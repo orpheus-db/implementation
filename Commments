@@ -1,0 +1,17 @@
+Date: 09/30/2016
+
+config:
+  1. What if specified user is not present
+  2. What if specified password does not match the user's password
+  3. What is DB is not created.
+  4. Overall, need to have sanity checks before writing into the file
+
+clone:
+  1. init_db(): Is better to create an conn object by calling DatabaseManager
+  2. No reseved table necessary in the current case.
+  3. user_name: get from info
+  4. meta_data: move all functions to the MetaDataManager.
+
+init_dataset:
+  1. Is better to create an conn object by calling DatabaseManager
+  2. Other methods are undone

@@ -107,6 +107,7 @@ def clone(vlist, from_table, to_table, ignore):
         return
 
     # check to_table
+
     if to_table:
         if RelationManager.reserve_table_check(to_table):
             click.echo("%s is a reserved table. Try with different table name" % to_table)
