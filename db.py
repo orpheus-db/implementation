@@ -3,16 +3,16 @@ import  logging
 import  click
 import psycopg2
 import sys
+import json
+
 
 
 class DatabaseManager():
-    def __init__(self):
+    def __init__(self,userinfo_file):
         self.verbose = False
         self.config_path = 'config.yaml'
         self.connect = None
         self.cursor = None
-        self.currentDB = None
-        self.user = None
         self.password = None
         # TODO still keep the yaml thing?
         with open(self.config_path, 'r') as f:
@@ -22,6 +22,26 @@ class DatabaseManager():
         self.user_log = open(self.config['user_log'], 'a')
         self.meta_info = self.config['meta_info']
         self.meta_modifiedIds = self.config['meta_modifiedIds']
+
+        try:
+            with open(userinfo_file, 'r') as f:
+                config_info = f.readline()
+            config_info = json.loads(config_info)
+            db_name = config_info['database']
+            user = config_info['user']
+            password = config_info['password']
+            if not db_name:
+                click.echo("Please config user and databse first, use the command config")
+                return
+        except:
+            click.echo("Please config user and database first, use the command config!!!")
+            return
+
+        self.currentDB = db_name
+        self.user = user
+        self.password = password
+        self.connect_db()
+
 
 
     def connect_db(self):

@@ -16,29 +16,29 @@ from version import VersionManager
 from metadata import MetadataManager
 from user_control import UserManager
 
+
 userinfo_file = 'user.info'
-
-def init_db():
-    try:
-        with open(userinfo_file, 'r') as f:
-            config_info = f.readline()
-        config_info = json.loads(config_info)
-        db_name = config_info['database']
-        user = config_info['user']
-        password = config_info['password']
-        if not db_name:
-            click.echo("Please config user and databse first, use the command config")
-            return
-    except:
-        click.echo("Please config user and database first, use the command config!!!")
-        return
-
-    conn = DatabaseManager()
-    conn.currentDB = db_name
-    conn.user = user
-    conn.password = password
-    conn.connect_db()
-    return conn
+# def init_db():
+#     try:
+#         with open(userinfo_file, 'r') as f:
+#             config_info = f.readline()
+#         config_info = json.loads(config_info)
+#         db_name = config_info['database']
+#         user = config_info['user']
+#         password = config_info['password']
+#         if not db_name:
+#             click.echo("Please config user and databse first, use the command config")
+#             return
+#     except:
+#         click.echo("Please config user and database first, use the command config!!!")
+#         return
+#
+#     conn = DatabaseManager()
+#     conn.currentDB = db_name
+#     conn.user = user
+#     conn.password = password
+#     conn.connect_db()
+#     return conn
 
 @click.group()
 @click.pass_context
@@ -78,6 +78,8 @@ def create_user(user, password, db_name):
 
 @cli.command()
 @click.option('--dataset_name', '-n', required=True, help='Specify the dataset what you want to init into the DB')
+@click.option('--primary', '-key', required=False,multiple=True,help='Specify the primary key of the dataset')
+
 def init_dataset(dataset_name):
     # By default, we connect to the database specified in the -config- command earlier
 
@@ -107,13 +109,12 @@ def clone(vlist, from_table, to_table, ignore):
         return
 
     # check to_table
+    # if to_table:
+    #     if RelationManager.reserve_table_check(to_table):
+    #         click.echo("%s is a reserved table. Try with different table name" % to_table)
+    #         return
 
-    if to_table:
-        if RelationManager.reserve_table_check(to_table):
-            click.echo("%s is a reserved table. Try with different table name" % to_table)
-            return
-
-    conn = init_db()
+    conn = DatabaseManager(userinfo_file)
     relation = RelationManager(conn)
     try:
         relation.checkout_table(vlist, from_table, to_table,ignore)
