@@ -1,0 +1,6 @@
+datahub.egg-info/PKG-INFO
+datahub.egg-info/SOURCES.txt
+datahub.egg-info/dependency_links.txt
+datahub.egg-info/entry_points.txt
+datahub.egg-info/requires.txt
+datahub.egg-info/top_level.txt

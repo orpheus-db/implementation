@@ -13,6 +13,7 @@ echo "Install dependencies"
 pip install pyyaml
 pip install click
 pip install psycopg2
+pip install pandas
 
 echo "Install Datahub-clt"
 pip install --editable .
