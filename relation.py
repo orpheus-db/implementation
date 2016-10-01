@@ -21,10 +21,18 @@ class RelationManager(object):
     # Select the records into a new table
     def checkout_table(self,vlist, from_table, to_table,ignore):
         print 'try to check out now'
+        if self.check_table_exists(to_table):
+            error_msg= "relation "+ to_table + " already exists."
+            raise ValueError(error_msg)
+            return
+        if not self.check_table_exists(from_table):
+            error_msg= "relation "+from_table+" does not exist."
+            raise ValueError(error_msg)
+            return
+
         _attributes,_attributes_type = self.__get_datatable_attribute(from_table)
 
         recordlist = self.select_records_of_version_list(vlist)
-
         if not ignore:
             sql = "SELECT %s,rid INTO %s FROM %s WHERE rid = ANY('%s'::int[]);" \
               % (', '.join(_attributes), to_table, from_table,recordlist)
@@ -48,8 +56,16 @@ class RelationManager(object):
 
     def check_table_exists(self,table_name):
       # SQL to check the exisistence of the table
-      print "check_table_exists";
-      return True;
+      print "check_table_exists"
+      sql= "SELECT EXISTS (" \
+           "SELECT 1 " \
+           "FROM   information_schema.tables " \
+           "WHERE  table_name = '%s');" % table_name
+      print sql
+      self.conn.cursor.execute(sql)
+      result = self.conn.cursor.fetchall()
+      print result[0][0]
+      return result[0][0]
 
     def update_datatable(self, table_name):
       print "update_datatable";

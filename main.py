@@ -111,9 +111,11 @@ def clone(vlist, from_table, to_table, ignore):
     relation = RelationManager(conn)
     try:
         relation.checkout_table(vlist, from_table, to_table,ignore)
+    except ValueError as err:
+        print(err.args)
+        return
     except:
-        print "DB error"
-        click.echo("check the name of tables. relation %s may already exists" % to_table)
+        click.echo("DB Error")
         return
 
     AccessManager.grant_access(to_table, conn.user)
@@ -130,15 +132,10 @@ def commit(msg, table_name):
     if msg is None or len(msg) == 0:
         click.echo("Needs commit msg, abort")
         return
-    db_name = ".."
 
-    try:
-        conn = DatabaseManager.connect_db(db_name);
-    except:
-        print "connection to DB failed."
-        return
+    conn = DatabaseManager(userinfo_file)
+    relation = RelationManager(conn)
 
-    relation = RelationManager(conn);
     if not relation.check_table_exists(table_name):
         click.echo("Table %s not found, abort" % table_name)
         return
