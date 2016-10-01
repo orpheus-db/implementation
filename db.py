@@ -50,7 +50,7 @@ class DatabaseManager():
             if self.verbose:
                 click.echo('Trying connect to %s' % (self.config['db']))
             logging.info('Trying to connext to %s' % (self.config['db']))
-            conn_string = "host=" + self.config['host'] + " dbname=" + self.currentDB + " user=" + self.user + " password=" + self.password
+            conn_string = "host=" + self.config['host'] + " port=" + str(self.config['port']) + " dbname=" + self.currentDB + " user=" + self.user + " password=" + self.password
             self.connect = psycopg2.connect(conn_string)
             self.cursor = self.connect.cursor()
             self.currentDB = self.config['db']

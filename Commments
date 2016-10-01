@@ -6,12 +6,14 @@ config:
   3. What is DB is not created.
   4. Overall, need to have sanity checks before writing into the file
 
+  now check when connect to db. need to check when config?
+
 clone:
-  1. init_db(): Is better to create an conn object by calling DatabaseManager
-  2. No reseved table necessary in the current case.
-  3. user_name: get from info
-  4. meta_data: move all functions to the MetaDataManager.
+  1. init_db(): Is better to create an conn object by calling DatabaseManager: fixed
+  2. No reseved table necessary in the current case. : fixed
+  3. user_name: get from info : fixed
+  4. meta_data: move all functions to the MetaDataManager. : fixed
 
 init_dataset:
-  1. Is better to create an conn object by calling DatabaseManager
+  1. Is better to create an conn object by calling DatabaseManager :fixed
   2. Other methods are undone

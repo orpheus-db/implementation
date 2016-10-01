@@ -1,7 +1,8 @@
 import json
+import datetime
 
 class MetadataManager(object):
-    def __init__(self, conn,user):
+    def __init__(self, conn):
     # def __init__(self,user):
         # file path is in some format of 'user'.
         # The simpliest is "~/user/"
@@ -23,7 +24,10 @@ class MetadataManager(object):
         f.write(json.dumps(new_meta))
         f.close()
 
-    def update(self, data):
+    def update(self, to_table,from_table,vlist):
         print "update metadata."
-        self.commit_meta(data)
+        _meta = self.load_meta()
+        _meta['table_map'][to_table] = from_table, vlist
+        _meta['table_created_time'][to_table] = str(datetime.datetime.now())
+        self.commit_meta(_meta)
 

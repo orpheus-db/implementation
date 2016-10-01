@@ -6,7 +6,6 @@ import sys
 import logging
 import user
 import json
-from datetime import datetime
 import pandas as pd
 
 from db import DatabaseManager
@@ -83,7 +82,7 @@ def create_user(user, password, db_name):
 def init_dataset(dataset_name):
     # By default, we connect to the database specified in the -config- command earlier
 
-    conn = init_db()
+    conn = DatabaseManager()
 
     version = VersionManager(conn)
     version.create_version_graph(dataset_name)
@@ -108,30 +107,18 @@ def clone(vlist, from_table, to_table, ignore):
         click.echo("Please mention the original table you want to checkout to.")
         return
 
-    # check to_table
-    # if to_table:
-    #     if RelationManager.reserve_table_check(to_table):
-    #         click.echo("%s is a reserved table. Try with different table name" % to_table)
-    #         return
-
     conn = DatabaseManager(userinfo_file)
     relation = RelationManager(conn)
     try:
         relation.checkout_table(vlist, from_table, to_table,ignore)
     except:
         print "DB error"
-        click.echo("check the name of tables")
+        click.echo("check the name of tables. relation %s may already exists" % to_table)
         return
 
-    # TODO:
-    user_name = ".."
-    AccessManager.grant_access(to_table, user_name);
-
-    metadata = MetadataManager(conn,user_name);
-    _meta = metadata.load_meta()
-    _meta['table_map'][to_table] = from_table,vlist
-    _meta['table_created_time'][to_table] = str(datetime.now())
-    metadata.update(_meta)
+    AccessManager.grant_access(to_table, conn.user)
+    metadata = MetadataManager(conn)
+    metadata.update(to_table,from_table,vlist)
 
     click.echo("Table %s has been cloned from version %s" % (to_table, ",".join(vlist)))
 
@@ -189,3 +176,19 @@ def commit(msg, table_name):
     # TODO: Before return, we may also need to clean table if any.
 
     click.echo("commited")
+
+
+
+@cli.command()
+def clean():
+    conn = DatabaseManager(userinfo_file)
+    open(conn.meta_info, 'w').close()
+    f = open(conn.meta_info, 'w')
+    f.write('{"file_map": {}, "table_map": {}, "table_created_time": {}, "merged_tables": []}')
+    f.close()
+    click.echo("meta_info cleaned")
+    open(conn.meta_modifiedIds, 'w').close()
+    f = open(conn.meta_modifiedIds, 'w')
+    f.write('{}')
+    f.close()
+    click.echo("modifiedID cleaned")

@@ -1,4 +1,5 @@
 host: localhost
+port: 5433
 db: postgres  
 log_path: .meta/logs/log.out
 user_log: .meta/user_log
