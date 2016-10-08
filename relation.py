@@ -107,5 +107,12 @@ class RelationManager(object):
             "WHERE  i.indrelid = '%s'::regclass " \
             "AND    i.indisprimary;"%tablename
         self.conn.cursor.execute(sql)
-        print tablename+'\'s primary key!!'
+        print tablename+'\'s primary key'
         print self.conn.cursor.fetchall()
+
+    def get_number_of_rows(self,tablename):
+        sql = "SELECT COUNT (*) from %s" % tablename
+        self.conn.cursor.execute(sql)
+        result = self.conn.cursor.fetchall()
+        # print result
+        return result[0][0]

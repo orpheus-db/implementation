@@ -107,6 +107,7 @@ def clone(vlist, from_table, to_table, ignore):
         click.echo("Please mention the original table you want to checkout to.")
         return
 
+    # connect to db
     conn = DatabaseManager(userinfo_file)
     relation = RelationManager(conn)
     try:
@@ -118,6 +119,7 @@ def clone(vlist, from_table, to_table, ignore):
         click.echo("DB Error")
         return
 
+    # update meta info
     AccessManager.grant_access(to_table, conn.user)
     metadata = MetadataManager(conn)
     metadata.update(to_table,from_table,vlist)
@@ -135,29 +137,51 @@ def commit(msg, table_name):
 
     conn = DatabaseManager(userinfo_file)
     relation = RelationManager(conn)
+    metadata = MetadataManager(conn)
 
     if not relation.check_table_exists(table_name):
         click.echo("Table %s not found, abort" % table_name)
         return
 
+    # load changes to the table
+    try:
+        modified_id = metadata.load_modified_id(table_name)
+    except ValueError as err:
+        print(err.args)
+        return
+
+    # load parent information about the table
     # We need to get the derivation information of the committed table;
     # Otherwise, in the multitable scenario, we do not know which datatable/version_graph/index_table
     # that we need to update information.
-    parent_name = "..."
+    try:
+        parent_vid_list = metadata.load_parent_id(table_name)
+        click.echo("Parent table %s " % parent_vid_list[0])
+        click.echo("Parent versions %s " % parent_vid_list[1])
+    except ValueError as err:
+        print(err.args)
+        return
 
+    parent_name = parent_vid_list[0]
+    parent_list = parent_vid_list[1]
     # update corresponding version graph
-    version = VersionManager(conn);
+    version = VersionManager(conn)
     try:
         graph_name = parent_name + "_version_graph"
-        version.update_version_graph(graph_name);
+        num_of_records = relation.get_number_of_rows(table_name)
+        table_create_time = metadata.load_table_create_time(table_name)
+        # TODO use real version graph name
+        curt_vid = version.update_version_graph("version",num_of_records,parent_list,table_create_time,msg)
     except:
         print "update version graph error"
         return
 
+    # TODO
     # update index table
     try:
+        # TODO use real index name
         index_name = parent_name + "_index_table"
-        version.update_index_table(index_name);
+        # version.update_index_table("indexTbl",curt_vid,modified_id)
     except:
         print "update index table error"
         return
@@ -165,7 +189,7 @@ def commit(msg, table_name):
     # append new records to the datatable
     try:
         data_table_name = parent_name + "_datatable_name"
-        relation.update_datatable(data_table_name);
+        relation.update_datatable(data_table_name)
     except:
         print "update datatable error"
         return
