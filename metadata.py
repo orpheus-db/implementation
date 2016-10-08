@@ -11,18 +11,19 @@ class MetadataManager(object):
 
     # Read metadata
     def load_meta(self):
-        print "load meta"
+        # print "load meta"
         with open(self.connector.meta_info, 'r') as f:
             meta_info = f.readline()
         return json.loads(meta_info)
 
     # Commit metadata
     def commit_meta(self, new_meta):
-        print "commit_data"
         open(self.connector.meta_info, 'w').close()
         f = open(self.connector.meta_info, 'w')
         f.write(json.dumps(new_meta))
         f.close()
+        print "meta data committed"
+
 
     def update(self, to_table,from_table,vlist):
         print "update metadata."

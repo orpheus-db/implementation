@@ -17,28 +17,6 @@ from user_control import UserManager
 
 
 userinfo_file = 'user.info'
-# def init_db():
-#     try:
-#         with open(userinfo_file, 'r') as f:
-#             config_info = f.readline()
-#         config_info = json.loads(config_info)
-#         db_name = config_info['database']
-#         user = config_info['user']
-#         password = config_info['password']
-#         if not db_name:
-#             click.echo("Please config user and databse first, use the command config")
-#             return
-#     except:
-#         click.echo("Please config user and database first, use the command config!!!")
-#         return
-#
-#     conn = DatabaseManager()
-#     conn.currentDB = db_name
-#     conn.user = user
-#     conn.password = password
-#     conn.connect_db()
-#     return conn
-
 @click.group()
 @click.pass_context
 def cli(ctx):
@@ -82,7 +60,7 @@ def create_user(user, password, db_name):
 def init_dataset(dataset_name):
     # By default, we connect to the database specified in the -config- command earlier
 
-    conn = DatabaseManager()
+    conn = DatabaseManager(userinfo_file)
 
     version = VersionManager(conn)
     version.create_version_graph(dataset_name)
@@ -116,7 +94,7 @@ def clone(vlist, from_table, to_table, ignore):
         print(err.args)
         return
     except:
-        click.echo("DB Error")
+        click.echo("DB Error--clone table failed")
         return
 
     # update meta info
@@ -143,12 +121,7 @@ def commit(msg, table_name):
         click.echo("Table %s not found, abort" % table_name)
         return
 
-    # load changes to the table
-    try:
-        modified_id = metadata.load_modified_id(table_name)
-    except ValueError as err:
-        print(err.args)
-        return
+
 
     # load parent information about the table
     # We need to get the derivation information of the committed table;
@@ -156,14 +129,15 @@ def commit(msg, table_name):
     # that we need to update information.
     try:
         parent_vid_list = metadata.load_parent_id(table_name)
-        click.echo("Parent table %s " % parent_vid_list[0])
-        click.echo("Parent versions %s " % parent_vid_list[1])
+        click.echo("Parent table is %s " % parent_vid_list[0])
+        click.echo("Parent versions are %s " % parent_vid_list[1])
     except ValueError as err:
         print(err.args)
         return
-
     parent_name = parent_vid_list[0]
     parent_list = parent_vid_list[1]
+
+
     # update corresponding version graph
     version = VersionManager(conn)
     try:
@@ -176,23 +150,34 @@ def commit(msg, table_name):
         print "update version graph error"
         return
 
-    # TODO
-    # update index table
+    # load changes to the table
     try:
-        # TODO use real index name
-        index_name = parent_name + "_index_table"
-        # version.update_index_table("indexTbl",curt_vid,modified_id)
-    except:
-        print "update index table error"
+        modified_id = metadata.load_modified_id(table_name)
+    except ValueError as err:
+        print(err.args)
         return
+    modified_id = map(str, modified_id)
 
     # append new records to the datatable
     try:
-        data_table_name = parent_name + "_datatable_name"
-        relation.update_datatable(data_table_name)
+        new_rids = relation.update_datatable(parent_name,table_name,modified_id)
     except:
         print "update datatable error"
         return
+
+
+    version.update_index_table("indexTbl",table_name,parent_name,parent_list,curt_vid,modified_id,new_rids)
+    # update index table
+    # try:
+    #     # TODO use real index name
+    #     index_name = parent_name + "_index_table"
+    #     new_rid = modified_id
+    #     version.update_index_table("indexTbl",table_name,parent_name,parent_list,curt_vid,modified_id)
+    # except:
+    #     print "update index table error"
+    #     return
+
+
 
     # TODO: Before return, we may also need to clean table if any.
 

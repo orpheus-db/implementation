@@ -4,7 +4,7 @@ class RelationManager(object):
 
 
     def __get_datatable_attribute(self, from_table):
-      print 'try to get attributes now'
+      print 'get attributes now'
       selectTemplate = "SELECT column_name, data_type from INFORMATION_SCHEMA.COLUMNS where table_name = '%s' and column_name NOT IN ('rid');" % (from_table)
       # print selectTemplate
       # print self.conn.cursor
@@ -15,7 +15,6 @@ class RelationManager(object):
       print _attributes
       # data type
       _attributes_type = map(lambda x: str(x[1]), _datatable_attribute_types)
-      print  _attributes_type
       return _attributes, _attributes_type
 
     # Select the records into a new table
@@ -44,9 +43,8 @@ class RelationManager(object):
         print sql
         self.conn.cursor.execute(sql)
         sql = "SELECT %s,rid FROM %s;"%(', '.join(_attributes),to_table)
-        print sql
+        # print sql
         self.conn.cursor.execute(sql)
-        print self.conn.cursor.fetchall()
         self.conn.connect.commit()
 
 
@@ -56,19 +54,29 @@ class RelationManager(object):
 
     def check_table_exists(self,table_name):
       # SQL to check the exisistence of the table
-      print "check_table_exists"
+      print "checking if table %s exists" %(table_name)
       sql= "SELECT EXISTS (" \
            "SELECT 1 " \
            "FROM   information_schema.tables " \
            "WHERE  table_name = '%s');" % table_name
-      print sql
+      # print sql
       self.conn.cursor.execute(sql)
       result = self.conn.cursor.fetchall()
       print result[0][0]
       return result[0][0]
 
-    def update_datatable(self, table_name):
-      print "update_datatable";
+    def update_datatable(self, parent_name,table_name,modified_pk):
+        print "update_datatable"
+        modified_id_string = '{' + ', '.join(modified_pk) + '}'
+        _attributes, _attributes_type = self.__get_datatable_attribute(parent_name)
+        sql =  "INSERT INTO %s (%s) (SELECT %s FROM %s t1 WHERE t1.%s = ANY('%s' :: int[])) RETURNING rid; " \
+             %(parent_name, ', '.join(_attributes), ', '.join(_attributes),table_name,"employee_id",modified_id_string)
+        print sql
+        self.conn.cursor.execute(sql)
+        new_rids=[t[0] for t in self.conn.cursor.fetchall()]
+        self.conn.connect.commit()
+        print new_rids
+        return new_rids
 
     def clean(self):
       print "clean"
@@ -86,8 +94,9 @@ class RelationManager(object):
 
     def select_records_of_version_list(self, vlist):
         targetv= ','.join(vlist)
+        print "get rids of version %s" % targetv
         sql = "SELECT distinct rlist FROM indexTbl WHERE vlist && (ARRAY[%s]);"%targetv
-        print sql
+        # print sql
         self.conn.cursor.execute(sql)
         data = self.conn.cursor.fetchall()
         data_string=''
