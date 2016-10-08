@@ -1,4 +1,5 @@
 1. Security of user information
   1.1. Encoded password and file path
 2. Unit Tests of each command
+3. Compact index table
 
