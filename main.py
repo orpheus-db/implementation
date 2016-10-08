@@ -165,17 +165,13 @@ def commit(msg, table_name):
         print "update datatable error"
         return
 
-
-    version.update_index_table("indexTbl",table_name,parent_name,parent_list,curt_vid,modified_id,new_rids)
     # update index table
-    # try:
-    #     # TODO use real index name
-    #     index_name = parent_name + "_index_table"
-    #     new_rid = modified_id
-    #     version.update_index_table("indexTbl",table_name,parent_name,parent_list,curt_vid,modified_id)
-    # except:
-    #     print "update index table error"
-    #     return
+    try:
+        # TODO use real index name
+        version.update_index_table("indexTbl",table_name,parent_name,parent_list,curt_vid,modified_id,new_rids)
+    except:
+        print "update index table error"
+        return
 
 
 
