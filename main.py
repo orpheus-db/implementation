@@ -23,14 +23,20 @@ def cli(ctx):
    pass
 
 @cli.command()
-@click.option('--user', '-u', required=True, help='Specify the user name that you want to create.')
-@click.option('--password', '-p', required=True, help='Specify the password that you want to use.')
-@click.option('--database', '-d', required=True, help='Specify the database that you want to connected with.')
-def config(user, password, database):
+@click.option('--database', prompt='Enter the database', help='Specify the database that you want to connected with.')
+@click.option('--user', prompt='Enter user name', help='Specify the user name that you want to create.')
+@click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True, help='Specify the password that you want to use.')
+def config(database, user, password):
     # TODO: Need to configure the system
     # (i.e. remember user information after they init on one computer)
     # One solution is to store info into a file (WHERE? SECURITY?)
     # Maybe depends on the APIs of the python package we use. Not sure.
+
+    # Use hmac key hashing
+    import hashlib, binascii
+    # TODO: check if this user exist
+
+    pass
     config_info = {
         'user':user,
         # TODO encrytion needed
@@ -40,23 +46,27 @@ def config(user, password, database):
     f = open(userinfo_file, 'w')
     f.write(json.dumps(config_info))
     f.close()
-    pass;
 
 @cli.command()
-@click.option('--user', '-u', required=True, help='Specify the user name that you want to create.')
-@click.option('--password', '-p', required=True, help='Specify the password that you want to use.')
-@click.option('--db_name', '-n', help='Specify the database that you want to connect to.')
-def create_user(user, password, db_name):
-    # TODO: password encryption
-    # create user
-    UserManager.create_user(user, password)
+@click.option('--database', prompt='Enter the database', help='Specify the database that you want to connected with.')
+@click.option('--user', prompt='Enter user name', help='Specify the user name that you want to create.')
+@click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True, help='Specify the password that you want to use.')
+def create_user(database, user, password):
+    # Use hmac key hashing
+    import hashlib, binascii
+    
+    salt = b'datahub' # should random
+    passphrase = binascii.hexlify(hashlib.pbkdf2_hmac('sha256', password, salt, 100000))
+
+    print passphrase
+    # create user in UserManager
+    UserManager.create_user(user, passphrase)
     # create user in the DB
-    DatabaseManager.create_user(user, password, db_name);
+    DatabaseManager.create_user(user, passphrase, database);
 
 @cli.command()
 @click.option('--dataset_name', '-n', required=True, help='Specify the dataset what you want to init into the DB')
 @click.option('--primary', '-key', required=False,multiple=True,help='Specify the primary key of the dataset')
-
 def init_dataset(dataset_name):
     # By default, we connect to the database specified in the -config- command earlier
 
