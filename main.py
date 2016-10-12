@@ -15,54 +15,60 @@ from version import VersionManager
 from metadata import MetadataManager
 from user_control import UserManager
 
-
-userinfo_file = 'user.info'
 @click.group()
 @click.pass_context
 def cli(ctx):
-   pass
+    ctx.obj = UserManager.get_current_state()
+    if not ctx.obj:
+        click.secho("No session in use, please call config first", fg='red')
 
 @cli.command()
-@click.option('--database', prompt='Enter the database', help='Specify the database that you want to connected with.')
 @click.option('--user', prompt='Enter user name', help='Specify the user name that you want to create.')
-@click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True, help='Specify the password that you want to use.')
-def config(database, user, password):
+@click.option('--password', prompt=True, hide_input=True, help='Specify the password that you want to use.')
+@click.pass_context
+def config(ctx, user, password):
     # TODO: Need to configure the system
     # (i.e. remember user information after they init on one computer)
     # One solution is to store info into a file (WHERE? SECURITY?)
     # Maybe depends on the APIs of the python package we use. Not sure.
-
-    # Use hmac key hashing
-    import hashlib, binascii
-    # TODO: check if this user exist
-
-    pass
-    config_info = {
-        'user':user,
-        # TODO encrytion needed
-        'password':password,
-        'database':database
-    }
-    f = open(userinfo_file, 'w')
-    f.write(json.dumps(config_info))
-    f.close()
+    newctx = ctx.obj or {"user": None, "database": "demo"} # set demo as default
+    try:
+        if UserManager.verify_credential(user, password):
+            newctx['user'] = user
+            UserManager.write_current_state(newctx)
+    except Exception as e:
+        click.secho(str(e), fg='red')
+    
 
 @cli.command()
-@click.option('--database', prompt='Enter the database', help='Specify the database that you want to connected with.')
 @click.option('--user', prompt='Enter user name', help='Specify the user name that you want to create.')
 @click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True, help='Specify the password that you want to use.')
-def create_user(database, user, password):
-    # Use hmac key hashing
-    import hashlib, binascii
-    
-    salt = b'datahub' # should random
-    passphrase = binascii.hexlify(hashlib.pbkdf2_hmac('sha256', password, salt, 100000))
+@click.pass_context
+def create_user(ctx, user, password):
 
-    print passphrase
+    # check this user has permission to create new user or not
     # create user in UserManager
-    UserManager.create_user(user, passphrase)
+    try:
+        UserManager.create_user(user, password)
+    except Exception as e:
+        click.secho(str(e), fg='red')
     # create user in the DB
-    DatabaseManager.create_user(user, passphrase, database);
+    # DatabaseManager.create_user(user, passphrase, database);
+
+@cli.command()
+@click.option('--database', '-d', help='Specify the database that you want to use')
+@click.pass_context
+def db(ctx, database):
+    # TODO: check permission?
+    if database:
+        ctx.obj['database'] = database 
+        UserManager.write_current_state(ctx.obj) # write to persisent store
+    click.echo('using: %s' % ctx.obj['database'])
+
+@cli.command()
+@click.pass_context
+def whoami(ctx):
+    click.echo('logged in as: %s' % ctx.obj['user'])
 
 @cli.command()
 @click.option('--dataset_name', '-n', required=True, help='Specify the dataset what you want to init into the DB')
@@ -70,7 +76,7 @@ def create_user(database, user, password):
 def init_dataset(dataset_name):
     # By default, we connect to the database specified in the -config- command earlier
 
-    conn = DatabaseManager(userinfo_file)
+    conn = DatabaseManager()
 
     version = VersionManager(conn)
     version.create_version_graph(dataset_name)
@@ -85,18 +91,12 @@ def init_dataset(dataset_name):
 @click.option('--from_table', '-f', required=True, help='Specify the table name to checkout from')
 @click.option('--to_table', '-t', required=True, help='Specify the table name to checkout to.')
 @click.option('--ignore', '-i', help='If set, clone versions into table will ignore duplicated key', is_flag=True)
-def clone(vlist, from_table, to_table, ignore):
-
-    # sanity check
-    if not from_table:
-        click.echo("Please mention the original table you want to checkout from.")
-        return
-    if not to_table:
-        click.echo("Please mention the original table you want to checkout to.")
-        return
+@click.pass_context
+def clone(ctx, vlist, from_table, to_table, ignore):
+    # check ctx.obj has permission or not
 
     # connect to db
-    conn = DatabaseManager(userinfo_file)
+    conn = DatabaseManager()
     relation = RelationManager(conn)
     try:
         relation.checkout_table(vlist, from_table, to_table,ignore)
@@ -117,13 +117,14 @@ def clone(vlist, from_table, to_table, ignore):
 @cli.command()
 @click.option('--msg','-m', help='Commit message', required = True)
 @click.option('--table_name','-t', help='Commit table', required = True)
-def commit(msg, table_name):
+@click.pass_context
+def commit(ctx, msg, table_name):
     # sanity check
     if msg is None or len(msg) == 0:
         click.echo("Needs commit msg, abort")
         return
 
-    conn = DatabaseManager(userinfo_file)
+    conn = DatabaseManager()
     relation = RelationManager(conn)
     metadata = MetadataManager(conn)
 
@@ -193,7 +194,7 @@ def commit(msg, table_name):
 
 @cli.command()
 def clean():
-    conn = DatabaseManager(userinfo_file)
+    conn = DatabaseManager()
     open(conn.meta_info, 'w').close()
     f = open(conn.meta_info, 'w')
     f.write('{"file_map": {}, "table_map": {}, "table_created_time": {}, "merged_tables": []}')

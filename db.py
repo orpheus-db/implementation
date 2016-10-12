@@ -1,40 +1,65 @@
 import yaml
-import  logging
-import  click
+import logging
+import click
 import psycopg2
 import sys
 import json
 
 
+import exceptions as sys_exception
+
+# Database Manager exceptions
+class UserNotSetError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
+
+class ConnectionError(Exception):
+    def __init__(self, value):
+        self.value = value
+    def __str__(self):
+        return repr(self.value)
 
 class DatabaseManager():
-    def __init__(self,userinfo_file):
+    def __init__(self):
         self.verbose = False
         self.config_path = 'config.yaml'
+        self.current_config = '.meta/config'# keep track of session -> which db, who, password. 
         self.connect = None
         self.cursor = None
         self.password = None
-        # TODO still keep the yaml thing?
-        with open(self.config_path, 'r') as f:
-            self.config = yaml.load(f)
-        logging.basicConfig(filename=self.config['log_path'], format='%(asctime)s %(message)s',
-                            datefmt='%m/%d/%Y %I:%M:%S ')
-        self.user_log = open(self.config['user_log'], 'a')
-        self.meta_info = self.config['meta_info']
-        self.meta_modifiedIds = self.config['meta_modifiedIds']
+        # TODO still keep the yaml thing? Yes.
+        try:
+            with open(self.config_path, 'r') as f:
+                self.config = yaml.load(f)
+            
+            logging.basicConfig(filename=self.config['log_path'], format='%(asctime)s %(message)s',
+                                datefmt='%m/%d/%Y %I:%M:%S ')
+            self.user_log = open(self.config['user_log'], 'a')
+            self.meta_info = self.config['meta_info']
+            self.meta_modifiedIds = self.config['meta_modifiedIds']
+        except (IOError, KeyError):
+            raise sys_exception.BadStateError("config.yaml file not found or data not clean, abort")
+            return
+        except: # unknown error
+            raise sys_exception.BadStateError("unknown error during loding config file, abort")
+            return
 
         try:
-            with open(userinfo_file, 'r') as f:
+            with open(self.current_config, 'r') as f:
                 config_info = f.readline()
             config_info = json.loads(config_info)
             db_name = config_info['database']
             user = config_info['user']
             password = config_info['password']
-            if not db_name:
-                click.echo("Please config user and databse first, use the command config")
-                return
+        except IOError:
+            raise sys_exception.BadStateError("meta config file not found, abort")
+            return
+        except KeyError:
+            raise UserNotSetError("config is not set")
         except:
-            click.echo("Please config user and database first, use the command config!!!")
+            raise sys_exception.BadStateError("unknown error during loding meta config file, abort")
             return
 
         self.currentDB = db_name
@@ -57,6 +82,7 @@ class DatabaseManager():
         except psycopg2.OperationalError as e:
             logging.error('%s is not open' % (self.config['db']))
             click.echo(e, file=sys.stderr)
+            raise ConnectionError("connot connect to %s" % self.config['db'])
             pass
         return self
 
