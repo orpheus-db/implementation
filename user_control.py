@@ -30,13 +30,6 @@ class UserManager(object):
 
 	@classmethod
 	def create_user(cls, user, password):
-		# Check if the user name has already exists
-    	# If so, return error
-    	# If not, create a folder (via system call)
-    	# TODO: How to encript the privacy of the folder? 
-    	# No better solution at hand now, but will research into it in the near future. 
-    	# Now, we store encrypted password
-    	##	Direction -- use some existing python package
 		from os import makedirs
 		if cls.check_user_exist(user):
 			raise LocalUserExistError("username %s exists, try a different one" % user)

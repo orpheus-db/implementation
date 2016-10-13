@@ -23,14 +23,10 @@ def cli(ctx):
         click.secho("No session in use, please call config first", fg='red')
 
 @cli.command()
-@click.option('--user', prompt='Enter user name', help='Specify the user name that you want to create.')
-@click.option('--password', prompt=True, hide_input=True, help='Specify the password that you want to use.')
+@click.option('--user', prompt='Enter user name', help='Specify the user name that you want to configure to.')
+@click.option('--password', prompt=True, hide_input=True, help='Specify the password.')
 @click.pass_context
 def config(ctx, user, password):
-    # TODO: Need to configure the system
-    # (i.e. remember user information after they init on one computer)
-    # One solution is to store info into a file (WHERE? SECURITY?)
-    # Maybe depends on the APIs of the python package we use. Not sure.
     newctx = ctx.obj or {"user": None, "database": "demo"} # set demo as default
     try:
         if UserManager.verify_credential(user, password):
@@ -38,21 +34,20 @@ def config(ctx, user, password):
             UserManager.write_current_state(newctx)
     except Exception as e:
         click.secho(str(e), fg='red')
-    
+
 
 @cli.command()
 @click.option('--user', prompt='Enter user name', help='Specify the user name that you want to create.')
 @click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True, help='Specify the password that you want to use.')
 @click.pass_context
 def create_user(ctx, user, password):
-
     # check this user has permission to create new user or not
     # create user in UserManager
     try:
         UserManager.create_user(user, password)
     except Exception as e:
         click.secho(str(e), fg='red')
-    # create user in the DB
+    # TODO: create user in the DB
     # DatabaseManager.create_user(user, passphrase, database);
 
 @cli.command()
@@ -61,7 +56,7 @@ def create_user(ctx, user, password):
 def db(ctx, database):
     # TODO: check permission?
     if database:
-        ctx.obj['database'] = database 
+        ctx.obj['database'] = database
         UserManager.write_current_state(ctx.obj) # write to persisent store
     click.echo('using: %s' % ctx.obj['database'])
 
@@ -72,10 +67,15 @@ def whoami(ctx):
 
 @cli.command()
 @click.option('--dataset_name', '-n', required=True, help='Specify the dataset what you want to init into the DB')
-@click.option('--primary', '-key', required=False,multiple=True,help='Specify the primary key of the dataset')
-def init_dataset(dataset_name):
+@click.pass_context
+def init_dataset(ctx, dataset_name):
     # By default, we connect to the database specified in the -config- command earlier
 
+    # Two cases need to be taken care of:
+    # 1.add version control on an outside file
+    #    1.1 Load a csv or other format of the file into DB
+    #    1.2 Schema
+    # 2.add version control on a existing table in DB
     conn = DatabaseManager()
 
     version = VersionManager(conn)
@@ -131,8 +131,6 @@ def commit(ctx, msg, table_name):
     if not relation.check_table_exists(table_name):
         click.echo("Table %s not found, abort" % table_name)
         return
-
-
 
     # load parent information about the table
     # We need to get the derivation information of the committed table;
