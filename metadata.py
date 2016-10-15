@@ -25,7 +25,7 @@ class MetadataManager(object):
         print "meta data committed"
 
 
-    def update(self, to_table,from_table,vlist):
+    def update(self, to_table, from_table,vlist):
         print "update metadata."
         _meta = self.load_meta()
         _meta['table_map'][to_table] = from_table, vlist

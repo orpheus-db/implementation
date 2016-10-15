@@ -19,7 +19,7 @@ from user_control import UserManager
 @click.pass_context
 def cli(ctx):
     ctx.obj = UserManager.get_current_state()
-    if not ctx.obj:
+    if not ctx.obj or not ctx.obj['user'] or not ctx.obj['database'] or not ctx.obj['passphrase']:
         click.secho("No session in use, please call config first", fg='red')
 
 @cli.command()
@@ -27,11 +27,13 @@ def cli(ctx):
 @click.option('--password', prompt=True, hide_input=True, help='Specify the password.')
 @click.pass_context
 def config(ctx, user, password):
-    newctx = ctx.obj or {"user": None, "database": "demo"} # set demo as default
+    newctx = ctx.obj or {"user": None, "passphrase" : None, "database": "demo"} # default
     try:
         if UserManager.verify_credential(user, password):
+            from encryption import EncryptionTool
             newctx['user'] = user
-            UserManager.write_current_state(newctx)
+            newctx['passphrase'] = EncryptionTool.passphrase_hash(password)
+            UserManager.write_current_state(newctx) # pass down to user manager
     except Exception as e:
         click.secho(str(e), fg='red')
 
@@ -45,11 +47,11 @@ def create_user(ctx, user, password):
     # create user in UserManager
     try:
         UserManager.create_user(user, password)
+        # DatabaseManager.create_user(user, passphrase, database) # TODO
+        click.echo('User created.')
     except Exception as e:
         click.secho(str(e), fg='red')
-    # TODO: create user in the DB
-    # DatabaseManager.create_user(user, passphrase, database);
-
+    
 @cli.command()
 @click.option('--database', '-d', help='Specify the database that you want to use')
 @click.pass_context
@@ -66,9 +68,9 @@ def whoami(ctx):
     click.echo('logged in as: %s' % ctx.obj['user'])
 
 @cli.command()
-@click.option('--dataset_name', '-n', required=True, help='Specify the dataset what you want to init into the DB')
+@click.option('--dataset', '-n', required=True, help='Specify the dataset what you want to init into the DB')
 @click.pass_context
-def init_dataset(ctx, dataset_name):
+def init_dataset(ctx, dataset):
     # By default, we connect to the database specified in the -config- command earlier
 
     # Two cases need to be taken care of:
@@ -76,14 +78,14 @@ def init_dataset(ctx, dataset_name):
     #    1.1 Load a csv or other format of the file into DB
     #    1.2 Schema
     # 2.add version control on a existing table in DB
-    conn = DatabaseManager()
+    conn = DatabaseManager(ctx.obj)
 
     version = VersionManager(conn)
-    version.create_version_graph(dataset_name)
-    version.create_index_table(dataset_name)
+    version.create_version_graph(dataset)
+    version.create_index_table(dataset)
 
     relation = RelationManager(conn)
-    relation.create_relation(dataset_name)
+    relation.create_relation(dataset)
     # TODO: What about schema? Automation or specified by user?
 
 @cli.command()
@@ -94,37 +96,28 @@ def init_dataset(ctx, dataset_name):
 @click.pass_context
 def clone(ctx, vlist, from_table, to_table, ignore):
     # check ctx.obj has permission or not
-
-    # connect to db
-    conn = DatabaseManager()
-    relation = RelationManager(conn)
     try:
-        relation.checkout_table(vlist, from_table, to_table,ignore)
-    except ValueError as err:
-        print(err.args)
-        return
-    except:
-        click.echo("DB Error--clone table failed")
-        return
+        # connect to db
+        conn = DatabaseManager(ctx.obj)
+        relation = RelationManager(conn)
+        relation.checkout_table(vlist, from_table, to_table, ignore)
+        # update meta info
+        AccessManager.grant_access(to_table, conn.user)
+        metadata = MetadataManager(conn)
+        metadata.update(to_table,from_table,vlist)
+        click.echo("Table %s has been cloned from version %s" % (to_table, ",".join(vlist)))
+    except Exception as e:
+        click.secho(str(e), fg='red')
 
-    # update meta info
-    AccessManager.grant_access(to_table, conn.user)
-    metadata = MetadataManager(conn)
-    metadata.update(to_table,from_table,vlist)
-
-    click.echo("Table %s has been cloned from version %s" % (to_table, ",".join(vlist)))
+    
 
 @cli.command()
 @click.option('--msg','-m', help='Commit message', required = True)
-@click.option('--table_name','-t', help='Commit table', required = True)
+@click.option('--table_name','-t', help='The table to be committed', required = True)
 @click.pass_context
 def commit(ctx, msg, table_name):
-    # sanity check
-    if msg is None or len(msg) == 0:
-        click.echo("Needs commit msg, abort")
-        return
 
-    conn = DatabaseManager()
+    conn = DatabaseManager(ctx.obj)
     relation = RelationManager(conn)
     metadata = MetadataManager(conn)
 
@@ -191,8 +184,9 @@ def commit(ctx, msg, table_name):
 
 
 @cli.command()
-def clean():
-    conn = DatabaseManager()
+@pass_context
+def clean(ctx):
+    conn = DatabaseManager(ctx.obj)
     open(conn.meta_info, 'w').close()
     f = open(conn.meta_info, 'w')
     f.write('{"file_map": {}, "table_map": {}, "table_created_time": {}, "merged_tables": []}')

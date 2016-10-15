@@ -22,10 +22,10 @@ class ConnectionError(Exception):
         return repr(self.value)
 
 class DatabaseManager():
-    def __init__(self):
+    def __init__(self, config):
         self.verbose = False
         self.config_path = 'config.yaml'
-        self.current_config = '.meta/config'# keep track of session -> which db, who, password. 
+        # self.current_config = '.meta/config' pass from ctx
         self.connect = None
         self.cursor = None
         self.password = None
@@ -46,25 +46,9 @@ class DatabaseManager():
             raise sys_exception.BadStateError("unknown error during loding config file, abort")
             return
 
-        try:
-            with open(self.current_config, 'r') as f:
-                config_info = f.readline()
-            config_info = json.loads(config_info)
-            db_name = config_info['database']
-            user = config_info['user']
-            password = config_info['password']
-        except IOError:
-            raise sys_exception.BadStateError("meta config file not found, abort")
-            return
-        except KeyError:
-            raise UserNotSetError("config is not set")
-        except:
-            raise sys_exception.BadStateError("unknown error during loding meta config file, abort")
-            return
-
-        self.currentDB = db_name
-        self.user = user
-        self.password = password
+        self.currentDB = config['database']
+        self.user = config['user']
+        self.password = config['passphrase']
         self.connect_db()
 
 
@@ -82,8 +66,8 @@ class DatabaseManager():
         except psycopg2.OperationalError as e:
             logging.error('%s is not open' % (self.config['db']))
             click.echo(e, file=sys.stderr)
-            raise ConnectionError("connot connect to %s" % self.config['db'])
-            pass
+            raise ConnectionError("connot connect to %s, check login credential or connection" % self.config['db'])
+            
         return self
 
     @staticmethod

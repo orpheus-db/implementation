@@ -1,3 +1,22 @@
+class RelationNotExistError(Exception):
+  def __init__(self, tablename):
+      self.name = tablename
+  def __str__(self):
+      return "relation %s not exists" % self.name
+
+class RelationOverwriteError(Exception):
+  def __init__(self, tablename):
+      self.name = tablename
+  def __str__(self):
+      return "relation %s exists, add flag to allow overwrite" % self.name
+
+class ReservedRelationError(Exception):
+  def __init__(self, tablename):
+      self.name = tablename
+  def __str__(self):
+      return "relation %s is a reserved name, please use a different one" % self.name
+
+
 class RelationManager(object):
     def __init__(self, conn):
       self.conn = conn;
@@ -18,15 +37,13 @@ class RelationManager(object):
       return _attributes, _attributes_type
 
     # Select the records into a new table
-    def checkout_table(self,vlist, from_table, to_table,ignore):
+    def checkout_table(self, vlist, from_table, to_table, ignore):
         print 'try to check out now'
-        if self.check_table_exists(to_table):
-            error_msg= "relation "+ to_table + " already exists."
-            raise ValueError(error_msg)
+        if self.check_table_exists(to_table): # ask if user want to overwrite
+            raise RelationOverwriteError(to_table)
             return
         if not self.check_table_exists(from_table):
-            error_msg= "relation "+from_table+" does not exist."
-            raise ValueError(error_msg)
+            raise RelationNotExistError(from_table)
             return
 
         _attributes,_attributes_type = self.__get_datatable_attribute(from_table)
@@ -34,8 +51,8 @@ class RelationManager(object):
         recordlist = self.select_records_of_version_list(vlist)
         if not ignore:
             sql = "SELECT %s,rid INTO %s FROM %s WHERE rid = ANY('%s'::int[]);" \
-              % (', '.join(_attributes), to_table, from_table,recordlist)
-        if ignore:
+              % (', '.join(_attributes), to_table, from_table, recordlist)
+        else:
             # TODO
             self.get_primary_key(from_table)
             sql = "SELECT %s,rid INTO %s FROM %s WHERE rid = ANY('%s'::int[]);" \
