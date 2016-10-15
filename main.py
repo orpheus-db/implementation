@@ -184,7 +184,7 @@ def commit(ctx, msg, table_name):
 
 
 @cli.command()
-@pass_context
+@click.pass_context
 def clean(ctx):
     conn = DatabaseManager(ctx.obj)
     open(conn.meta_info, 'w').close()
