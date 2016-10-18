@@ -46,6 +46,12 @@ class UserManager(object):
 		return 1
 
 
+	# this method is very dangrous! use caution
+	@classmethod
+	def delete_user(cls, user, password):
+		pass 
+
+
 	@classmethod
 	def get_current_state(cls):
 		try:

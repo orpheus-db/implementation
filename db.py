@@ -5,77 +5,208 @@ import psycopg2
 import sys
 import json
 
+from encryption import EncryptionTool
 
-import exceptions as sys_exception
+from exceptions import BadStateError, NotImplementedError
 
 # Database Manager exceptions
 class UserNotSetError(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
-        return repr(self.value)
+        return self.value
 
 class ConnectionError(Exception):
     def __init__(self, value):
         self.value = value
     def __str__(self):
-        return repr(self.value)
+        return self.value
+
+class OperationError(Exception):
+    def __str__(self):
+        return 'Operation failure, check system parameters'
+
+class DatasetExistsError(Exception):
+    def __init__(self, value, user):
+        self.value = value
+        self.user = user
+    def __str__(self):
+        return 'dataset %s exists under user %s' % (self.value, self.user)
 
 class DatabaseManager():
     def __init__(self, config):
-        self.verbose = False
-        self.config_path = 'config.yaml'
-        # self.current_config = '.meta/config' pass from ctx
-        self.connect = None
-        self.cursor = None
-        self.password = None
-        # TODO still keep the yaml thing? Yes.
+        # yaml config passed from ctx
         try:
-            with open(self.config_path, 'r') as f:
-                self.config = yaml.load(f)
-            
-            logging.basicConfig(filename=self.config['log_path'], format='%(asctime)s %(message)s',
-                                datefmt='%m/%d/%Y %I:%M:%S ')
-            self.user_log = open(self.config['user_log'], 'a')
-            self.meta_info = self.config['meta_info']
-            self.meta_modifiedIds = self.config['meta_modifiedIds']
-        except (IOError, KeyError):
-            raise sys_exception.BadStateError("config.yaml file not found or data not clean, abort")
-            return
-        except: # unknown error
-            raise sys_exception.BadStateError("unknown error during loding config file, abort")
-            return
-
-        self.currentDB = config['database']
-        self.user = config['user']
-        self.password = config['passphrase']
-        self.connect_db()
-
+            self.verbose = False
+            self.connect = None
+            self.cursor = None
+            self.config = config
+            logging.basicConfig(filename=config['log_path'], format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %I:%M:%S ')
+            self.user_log = open(config['user_log'], 'a')
+            self.home = config['orpheus_home']
+            self.currentDB = config['database']
+            self.user = config['user']
+            self.password = config['passphrase']
+            self.connect_str = "host=" + self.config['host'] + " port=" + str(self.config['port']) + " dbname=" + self.currentDB + " user=" + self.user + " password=" + self.password
+            self.connect_db()
+        except KeyError as e:
+            raise BadStateError("context missing field %s, abort" % e.args[0])
 
 
     def connect_db(self):
         print "connect to DB %s" % self.currentDB
         try:
             if self.verbose:
-                click.echo('Trying connect to %s' % (self.config['db']))
-            logging.info('Trying to connext to %s' % (self.config['db']))
-            conn_string = "host=" + self.config['host'] + " port=" + str(self.config['port']) + " dbname=" + self.currentDB + " user=" + self.user + " password=" + self.password
-            self.connect = psycopg2.connect(conn_string)
+                click.echo('Trying connect to %s' % (self.currentDB))
+            logging.info('Trying to connext to %s' % (self.currentDB))
+            self.connect = psycopg2.connect(self.connect_str)
             self.cursor = self.connect.cursor()
-            self.currentDB = self.config['db']
         except psycopg2.OperationalError as e:
-            logging.error('%s is not open' % (self.config['db']))
-            click.echo(e, file=sys.stderr)
-            raise ConnectionError("connot connect to %s, check login credential or connection" % self.config['db'])
-            
+            logging.error('%s is not open' % (self.currentDB))
+            # click.echo(e, file=sys.stderr)
+            raise ConnectionError("connot connect to %s, check login credential or connection" % self.currentDB)
         return self
 
-    @staticmethod
-    def create_user(user, password, db_name):
+    def refresh_cursor(self):
+        self.connect = psycopg2.connect(self.connect_str)
+        self.cursor = self.connect.cursor()
+
+
+    # schema is a table
+    def create_dataset(self, inputfile, dataset, schema=None, header=False, attributes=None): 
+        self.refresh_cursor()
+        print "creating dataset %s to %s" % (dataset, self.currentDB)
+        # create a schema to store user specific information
+        try:
+            self.cursor.execute("CREATE SCHEMA %s;" % self.user)
+            self.cursor.execute("CREATE TABLE %s (dataset_name text primary key);" % (self.user + '.datasets'))
+        except psycopg2.ProgrammingError:
+            # this is ok since table has been created before
+            self.refresh_cursor()
+
+        try:
+            self.cursor.execute("INSERT INTO %s values('%s');")
+        except psycopg2.IntegrityError: # happens when inserting duplicate key
+            raise DatasetExistsError(dataset, self.user)
+            return
+
+        try:
+            # for each dataset, create 3 tables
+            # dataset_datatable, which includes all records, rid as PK, based on schema
+            # dataset_version, which keeptrack of all version information, like version
+            # dataset_indexTbl, which includes all the vid and rid mapping, like indexTbl
+
+            # TODO: finish other input later
+            if '.csv' not in inputfile:
+                raise NotImplementedError("Loading other than CSV file not implemented!")
+                return
+
+            if not attributes:
+                raise NotImplementedError("No attributes not implemented!")
+                return
+
+
+            print "Creating datatable"
+            # create datatable
+            if schema:
+                self.cursor.execute("CREATE TABLE %s ( like %s including all);" % (dataset + "_datatable", schema))
+            else:
+                raise NotImplementedError("User specified schema not implemented!")
+                return
+
+            print "Creating version table"
+            # create version table
+            self.cursor.execute("CREATE TABLE %s(vid int primary key, num_records int, parent integer[], children integer[], create_time timestamp, commit_time timestamp, commit_msg text);" % (dataset + "_version"))
+
+            print "Creating index table"
+            # create indexTbl table
+            self.cursor.execute("CREATE TABLE %s (vlist integer[], rlist integer[]);" % (dataset + "_indexTbl"))
+
+            # dump data into this dataset
+            file_path = self.config['orpheus_home'] + inputfile
+            if header:
+                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV HEADER;" % (dataset + "_datatable", ",".join(attributes), file_path))
+            else:
+                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV;" % (dataset + "_datatable", ",".join(attributes), file_path))
+
+            self.connect.commit()
+        except Exception as e:
+            raise OperationError()
+        return
+
+    def drop_dataset(self, dataset):
+        self.refresh_cursor()
+        # TODO: refactor for better approach?
+        try:
+            self.cursor.execute("DROP table %s;" % (dataset + "_datatable"))
+            self.connect.commit()
+        except:
+            self.refresh_cursor()
+            
+        try:
+            self.cursor.execute("DROP table %s;" % (dataset + "_version"))
+            self.connect.commit()
+        except:
+            self.refresh_cursor()
+
+        try:
+            self.cursor.execute("DROP table %s;" % (dataset + "_indexTbl"))
+            self.connect.commit()
+        except:
+            self.refresh_cursor()
+        try:
+            self.cursor.execute("DELETE from %s where dataset_name = '%s';" % (self.user + ".datasets", dataset))
+            self.connect.commit()
+        except:
+            self.refresh_cursor()
+
+        self.connect.commit()
+        return
+
+    def list_dataset(self):
+        self.refresh_cursor()
+        try:
+            self.cursor.execute("SELECT * from %s;" % (self.user + '.datasets'))
+            return [x[0] for x in self.cursor.fetchall()]
+        except psycopg2.ProgrammingError:
+            raise BadStateError("No dataset has been initalized before, try init first")
+        return
+
+    def show_dataset(self, dataset):
+        self.refresh_cursor()
+        raise NotImplementedError("Show a specified dataset not implemented!")
+        return
+
+
+    @classmethod
+    def load_config(cls):
+        try:
+            with open('config.yaml', 'r') as f:
+                obj = yaml.load(f)
+        except IOError:
+            raise sys_exception.BadStateError("config.yaml file not found or data not clean, abort")
+            return None
+        return obj
+
+    @classmethod
+    def create_user(cls, user, password, db):
 		# Create user in the database
 		# Using corresponding SQL or prostegres commands
-		print "add user into database %s" % db_name
+        # Set one-time only connection to the database to create user
+        try:
+            server_config = cls.load_config()
+            conn_string = "host=" + server_config['host'] + " port=" + str(server_config['port']) + " dbname=" + db
+            connect = psycopg2.connect(conn_string)
+            cursor = connect.cursor()
+            passphrase = EncryptionTool.passphrase_hash(password)
+            cursor.execute("CREATE USER %s WITH LOGIN ENCRYPTED PASSWORD ' %s ' SUPERUSER;" % (user, passphrase)) # TODO: use different flags
 
+            connect.commit()
+        except psycopg2.OperationalError:
+            raise ConnectionError("connot connect to %s at %s:%s" % (db, server_config['host'], str(server_config['port'])))
+        except Exception as e:
+            raise e # throw the exception to main
+        return
 
 
 

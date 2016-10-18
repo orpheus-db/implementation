@@ -1,31 +1,36 @@
 import json
 import datetime
+import exceptions as sys_exception
 
 class MetadataManager(object):
-    def __init__(self, conn):
+    def __init__(self, config):
     # def __init__(self,user):
         # file path is in some format of 'user'.
         # The simpliest is "~/user/"
-        self.file_path = ".."
-        self.connector = conn
+        try:
+            self.file_path = ".."
+            self.meta_info = config['meta_info']
+            self.meta_modifiedIds = config['meta_modifiedIds']
+        except KeyError as e:
+            raise sys_exception.BadStateError("context missing field %s, abort" % e.args[0])
 
     # Read metadata
     def load_meta(self):
         # print "load meta"
-        with open(self.connector.meta_info, 'r') as f:
+        with open(self.meta_info, 'r') as f:
             meta_info = f.readline()
         return json.loads(meta_info)
 
     # Commit metadata
     def commit_meta(self, new_meta):
-        open(self.connector.meta_info, 'w').close()
-        f = open(self.connector.meta_info, 'w')
+        open(self.meta_info, 'w').close()
+        f = open(self.meta_info, 'w')
         f.write(json.dumps(new_meta))
         f.close()
         print "meta data committed"
 
 
-    def update(self, to_table, from_table,vlist):
+    def update(self, to_table, from_table, vlist):
         print "update metadata."
         _meta = self.load_meta()
         _meta['table_map'][to_table] = from_table, vlist
@@ -33,12 +38,7 @@ class MetadataManager(object):
         self.commit_meta(_meta)
 
     def load_modified(self):
-        '''
-        @summary: helper function to load modified information from disk
-        @param connector: the connector obj
-        @result: return dictionary of JSON format
-        '''
-        with open(self.connector.meta_modifiedIds, 'r') as f:
+        with open(self.meta_modifiedIds, 'r') as f:
             meta_modifiedIds = f.readline()
         return json.loads(meta_modifiedIds)
 
@@ -56,6 +56,7 @@ class MetadataManager(object):
         return modified_id
 
     def load_parent_id(self,table_name):
+        parent_vid_lis = None
         try:
             _meta = self.load_meta()
             parent_vid_lis = _meta['table_map'][table_name]
@@ -64,10 +65,8 @@ class MetadataManager(object):
             # parent_vid = "\'{%s}\'" % ",".join(str(x) for x in parent_vid_lis)
             return parent_vid_lis
         except KeyError:
-            parent_vid_lis = None
-            error_msg = KeyError.args
-            raise ValueError(error_msg)
-            return
+            raise sys_exception.BadStateError("meta information missing field %s, abort" % e.args[0])
+            return None
 
     def load_table_create_time(self,table_name):
         # load the table creat time

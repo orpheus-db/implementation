@@ -4,35 +4,41 @@ class VersionManager(object):
     def __init__(self, conn):
         self.conn = conn;
 
-    def create_version_graph(self, table_name):
+    def init_version_graph_dataset(self, dataset, list_of_rid):
         # using CREATE SQL command
         # table name = graph_name = dataset_name + "version_graph" (or any nicer name..)
-        print "create_version_graph"
+        print "Initializing version graph"
+        self.conn.refresh_cursor()
+        init_version_sql = "INSERT INTO %s VALUES \
+                            (1, %s, '{-1}', '{}', '%s', '%s', 'init commit');" % (dataset + "_version", str(len(list_of_rid)), str(datetime.datetime.now()), str(datetime.datetime.now()))
+        self.conn.cursor.execute(init_version_sql)
+        self.conn.connect.commit()   
 
-    def create_index_table(self, table_name):
-        print "create_index_table"
+    def init_index_table_dataset(self, dataset, list_of_rid):
+        print "Initializing indextbl"
+        self.conn.refresh_cursor()
+        # insert into indexTbl values ('{1,3,5}', '{1}')
+        init_indextbl_sql = "INSERT INTO %s \
+                             VALUES \
+                             ('{1}', '{%s}');" % (dataset + "_indexTbl", str(",".join(map(str, list_of_rid))))
+        self.conn.cursor.execute(init_indextbl_sql)
+        self.conn.connect.commit()
 
-    def update_version_graph(self, version_graph_name,num_of_records,parent_list,table_create_time,msg):
+    def update_version_graph(self, version_graph_name, num_of_records, parent_list, table_create_time, msg):
         print "update_version_graph"
         # create new version
-        parent_list_string='\'{'+', '.join(parent_list)+'}\''
+        parent_list_string='\'{' + ', '.join(parent_list) + '}\''
         commit_time = str(datetime.datetime.now())
         max_vid = self.get_curt_max_vid(version_graph_name)
         curt_vid = max_vid + 1
-        values = "(%s,%s,%s, %s, %s, %s,%s)" % (
-        curt_vid,
-        num_of_records,parent_list_string,
-        "'{}'",
-        "'%s'" % table_create_time,
-        "'%s'" % commit_time,
-        "'%s'" % msg)
+        values = "(%s, %s, %s, %s, %s, %s, %s)" % (curt_vid, num_of_records, parent_list_string, "'{}'", "'%s'" % table_create_time, "'%s'" % commit_time, "'%s'" % msg)
         sql = "INSERT INTO %s VALUES %s"% (version_graph_name, values)
-        print sql
+        # print sql
         self.conn.cursor.execute(sql)
 
         # update child column in the parent tuple
         target_parent_vid='{' + ','.join(parent_list) + '}'
-        sql = "UPDATE %s SET children = ARRAY_APPEND(children, %s) WHERE vid = ANY('%s' :: int[]);" %(version_graph_name, curt_vid,target_parent_vid)
+        sql = "UPDATE %s SET children = ARRAY_APPEND(children, %s) WHERE vid = ANY('%s' :: int[]);" %(version_graph_name, curt_vid, target_parent_vid)
         self.conn.cursor.execute(sql)
         self.conn.connect.commit()
         return curt_vid

@@ -1,6 +1,12 @@
+# Server information
 host: localhost
-port: 5433
-db: postgres  
+port: 5432
+
+# Orpheus Home dir
+orpheus_home: /Users/Wesley/Documents/git/orpheus-db/implementation/
+
+# Meta dir 
+# TODO: hide them under orpheus_home
 log_path: .meta/logs/log.out
 user_log: .meta/user_log
 commit_path: .meta/commit_tables
