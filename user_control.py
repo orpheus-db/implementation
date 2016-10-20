@@ -1,6 +1,6 @@
 from encryption import EncryptionTool
 
-import exceptions as sys_exception
+import orpheus_exceptions as sys_exception
 import json
 
 class LocalUserExistError(Exception):

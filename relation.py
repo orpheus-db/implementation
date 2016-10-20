@@ -35,38 +35,53 @@ class RelationManager(object):
       _attributes_type = map(lambda x: str(x[1]), _datatable_attribute_types)
       return _attributes, _attributes_type
 
-    # Select the records into a new table
-    def checkout_table(self, vlist, datatable, indextable, to_table, ignore):
+
+    # to_file needs an absolute path
+    def checkout(self, vlist, datatable, indextable, to_table=None, to_file=None, delimeters=',', header=False, ignore=False):
         # sanity check
-        if RelationManager.reserve_table_check(to_table):
-          raise ReservedRelationError(to_table)
-          return
-          
-        if self.check_table_exists(to_table): # ask if user want to overwrite
-            raise RelationOverwriteError(to_table)
+        if to_table:
+          if RelationManager.reserve_table_check(to_table):
+            raise ReservedRelationError(to_table)
             return
+          if self.check_table_exists(to_table): # ask if user want to overwrite
+              raise RelationOverwriteError(to_table)
+              return
         if not self.check_table_exists(datatable):
             raise RelationNotExistError(datatable)
             return
 
         _attributes,_attributes_type = self.get_datatable_attribute(datatable)
-
         recordlist = self.select_records_of_version_list(vlist, indextable)
-        print recordlist
+
+        if to_table:
+          self.checkout_table(_attributes, recordlist, datatable, to_table, ignore)
+        if to_file:
+          self.checkout_file(_attributes, recordlist, datatable, to_file, delimeters, header)
+
+        self.conn.connect.commit()
+
+    def checkout_file(self, attributes, ridlist, datatable, to_file, delimeters, header):
+      # COPY products_273 TO '/tmp/products_199.csv' DELIMITER ',' CSV HEADER;
+        sql = "COPY %s (%s) TO '%s' DELIMITER '%s' CSV HEADER;" if header else "COPY %s (%s) TO '%s' DELIMITER '%s' CSV;" 
+        sql = sql % (datatable, ','.join(attributes), to_file, delimeters)
+        self.conn.cursor.execute(sql)
+
+    # Select the records into a new table
+    def checkout_table(self, attributes, ridlist, datatable, to_table, ignore):
         if not ignore:
             sql = "SELECT rid,%s INTO %s FROM %s WHERE rid = ANY('%s'::int[]);" \
-              % (', '.join(_attributes), to_table, datatable, recordlist)
+              % (', '.join(attributes), to_table, datatable, ridlist)
         else:
             # TODO
             self.get_primary_key(datatable)
             sql = "SELECT rid,%s INTO %s FROM %s WHERE rid = ANY('%s'::int[]);" \
-                  % (', '.join(_attributes), to_table, datatable, recordlist)
+                  % (', '.join(attributes), to_table, datatable, ridlist)
         # print sql
         self.conn.cursor.execute(sql)
-        sql = "SELECT %s,rid FROM %s;"%(', '.join(_attributes),to_table)
+        sql = "SELECT %s,rid FROM %s;"%(', '.join(attributes),to_table)
         # print sql
         self.conn.cursor.execute(sql)
-        self.conn.connect.commit()
+        
 
     def drop_table(self, table_name):
         if not self.check_table_exists(table_name):
@@ -81,6 +96,17 @@ class RelationManager(object):
       select_sql = "SELECT rid from %s;" % table_name
       self.conn.cursor.execute(select_sql)
       return [x[0] for x in self.conn.cursor.fetchall()]
+
+    # return all records that is in table1 not in table2
+    def select_complement_table(self, table1, table2):
+      sql = "TABLE %s EXCEPT TABLE %s;" % (table1, table2)
+      self.conn.cursor.execute(sql)
+      return self.conn.cursor.fetchall()
+
+    def select_intersection_table(self, table1, table2, projection='rid'):
+      sql = "SELECT %s FROM (SELECT * FROM %s intersect SELECT * FROM %s) as foo;" % (projection, table1, table2)
+      self.conn.cursor.execute(sql)
+      return self.conn.cursor.fetchall()
 
     def create_relation(self,table_name):
       # Use CREATE SQL COMMAND
@@ -99,17 +125,22 @@ class RelationManager(object):
       # print result[0][0]
       return result[0][0]
 
-    def update_datatable(self, parent_name,table_name,modified_pk):
+    def update_datatable(self, datatable_name, records):
         print "update_datatable"
-        modified_id_string = '{' + ', '.join(modified_pk) + '}'
-        _attributes, _attributes_type = self.get_datatable_attribute(parent_name)
-        sql =  "INSERT INTO %s (%s) (SELECT %s FROM %s t1 WHERE t1.%s = ANY('%s' :: int[])) RETURNING rid; " \
-             %(parent_name, ', '.join(_attributes), ', '.join(_attributes),table_name,"employee_id",modified_id_string)
-        print sql
+        # modified_id_string = '{' + ', '.join(modified_pk) + '}'
+        _attributes, _attributes_type = self.get_datatable_attribute(datatable_name)
+
+    #     INSERT INTO films (code, title, did, date_prod, kind) VALUES
+    # ('B6717', 'Tampopo', 110, '1985-02-10', 'Comedy'),
+    # ('HG120', 'The Dinner Game', 140, DEFAULT, 'Comedy');
+        # sql =  "INSERT INTO %s (%s) (SELECT %s FROM %s t1 WHERE t1.%s = ANY('%s' :: int[])) RETURNING rid; " \
+        #      %(datatable_name, ', '.join(_attributes), ', '.join(_attributes), table_name, "employee_id", modified_id_string)
+        # print sql
+        sql = "INSERT INTO %s (%s) VALUES %s RETURNING rid;" % (datatable_name, ', '.join(_attributes), ','.join(records))
         self.conn.cursor.execute(sql)
         new_rids=[t[0] for t in self.conn.cursor.fetchall()]
         self.conn.connect.commit()
-        print new_rids
+        # print new_rids
         return new_rids
 
     def clean(self):

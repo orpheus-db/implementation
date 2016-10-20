@@ -15,7 +15,7 @@ from version import VersionManager
 from metadata import MetadataManager
 from user_control import UserManager
 
-from exceptions import BadStateError, NotImplementedError
+from orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
 
 class Context():
     def __init__(self):
@@ -148,8 +148,9 @@ def drop(ctx, dataset):
 
 @cli.command()
 @click.option('--dataset', '-d', help='Specify the dataset to show')
+@click.option('--table_name', '-t', help='Specify the table to show')
 @click.pass_context
-def ls(ctx, dataset):
+def ls(ctx, dataset, table_name):
     # if no dataset specified, show the list of dataset the current user owns
     try:
         conn = DatabaseManager(ctx.obj)
@@ -166,11 +167,18 @@ def ls(ctx, dataset):
 @cli.command()
 @click.argument('dataset')
 @click.option('--vlist', '-v', multiple=True, required=True, help='Specify version you want to clone, use multiple -v for multiple version checkout')
-@click.option('--to_table', '-t', required=True, help='Specify the table name to checkout to.')
-@click.option('--ignore', '-i', help='If set, clone versions into table will ignore duplicated key', is_flag=True)
+@click.option('--to_table', '-t', help='Specify the table name to checkout to.')
+@click.option('--to_file', '-f', help='Specify the location of file')
+@click.option('--delimeters', '-d', default=',', help='Specify the delimeter used for checkout file')
+@click.option('--header', '-h', is_flag=True, help="If set, the first line of checkout file will be the header")
+@click.option('--ignore', '-i', is_flag=True, help='If set, clone versions into table will ignore duplicated key')
 @click.pass_context
-def clone(ctx, dataset, vlist, to_table, ignore):
+def clone(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore):
     # check ctx.obj has permission or not
+    if not to_table and not to_file:
+        raise BadParametersError("Need a destination, either a table or a file")
+        return
+
     try:
         conn = DatabaseManager(ctx.obj)
         relation = RelationManager(conn)
@@ -178,29 +186,38 @@ def clone(ctx, dataset, vlist, to_table, ignore):
         click.secho(str(e), fg='red')
         return
 
+    abs_path = ctx.obj['orpheus_home'] + to_file if to_file and to_file[0] != '/' else to_file
+
     try:
         metadata = MetadataManager(ctx.obj)
-
+        meta_obj = metadata.load_meta()
         datatable = dataset + "_datatable"
         indextable = dataset + "_indexTbl"
-        relation.checkout_table(vlist, datatable, indextable, to_table, ignore)
+
+        relation.checkout(vlist, datatable, indextable, to_table=to_table, to_file=abs_path, delimeters=delimeters, header=header, ignore=ignore)
         # update meta info
         AccessManager.grant_access(to_table, conn.user)
-
-        metadata.update(to_table,dataset,vlist) # meta information only keep track of dataset 
-        click.echo("Table %s has been cloned from version %s" % (to_table, ",".join(vlist)))
+        metadata.update(to_table, abs_path, dataset, vlist, meta_obj)
+        metadata.commit_meta(meta_obj)
+        if to_table:
+            click.echo("Table %s has been cloned from version %s" % (to_table, ",".join(vlist)))
+        if to_file:
+            click.echo("File %s has been cloned from version %s" % (to_file, ",".join(vlist)))
     except Exception as e:
-        relation.drop_table(to_table)
+        if to_table:
+            relation.drop_table(to_table)
+        if to_file:
+            pass # delete the file
         click.secho(str(e), fg='red')
 
     
 
 @cli.command()
 @click.option('--msg','-m', help='Commit message', required = True)
-@click.option('--table_name','-t', help='The table to be committed', required = True)
+@click.option('--table_name','-t', help='The table to be committed', required=True) # changed to optional later
+@click.option('--file_name', '-f', help='The file to be committed')
 @click.pass_context
-def commit(ctx, msg, table_name):
-
+def commit(ctx, msg, table_name, file_name):
     try:
         conn = DatabaseManager(ctx.obj)
         relation = RelationManager(conn)
@@ -209,7 +226,7 @@ def commit(ctx, msg, table_name):
     except Exception as e:
         click.secho(str(e), fg='red')
 
-    if not relation.check_table_exists(table_name):
+    if table_name and not relation.check_table_exists(table_name):
         click.secho(str(relation.RelationNotExistError(table_name)), fg='red')
         return
 
@@ -226,15 +243,38 @@ def commit(ctx, msg, table_name):
         return
     parent_name = parent_vid_list[0]
     parent_list = parent_vid_list[1]
+    datatable_name = parent_name + "_datatable"
+    indextable_name = parent_name + "_indexTbl"
+    graph_name = parent_name + "_version"
+
+    # find the new records
+    try:
+        lis_of_newrecords = relation.select_complement_table(table_name, datatable_name)
+        if not lis_of_newrecords:
+            click.echo("Nothing to commit")
+            return
+        lis_of_newrecords = [map(str, list(x[1:])) for x in lis_of_newrecords] # rid is always at the very first field
+        lis_of_newrecords = map(lambda x : '(' + ','.join(x) + ')', lis_of_newrecords)
+        # insert them into datatable
+        new_rids = relation.update_datatable(datatable_name, lis_of_newrecords)
+
+        # find the existing rids
+        existing_rids = [t[0] for t in relation.select_intersection_table(table_name, datatable_name)]
+        
+        print new_rids, existing_rids
+        current_version_rid = existing_rids + new_rids
+    except:
+        print "insert new records error"
+        return
 
 
     # update corresponding version graph
     try:
-        graph_name = parent_name + "_version"
+        
         num_of_records = relation.get_number_of_rows(table_name)
         table_create_time = metadata.load_table_create_time(table_name)
         # TODO use real version graph name
-        curt_vid = version.update_version_graph("version",num_of_records,parent_list,table_create_time,msg)
+        curt_vid = version.update_version_graph("version", num_of_records, parent_list,table_create_time,msg)
     except:
         print "update version graph error"
         return
@@ -243,8 +283,6 @@ def commit(ctx, msg, table_name):
     # update index table
     try:
         modified_id = map(str, metadata.load_modified_id(table_name))
-        new_rids = relation.update_datatable(parent_name,table_name,modified_id)
-        indextable_name = parent_name + "_indexTbl"
         version.update_index_table(parent_name,table_name,parent_name,parent_list,curt_vid,modified_id,new_rids)
     except Exception as e:
         print e.args

@@ -6,8 +6,7 @@ import sys
 import json
 
 from encryption import EncryptionTool
-
-from exceptions import BadStateError, NotImplementedError
+from orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
 
 # Database Manager exceptions
 class UserNotSetError(Exception):

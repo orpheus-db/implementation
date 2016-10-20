@@ -1,8 +1,9 @@
 import json
 import datetime
-import exceptions as sys_exception
+import orpheus_exceptions as sys_exception
 
 class MetadataManager(object):
+    #TODO: refactor this class to static class for performance issue
     def __init__(self, config):
     # def __init__(self,user):
         # file path is in some format of 'user'.
@@ -29,13 +30,25 @@ class MetadataManager(object):
         f.close()
         print "meta data committed"
 
+    # can change to static method
+    def update(self, to_table, to_file, dataset, vlist, old_meta):
+        if to_table:
+            self.update_tablemap(to_table, dataset, vlist, old_meta)
+        if to_file:
+            self.update_filemap(to_file, dataset, vlist, old_meta)
+        # return old_meta
 
-    def update(self, to_table, from_table, vlist):
+    def update_tablemap(self, to_table, dataset, vlist, old_meta):
         print "update metadata."
-        _meta = self.load_meta()
-        _meta['table_map'][to_table] = from_table, vlist
-        _meta['table_created_time'][to_table] = str(datetime.datetime.now())
-        self.commit_meta(_meta)
+        old_meta['table_map'][to_table] = dataset, vlist
+        old_meta['table_created_time'][to_table] = str(datetime.datetime.now())
+        # self.commit_meta(_meta)
+        return old_meta
+
+    def update_filemap(self, to_file, dataset, vlist, old_meta):
+        old_meta['file_map'][to_file] = dataset, vlist
+        # keep track of time?
+        return old_meta
 
     def load_modified(self):
         with open(self.meta_modifiedIds, 'r') as f:
