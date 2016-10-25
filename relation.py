@@ -98,8 +98,11 @@ class RelationManager(object):
       return [x[0] for x in self.conn.cursor.fetchall()]
 
     # return all records that is in table1 not in table2
-    def select_complement_table(self, table1, table2):
-      sql = "TABLE %s EXCEPT TABLE %s;" % (table1, table2)
+    def select_complement_table(self, table1, table2, attributes=None):
+      if not attributes:
+        sql = "TABLE %s EXCEPT TABLE %s;" % (table1, table2)
+      else:
+        sql = "(SELECT %s from %s) EXCEPT (SELECT %s from %s);" % (','.join(attributes), table1, ','.join(attributes), table2)
       self.conn.cursor.execute(sql)
       return self.conn.cursor.fetchall()
 
@@ -108,9 +111,24 @@ class RelationManager(object):
       self.conn.cursor.execute(sql)
       return self.conn.cursor.fetchall()
 
+    def convert_csv_to_table(self, file_path, destination_table, attributes, delimeters=',', header=False):
+      sql = "COPY %s (%s) FROM '%s' DELIMITER '%s' CSV HEADER;" % (destination_table, ",".join(attributes), file_path, delimeters) if header \
+          else "COPY %s (%s) FROM '%s' DELIMITER '%s' CSV;" % (destination_table, ",".join(attributes), file_path, delimeters)
+      self.conn.cursor.execute(sql)
+      self.connect.commit()
+
     def create_relation(self,table_name):
       # Use CREATE SQL COMMAND
       print "create_relation"
+
+    # will drop existing table to create the new table 
+    def create_relation_force(self, table_name, schema):
+      if self.check_table_exists(table_name):
+        self.drop_table(table_name)
+      sql = "CREATE TABLE %s ( like %s including all);" % (table_name, schema)
+      self.conn.cursor.execute(sql)
+      self.conn.connect.commit()
+
 
     def check_table_exists(self,table_name):
       # SQL to check the exisistence of the table

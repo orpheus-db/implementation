@@ -214,10 +214,23 @@ def clone(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore):
 
 @cli.command()
 @click.option('--msg','-m', help='Commit message', required = True)
-@click.option('--table_name','-t', help='The table to be committed', required=True) # changed to optional later
-@click.option('--file_name', '-f', help='The file to be committed')
+@click.option('--table_name','-t', help='The table to be committed') # changed to optional later
+@click.option('--file_name', '-f', help='The file to be committed', type=click.Path(exists=True))
+@click.option('--schema', '-s', help='Specify the schema (existed table) of this input data')
+@click.option('--delimeters', '-d', default=',', help='Specify the delimeter used for checkout file')
+@click.option('--header', '-h', is_flag=True, help="If set, the first line of checkout file will be the header")
 @click.pass_context
-def commit(ctx, msg, table_name, file_name):
+def commit(ctx, msg, table_name, file_name, schema, delimeters, header):
+
+    # sanity check
+    if not table_name and not file_name:
+        raise BadParametersError("Need a source, either a table or a file")
+        return
+
+    if table_name and file_name:
+        raise NotImplementedError("Supporting both file and table commit is not implemented")
+        return
+
     try:
         conn = DatabaseManager(ctx.obj)
         relation = RelationManager(conn)
@@ -247,48 +260,58 @@ def commit(ctx, msg, table_name, file_name):
     indextable_name = parent_name + "_indexTbl"
     graph_name = parent_name + "_version"
 
-    # find the new records
-    try:
-        lis_of_newrecords = relation.select_complement_table(table_name, datatable_name)
-        if not lis_of_newrecords:
-            click.echo("Nothing to commit")
+    # exclduing rid
+    
+
+    # convert file into tmp_table first, then set the table_name to tmp_table
+    if file_name:
+        if not schema:
+            raise NotImplementedError("Need a schema source for file %s" %file_name)
             return
-        lis_of_newrecords = [map(str, list(x[1:])) for x in lis_of_newrecords] # rid is always at the very first field
-        lis_of_newrecords = map(lambda x : '(' + ','.join(x) + ')', lis_of_newrecords)
-        # insert them into datatable
-        new_rids = relation.update_datatable(datatable_name, lis_of_newrecords)
-
-        # find the existing rids
-        existing_rids = [t[0] for t in relation.select_intersection_table(table_name, datatable_name)]
-        
-        print new_rids, existing_rids
-        current_version_rid = existing_rids + new_rids
-    except:
-        print "insert new records error"
-        return
+        file_path = ctx.obj['orpheus_home'] + inputfile
+        relation.create_relation_force('tmp_table', schema)
+        _attributes, _attributes_type = self.get_datatable_attribute(schema)
+        relation.convert_csv_to_table(file_path, 'tmp_table', _attributes , delimeters=delimeters, header=header)
+        table_name = 'tmp_table'
 
 
-    # update corresponding version graph
-    try:
-        
-        num_of_records = relation.get_number_of_rows(table_name)
-        table_create_time = metadata.load_table_create_time(table_name)
-        # TODO use real version graph name
-        curt_vid = version.update_version_graph("version", num_of_records, parent_list,table_create_time,msg)
-    except:
-        print "update version graph error"
-        return
+    if table_name:
+        # find the new records
+        try:
+            _attributes, _attributes_type = self.get_datatable_attribute(datatable_name)
+            commit_attributes, _ = self.get_datatable_attribute(table_name)
+            if not set(_attributes) - set(commit_attributes):
+                raise BadStateError("%s and %s have different attributes" % (table_name, datatable_name))
+            lis_of_newrecords = relation.select_complement_table(table_name, datatable_name, attributes=_attributes)
+            if not lis_of_newrecords:
+                click.echo("Nothing to commit")
+                return
+            lis_of_newrecords = [map(str, list(x)) for x in lis_of_newrecords]
+            lis_of_newrecords = map(lambda x : '(' + ','.join(x) + ')', lis_of_newrecords)
+            # insert them into datatable
+            new_rids = relation.update_datatable(datatable_name, lis_of_newrecords)
 
+            # find the existing rids
+            existing_rids = [t[0] for t in relation.select_intersection_table(table_name, datatable_name)]
+            
+            print new_rids, existing_rids
+            current_version_rid = existing_rids + new_rids
 
-    # update index table
-    try:
-        modified_id = map(str, metadata.load_modified_id(table_name))
-        version.update_index_table(parent_name,table_name,parent_name,parent_list,curt_vid,modified_id,new_rids)
-    except Exception as e:
-        print e.args
-        print "update index table error"
-        return
+            num_of_records = relation.get_number_of_rows(table_name)
+            table_create_time = metadata.load_table_create_time(table_name)
 
+            # update version graph
+            curt_vid = version.update_version_graph(graph_name, num_of_records, parent_list, table_create_time, msg)
+
+            # update index table
+            version.update_index_table(indextable_name, curt_vid, current_version_rid)
+        except Exception as e:
+            click.secho(str(e), fg='red')
+            return
+
+    if file_name:
+        # need to drop tmp_table? But dt matter
+        pass
     # TODO: Before return, we may also need to clean table if any.
 
     click.echo("commited")

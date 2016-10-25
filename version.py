@@ -32,7 +32,7 @@ class VersionManager(object):
         max_vid = self.get_curt_max_vid(version_graph_name)
         curt_vid = max_vid + 1
         values = "(%s, %s, %s, %s, %s, %s, %s)" % (curt_vid, num_of_records, parent_list_string, "'{}'", "'%s'" % table_create_time, "'%s'" % commit_time, "'%s'" % msg)
-        sql = "INSERT INTO %s VALUES %s"% (version_graph_name, values)
+        sql = "INSERT INTO %s VALUES %s;"% (version_graph_name, values)
         # print sql
         self.conn.cursor.execute(sql)
 
@@ -43,41 +43,49 @@ class VersionManager(object):
         self.conn.connect.commit()
         return curt_vid
 
-    def update_index_table(self, index_table_name,table_name, parent_table_name,parent_vlist,new_vid,modified_id,new_rids):
-        print "update index table"
-        # TODO use specific primary key name.
+    # too complicated
+    # def update_index_table(self, index_table_name,table_name, parent_table_name,parent_vlist,new_vid,modified_id,new_rids):
+    #     print "update index table"
+    #     # TODO use specific primary key name.
 
-        # get all not changed pk in the cloned table
-        modified_id_string = '{'+', '.join(modified_id)+'}'
-        sql = "SELECT %s FROM %s WHERE NOT %s = ANY('%s' :: int[]);" %("employee_id", table_name,"employee_id", modified_id_string)
+    #     # get all not changed pk in the cloned table
+    #     modified_id_string = '{'+', '.join(modified_id)+'}'
+    #     sql = "SELECT %s FROM %s WHERE NOT %s = ANY('%s' :: int[]);" %("employee_id", table_name,"employee_id", modified_id_string)
+    #     self.conn.cursor.execute(sql)
+    #     all_not_changed_pk = [t[0] for t in self.conn.cursor.fetchall()]
+
+    #     # get all rid-pk mapping in the cloned table from source table
+    #     mappingTable = parent_table_name + "_mapTbl"
+    #     rid_list = self.select_records_of_version_list(parent_vlist)
+    #     sql = "SELECT rid, %s INTO %s FROM %s t1 WHERE t1.rid = ANY('%s' :: int[]); " %("employee_id", mappingTable, parent_table_name,rid_list)
+    #     self.conn.cursor.execute(sql)
+
+
+    #     # get all not changed rid, this is one part of new version's rid
+    #     all_not_changed_pk_string = '{'+', '.join(map(str,all_not_changed_pk))+'}'
+    #     sql = "SELECT rid FROM %s WHERE %s = ANY('%s' :: int[]);  "%(mappingTable,"employee_id",all_not_changed_pk_string)
+    #     self.conn.cursor.execute(sql)
+    #     all_not_changed_rid = [t[0] for t in self.conn.cursor.fetchall()]
+    #     print 'not changed rids:'
+    #     print all_not_changed_rid
+
+    #     print "new rids:"
+    #     print new_rids
+    #     all_rids = all_not_changed_rid + new_rids
+    #     sql = 'INSERT INTO %s VALUES (ARRAY[%s], ARRAY[%s])' % (index_table_name, new_vid, all_rids)
+    #     print sql
+    #     self.conn.cursor.execute(sql)
+
+    #     drop_sql = "DROP TABLE %s" % mappingTable
+    #     self.conn.cursor.execute(drop_sql)
+    #     self.conn.connect.commit()
+
+    def update_index_table(self, index_table_name, new_vid, new_rids):
+        sql = 'INSERT INTO %s VALUES (ARRAY[%s], ARRAY[%s])' % (index_table_name, new_vid, new_rids)
         self.conn.cursor.execute(sql)
-        all_not_changed_pk = [t[0] for t in self.conn.cursor.fetchall()]
-
-        # get all rid-pk mapping in the cloned table from source table
-        mappingTable = parent_table_name + "_mapTbl"
-        rid_list = self.select_records_of_version_list(parent_vlist)
-        sql = "SELECT rid, %s INTO %s FROM %s t1 WHERE t1.rid = ANY('%s' :: int[]); " %("employee_id", mappingTable, parent_table_name,rid_list)
-        self.conn.cursor.execute(sql)
-
-
-        # get all not changed rid, this is one part of new version's rid
-        all_not_changed_pk_string = '{'+', '.join(map(str,all_not_changed_pk))+'}'
-        sql = "SELECT rid FROM %s WHERE %s = ANY('%s' :: int[]);  "%(mappingTable,"employee_id",all_not_changed_pk_string)
-        self.conn.cursor.execute(sql)
-        all_not_changed_rid = [t[0] for t in self.conn.cursor.fetchall()]
-        print 'not changed rids:'
-        print all_not_changed_rid
-
-        print "new rids:"
-        print new_rids
-        all_rids = all_not_changed_rid + new_rids
-        sql = 'INSERT INTO %s VALUES (ARRAY[%s], ARRAY[%s])' % (index_table_name, new_vid, all_rids)
-        print sql
-        self.conn.cursor.execute(sql)
-
-        drop_sql = "DROP TABLE %s" % mappingTable
-        self.conn.cursor.execute(drop_sql)
         self.conn.connect.commit()
+
+
 
 
     def clean(self):

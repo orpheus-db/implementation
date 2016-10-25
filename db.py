@@ -83,8 +83,9 @@ class DatabaseManager():
             # this is ok since table has been created before
             self.refresh_cursor()
 
+
         try:
-            self.cursor.execute("INSERT INTO %s values('%s');")
+            self.cursor.execute("INSERT INTO %s values('%s');" % (self.user + '.datasets', dataset))
         except psycopg2.IntegrityError: # happens when inserting duplicate key
             raise DatasetExistsError(dataset, self.user)
             return
