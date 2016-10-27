@@ -172,8 +172,9 @@ def ls(ctx, dataset, table_name):
 @click.option('--delimeters', '-d', default=',', help='Specify the delimeter used for checkout file')
 @click.option('--header', '-h', is_flag=True, help="If set, the first line of checkout file will be the header")
 @click.option('--ignore', '-i', is_flag=True, help='If set, clone versions into table will ignore duplicated key')
+@click.option('--force', '-F', is_flag=True, help='If set, forcefully drop the table and create a new one')
 @click.pass_context
-def clone(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore):
+def clone(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore, force):
     # check ctx.obj has permission or not
     if not to_table and not to_file:
         raise BadParametersError("Need a destination, either a table or a file")
@@ -204,7 +205,8 @@ def clone(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore):
         if to_file:
             click.echo("File %s has been cloned from version %s" % (to_file, ",".join(vlist)))
     except Exception as e:
-        if to_table:
+        print e.args
+        if to_table and force:
             relation.drop_table(to_table)
         if to_file:
             pass # delete the file
@@ -234,11 +236,11 @@ def commit(ctx, msg, table_name, file_name, schema, delimeters, header):
     try:
         conn = DatabaseManager(ctx.obj)
         relation = RelationManager(conn)
-        metadata = MetadataManager(conn)
+        metadata = MetadataManager(conn.config)
         version = VersionManager(conn)
     except Exception as e:
         click.secho(str(e), fg='red')
-
+        return
     if table_name and not relation.check_table_exists(table_name):
         click.secho(str(relation.RelationNotExistError(table_name)), fg='red')
         return
@@ -270,7 +272,7 @@ def commit(ctx, msg, table_name, file_name, schema, delimeters, header):
             return
         file_path = ctx.obj['orpheus_home'] + inputfile
         relation.create_relation_force('tmp_table', schema)
-        _attributes, _attributes_type = self.get_datatable_attribute(schema)
+        _attributes, _attributes_type = relation.get_datatable_attribute(schema)
         relation.convert_csv_to_table(file_path, 'tmp_table', _attributes , delimeters=delimeters, header=header)
         table_name = 'tmp_table'
 
@@ -278,11 +280,12 @@ def commit(ctx, msg, table_name, file_name, schema, delimeters, header):
     if table_name:
         # find the new records
         try:
-            _attributes, _attributes_type = self.get_datatable_attribute(datatable_name)
-            commit_attributes, _ = self.get_datatable_attribute(table_name)
-            if not set(_attributes) - set(commit_attributes):
-                raise BadStateError("%s and %s have different attributes" % (table_name, datatable_name))
+            _attributes, _attributes_type = relation.get_datatable_attribute(datatable_name)
+            commit_attributes, _ = relation.get_datatable_attribute(table_name)
+            if len(set(_attributes) - set(commit_attributes)) > 0:
+                raise BadStateError("%s and %s have different attributes" % (table_name, parent_name))
             lis_of_newrecords = relation.select_complement_table(table_name, datatable_name, attributes=_attributes)
+            print "Found %s new records"
             if not lis_of_newrecords:
                 click.echo("Nothing to commit")
                 return
@@ -294,8 +297,8 @@ def commit(ctx, msg, table_name, file_name, schema, delimeters, header):
             # find the existing rids
             existing_rids = [t[0] for t in relation.select_intersection_table(table_name, datatable_name)]
             
-            print new_rids, existing_rids
             current_version_rid = existing_rids + new_rids
+            
 
             num_of_records = relation.get_number_of_rows(table_name)
             table_create_time = metadata.load_table_create_time(table_name)

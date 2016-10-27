@@ -25,7 +25,7 @@ class VersionManager(object):
         self.conn.connect.commit()
 
     def update_version_graph(self, version_graph_name, num_of_records, parent_list, table_create_time, msg):
-        print "update_version_graph"
+        # print "update_version_graph"
         # create new version
         parent_list_string='\'{' + ', '.join(parent_list) + '}\''
         commit_time = str(datetime.datetime.now())
@@ -81,7 +81,7 @@ class VersionManager(object):
     #     self.conn.connect.commit()
 
     def update_index_table(self, index_table_name, new_vid, new_rids):
-        sql = 'INSERT INTO %s VALUES (ARRAY[%s], ARRAY[%s])' % (index_table_name, new_vid, new_rids)
+        sql = 'INSERT INTO %s VALUES (ARRAY[%s], ARRAY%s);' % (index_table_name, new_vid, new_rids)
         self.conn.cursor.execute(sql)
         self.conn.connect.commit()
 
@@ -92,11 +92,11 @@ class VersionManager(object):
         print "version clean"
 
     def get_curt_max_vid(self,version_graph_name):
-        sql = "SELECT MAX(vid) FROM %s" % version_graph_name
-        print sql
+        sql = "SELECT MAX(vid) FROM %s;" % version_graph_name
+        # print sql
         self.conn.cursor.execute(sql)
         result = self.conn.cursor.fetchall()
-        print result
+        # print result
         return int(result[0][0])
 
     def select_records_of_version_list(self, vlist):

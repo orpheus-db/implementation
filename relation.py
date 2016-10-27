@@ -144,7 +144,7 @@ class RelationManager(object):
       return result[0][0]
 
     def update_datatable(self, datatable_name, records):
-        print "update_datatable"
+        # print "update_datatable"
         # modified_id_string = '{' + ', '.join(modified_pk) + '}'
         _attributes, _attributes_type = self.get_datatable_attribute(datatable_name)
 
