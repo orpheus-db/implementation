@@ -68,11 +68,12 @@ class MetadataManager(object):
                 return
         return modified_id
 
-    def load_parent_id(self,table_name):
+
+    def load_parent_id(self,table_name, mapping='table_map'):
         parent_vid_lis = None
         try:
             _meta = self.load_meta()
-            parent_vid_lis = _meta['table_map'][table_name]
+            parent_vid_lis = _meta[mapping][table_name]
             # print type(parent_vid_lis)
             # print type(parent_vid_lis[1])
             # parent_vid = "\'{%s}\'" % ",".join(str(x) for x in parent_vid_lis)

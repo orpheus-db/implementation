@@ -52,7 +52,7 @@ class RelationManager(object):
 
         _attributes,_attributes_type = self.get_datatable_attribute(datatable)
         recordlist = self.select_records_of_version_list(vlist, indextable)
-
+        print recordlist
         if to_table:
           self.checkout_table(_attributes, recordlist, datatable, to_table, ignore)
         if to_file:
@@ -61,9 +61,13 @@ class RelationManager(object):
         self.conn.connect.commit()
 
     def checkout_file(self, attributes, ridlist, datatable, to_file, delimeters, header):
-      # COPY products_273 TO '/tmp/products_199.csv' DELIMITER ',' CSV HEADER;
+        # COPY products_273 TO '/tmp/products_199.csv' DELIMITER ',' CSV HEADER;
+        # convert to a tmp_table first
+        if self.fcheck_table_exists('tmp_table'):
+          self.drop_table('tmp_table')
+        self.checkout_table(attributes, ridlist, datatable, 'tmp_table', None)
         sql = "COPY %s (%s) TO '%s' DELIMITER '%s' CSV HEADER;" if header else "COPY %s (%s) TO '%s' DELIMITER '%s' CSV;" 
-        sql = sql % (datatable, ','.join(attributes), to_file, delimeters)
+        sql = sql % ('tmp_table', ','.join(attributes), to_file, delimeters)
         self.conn.cursor.execute(sql)
 
     # Select the records into a new table
@@ -78,6 +82,7 @@ class RelationManager(object):
                   % (', '.join(attributes), to_table, datatable, ridlist)
         # print sql
         self.conn.cursor.execute(sql)
+
         sql = "SELECT %s,rid FROM %s;"%(', '.join(attributes),to_table)
         # print sql
         self.conn.cursor.execute(sql)
@@ -115,7 +120,7 @@ class RelationManager(object):
       sql = "COPY %s (%s) FROM '%s' DELIMITER '%s' CSV HEADER;" % (destination_table, ",".join(attributes), file_path, delimeters) if header \
           else "COPY %s (%s) FROM '%s' DELIMITER '%s' CSV;" % (destination_table, ",".join(attributes), file_path, delimeters)
       self.conn.cursor.execute(sql)
-      self.connect.commit()
+      self.conn.connect.commit()
 
     def create_relation(self,table_name):
       # Use CREATE SQL COMMAND
@@ -182,7 +187,7 @@ class RelationManager(object):
         # print sql
         self.conn.cursor.execute(sql)
         data = [','.join(map(str,x[0])) for x in self.conn.cursor.fetchall()]
-        data
+        # data
         return '{' + ','.join(data) + '}'
 
     def get_primary_key(self,tablename): #this method return nothing, what you want?

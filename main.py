@@ -205,7 +205,6 @@ def clone(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore, fo
         if to_file:
             click.echo("File %s has been cloned from version %s" % (to_file, ",".join(vlist)))
     except Exception as e:
-        print e.args
         if to_table and force:
             relation.drop_table(to_table)
         if to_file:
@@ -233,6 +232,7 @@ def commit(ctx, msg, table_name, file_name, schema, delimeters, header):
         raise NotImplementedError("Supporting both file and table commit is not implemented")
         return
 
+
     try:
         conn = DatabaseManager(ctx.obj)
         relation = RelationManager(conn)
@@ -245,12 +245,14 @@ def commit(ctx, msg, table_name, file_name, schema, delimeters, header):
         click.secho(str(relation.RelationNotExistError(table_name)), fg='red')
         return
 
+
     # load parent information about the table
     # We need to get the derivation information of the committed table;
     # Otherwise, in the multitable scenario, we do not know which datatable/version_graph/index_table
     # that we need to update information.
     try:
-        parent_vid_list = metadata.load_parent_id(table_name)
+        abs_path = ctx.obj['orpheus_home'] + file_name
+        parent_vid_list = metadata.load_parent_id(table_name) if table_name else metadata.load_parent_id(abs_path, mapping='file_map')
         click.echo("Parent dataset is %s " % parent_vid_list[0])
         click.echo("Parent versions are %s " % parent_vid_list[1])
     except Exception as e:
@@ -270,10 +272,10 @@ def commit(ctx, msg, table_name, file_name, schema, delimeters, header):
         if not schema:
             raise NotImplementedError("Need a schema source for file %s" %file_name)
             return
-        file_path = ctx.obj['orpheus_home'] + inputfile
+        
         relation.create_relation_force('tmp_table', schema)
         _attributes, _attributes_type = relation.get_datatable_attribute(schema)
-        relation.convert_csv_to_table(file_path, 'tmp_table', _attributes , delimeters=delimeters, header=header)
+        relation.convert_csv_to_table(abs_path, 'tmp_table', _attributes , delimeters=delimeters, header=header)
         table_name = 'tmp_table'
 
 
@@ -285,7 +287,7 @@ def commit(ctx, msg, table_name, file_name, schema, delimeters, header):
             if len(set(_attributes) - set(commit_attributes)) > 0:
                 raise BadStateError("%s and %s have different attributes" % (table_name, parent_name))
             lis_of_newrecords = relation.select_complement_table(table_name, datatable_name, attributes=_attributes)
-            print "Found %s new records"
+            print "Found %s new records" % lis_of_newrecords
             if not lis_of_newrecords:
                 click.echo("Nothing to commit")
                 return
