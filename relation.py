@@ -119,10 +119,11 @@ class RelationManager(object):
 
     # since the rid is hidden from the user, we need to select only the user visible attributes
     # perform by using inner join and select the rid, join_attributes is the attributes inner join will be joined on
+    # table2 should be the dataset datatable
     def select_intersection_table(self, table1, table2, join_attributes, projection='rid'):
       # SELECT rid FROM tmp_table INNER JOIN dataset1_datatable ON tmp_table.employee_id=dataset1_datatable.employee_id;
       join_clause = " AND ".join(["%s.%s=%s.%s" % (table1, attr, table2, attr) for attr in join_attributes])
-      sql = "SELECT %s FROM %s INNER JOIN %s on %s;" % (projection, table1, table2, join_clause)  
+      sql = "SELECT %s.%s FROM %s INNER JOIN %s on %s;" % (table2, projection, table1, table2, join_clause)  
       self.conn.cursor.execute(sql)
       return self.conn.cursor.fetchall()
 

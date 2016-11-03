@@ -245,13 +245,12 @@ def commit(ctx, msg, table_name, file_name, schema, delimeters, header):
         click.secho(str(relation.RelationNotExistError(table_name)), fg='red')
         return
 
-
     # load parent information about the table
     # We need to get the derivation information of the committed table;
     # Otherwise, in the multitable scenario, we do not know which datatable/version_graph/index_table
     # that we need to update information.
     try:
-        abs_path = ctx.obj['orpheus_home'] + file_name
+        abs_path = ctx.obj['orpheus_home'] + file_name if file_name else ctx.obj['orpheus_home']
         parent_vid_list = metadata.load_parent_id(table_name) if table_name else metadata.load_parent_id(abs_path, mapping='file_map')
         click.echo("Parent dataset is %s " % parent_vid_list[0])
         click.echo("Parent versions are %s " % parent_vid_list[1])
@@ -263,7 +262,6 @@ def commit(ctx, msg, table_name, file_name, schema, delimeters, header):
     datatable_name = parent_name + "_datatable"
     indextable_name = parent_name + "_indexTbl"
     graph_name = parent_name + "_version"
-    
 
     try:
         # convert file into tmp_table first, then set the table_name to tmp_table
@@ -305,11 +303,12 @@ def commit(ctx, msg, table_name, file_name, schema, delimeters, header):
 
             current_version_rid = existing_rids + new_rids
             
-            num_of_records = relation.get_number_of_rows(table_name)
+            # it can happen that there are duplicate in here
+            # num_of_records = relation.get_number_of_rows(table_name)
             table_create_time = metadata.load_table_create_time(table_name) if table_name != 'tmp_table' else None
 
             # update version graph
-            curt_vid = version.update_version_graph(graph_name, num_of_records, parent_list, table_create_time, msg)
+            curt_vid = version.update_version_graph(graph_name, len(current_version_rid), parent_list, table_create_time, msg)
 
             # update index table
             version.update_index_table(indextable_name, curt_vid, current_version_rid)
