@@ -89,4 +89,5 @@ class MetadataManager(object):
             create_time = _meta['table_created_time'][table_name]
             return create_time
         except KeyError:
-            print "----- ERROR ------: %s" % "created time must be completed"
+            # print "----- ERROR ------: %s" % "created time must be completed"
+            return None

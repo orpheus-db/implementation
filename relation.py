@@ -63,8 +63,7 @@ class RelationManager(object):
     def checkout_file(self, attributes, ridlist, datatable, to_file, delimeters, header):
         # COPY products_273 TO '/tmp/products_199.csv' DELIMITER ',' CSV HEADER;
         # convert to a tmp_table first
-        if self.fcheck_table_exists('tmp_table'):
-          self.drop_table('tmp_table')
+        self.drop_table_force('tmp_table')
         self.checkout_table(attributes, ridlist, datatable, 'tmp_table', None)
         sql = "COPY %s (%s) TO '%s' DELIMITER '%s' CSV HEADER;" if header else "COPY %s (%s) TO '%s' DELIMITER '%s' CSV;" 
         sql = sql % ('tmp_table', ','.join(attributes), to_file, delimeters)
@@ -97,12 +96,19 @@ class RelationManager(object):
         self.conn.connect.commit()
 
 
+    def drop_table_force(self, table_name):
+        if not self.check_table_exists(table_name):
+          return
+        drop_sql = "DROP TABLE %s" % table_name
+        self.conn.cursor.execute(drop_sql)
+        self.conn.connect.commit()
+
     def select_all_rid(self, table_name):
       select_sql = "SELECT rid from %s;" % table_name
       self.conn.cursor.execute(select_sql)
       return [x[0] for x in self.conn.cursor.fetchall()]
 
-    # return all records that is in table1 not in table2
+    # return all records that is in table1 not in table2, with the attributes
     def select_complement_table(self, table1, table2, attributes=None):
       if not attributes:
         sql = "TABLE %s EXCEPT TABLE %s;" % (table1, table2)
@@ -111,8 +117,12 @@ class RelationManager(object):
       self.conn.cursor.execute(sql)
       return self.conn.cursor.fetchall()
 
-    def select_intersection_table(self, table1, table2, projection='rid'):
-      sql = "SELECT %s FROM (SELECT * FROM %s intersect SELECT * FROM %s) as foo;" % (projection, table1, table2)
+    # since the rid is hidden from the user, we need to select only the user visible attributes
+    # perform by using inner join and select the rid, join_attributes is the attributes inner join will be joined on
+    def select_intersection_table(self, table1, table2, join_attributes, projection='rid'):
+      # SELECT rid FROM tmp_table INNER JOIN dataset1_datatable ON tmp_table.employee_id=dataset1_datatable.employee_id;
+      join_clause = " AND ".join(["%s.%s=%s.%s" % (table1, attr, table2, attr) for attr in join_attributes])
+      sql = "SELECT %s FROM %s INNER JOIN %s on %s;" % (projection, table1, table2, join_clause)  
       self.conn.cursor.execute(sql)
       return self.conn.cursor.fetchall()
 
@@ -127,10 +137,14 @@ class RelationManager(object):
       print "create_relation"
 
     # will drop existing table to create the new table 
-    def create_relation_force(self, table_name, schema):
+    def create_relation_force(self, table_name, sample_table, sample_table_attributes=None):
       if self.check_table_exists(table_name):
         self.drop_table(table_name)
-      sql = "CREATE TABLE %s ( like %s including all);" % (table_name, schema)
+      if not sample_table_attributes:
+        sample_table_attributes,_ = self.get_datatable_attribute(sample_table)
+      # sql = "CREATE TABLE %s ( like %s including all);" % (table_name, sample_table)
+      # an easier approach to create table
+      sql = "CREATE TABLE %s AS SELECT %s FROM %s WHERE 1=2;" % (table_name, ",".join(sample_table_attributes), sample_table)
       self.conn.cursor.execute(sql)
       self.conn.connect.commit()
 
@@ -149,16 +163,12 @@ class RelationManager(object):
       return result[0][0]
 
     def update_datatable(self, datatable_name, records):
+        if not records:
+          return []
         # print "update_datatable"
         # modified_id_string = '{' + ', '.join(modified_pk) + '}'
         _attributes, _attributes_type = self.get_datatable_attribute(datatable_name)
 
-    #     INSERT INTO films (code, title, did, date_prod, kind) VALUES
-    # ('B6717', 'Tampopo', 110, '1985-02-10', 'Comedy'),
-    # ('HG120', 'The Dinner Game', 140, DEFAULT, 'Comedy');
-        # sql =  "INSERT INTO %s (%s) (SELECT %s FROM %s t1 WHERE t1.%s = ANY('%s' :: int[])) RETURNING rid; " \
-        #      %(datatable_name, ', '.join(_attributes), ', '.join(_attributes), table_name, "employee_id", modified_id_string)
-        # print sql
         sql = "INSERT INTO %s (%s) VALUES %s RETURNING rid;" % (datatable_name, ', '.join(_attributes), ','.join(records))
         self.conn.cursor.execute(sql)
         new_rids=[t[0] for t in self.conn.cursor.fetchall()]

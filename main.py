@@ -166,15 +166,15 @@ def ls(ctx, dataset, table_name):
 
 @cli.command()
 @click.argument('dataset')
-@click.option('--vlist', '-v', multiple=True, required=True, help='Specify version you want to clone, use multiple -v for multiple version checkout')
+@click.option('--vlist', '-v', multiple=True, required=True, help='Specify version you want to checkout, use multiple -v for multiple version checkout')
 @click.option('--to_table', '-t', help='Specify the table name to checkout to.')
 @click.option('--to_file', '-f', help='Specify the location of file')
 @click.option('--delimeters', '-d', default=',', help='Specify the delimeter used for checkout file')
 @click.option('--header', '-h', is_flag=True, help="If set, the first line of checkout file will be the header")
-@click.option('--ignore', '-i', is_flag=True, help='If set, clone versions into table will ignore duplicated key')
+@click.option('--ignore', '-i', is_flag=True, help='If set, checkout versions into table will ignore duplicated key')
 @click.option('--force', '-F', is_flag=True, help='If set, forcefully drop the table and create a new one')
 @click.pass_context
-def clone(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore, force):
+def checkout(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore, force):
     # check ctx.obj has permission or not
     if not to_table and not to_file:
         raise BadParametersError("Need a destination, either a table or a file")
@@ -229,7 +229,7 @@ def commit(ctx, msg, table_name, file_name, schema, delimeters, header):
         return
 
     if table_name and file_name:
-        raise NotImplementedError("Supporting both file and table commit is not implemented")
+        raise NotImplementedError("Can either commit a file or a table at a time")
         return
 
 
@@ -263,61 +263,64 @@ def commit(ctx, msg, table_name, file_name, schema, delimeters, header):
     datatable_name = parent_name + "_datatable"
     indextable_name = parent_name + "_indexTbl"
     graph_name = parent_name + "_version"
-
-    # exclduing rid
     
 
-    # convert file into tmp_table first, then set the table_name to tmp_table
-    if file_name:
-        if not schema:
-            raise NotImplementedError("Need a schema source for file %s" %file_name)
-            return
-        
-        relation.create_relation_force('tmp_table', schema)
-        _attributes, _attributes_type = relation.get_datatable_attribute(schema)
-        relation.convert_csv_to_table(abs_path, 'tmp_table', _attributes , delimeters=delimeters, header=header)
-        table_name = 'tmp_table'
+    try:
+        # convert file into tmp_table first, then set the table_name to tmp_table
+        if file_name:
+            if not schema:
+                raise NotImplementedError("Need a schema source for file %s" % file_name)
+            
+            _attributes, _attributes_type = relation.get_datatable_attribute(schema)
+            relation.create_relation_force('tmp_table', schema, sample_table_attributes=_attributes) # create a tmp table
+            relation.convert_csv_to_table(abs_path, 'tmp_table', _attributes , delimeters=delimeters, header=header) # push everything from csv to tmp_table
+            table_name = 'tmp_table'
+    except Exception as e:
+        click.secho(str(e), fg='red')
+        return
 
 
     if table_name:
-        # find the new records
         try:
             _attributes, _attributes_type = relation.get_datatable_attribute(datatable_name)
-            commit_attributes, _ = relation.get_datatable_attribute(table_name)
+            commit_attributes, commit_type = relation.get_datatable_attribute(table_name)
             if len(set(_attributes) - set(commit_attributes)) > 0:
                 raise BadStateError("%s and %s have different attributes" % (table_name, parent_name))
+
+            # find the new records
             lis_of_newrecords = relation.select_complement_table(table_name, datatable_name, attributes=_attributes)
-            print "Found %s new records" % lis_of_newrecords
-            if not lis_of_newrecords:
-                click.echo("Nothing to commit")
-                return
+            
             lis_of_newrecords = [map(str, list(x)) for x in lis_of_newrecords]
             lis_of_newrecords = map(lambda x : '(' + ','.join(x) + ')', lis_of_newrecords)
-            # insert them into datatable
-            new_rids = relation.update_datatable(datatable_name, lis_of_newrecords)
 
             # find the existing rids
-            existing_rids = [t[0] for t in relation.select_intersection_table(table_name, datatable_name)]
+            # by default, assume the first column is the join attribute for inner join
+            existing_rids = [t[0] for t in relation.select_intersection_table(table_name, datatable_name, commit_attributes)]
+
+            # insert them into datatable
+            new_rids = relation.update_datatable(datatable_name, lis_of_newrecords)
             
+            print "Found %s new records" % len(new_rids)
+            print "Found %s exisiting records" % len(existing_rids)
+
             current_version_rid = existing_rids + new_rids
             
-
             num_of_records = relation.get_number_of_rows(table_name)
-            table_create_time = metadata.load_table_create_time(table_name)
+            table_create_time = metadata.load_table_create_time(table_name) if table_name != 'tmp_table' else None
 
             # update version graph
             curt_vid = version.update_version_graph(graph_name, num_of_records, parent_list, table_create_time, msg)
 
             # update index table
             version.update_index_table(indextable_name, curt_vid, current_version_rid)
+            print "Commiting version %s with %s records" % (curt_vid, current_version_rid)
         except Exception as e:
             click.secho(str(e), fg='red')
             return
 
     if file_name:
-        # need to drop tmp_table? But dt matter
+        # TODO: drop tmp_table so the next commit can use
         pass
-    # TODO: Before return, we may also need to clean table if any.
 
     click.echo("commited")
 

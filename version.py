@@ -29,6 +29,7 @@ class VersionManager(object):
         # create new version
         parent_list_string='\'{' + ', '.join(parent_list) + '}\''
         commit_time = str(datetime.datetime.now())
+        table_create_time = table_create_time or commit_time
         max_vid = self.get_curt_max_vid(version_graph_name)
         curt_vid = max_vid + 1
         values = "(%s, %s, %s, %s, %s, %s, %s)" % (curt_vid, num_of_records, parent_list_string, "'{}'", "'%s'" % table_create_time, "'%s'" % commit_time, "'%s'" % msg)
