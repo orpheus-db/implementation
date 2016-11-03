@@ -1,1 +1,1 @@
-{"user": "test1", "database": "demo"}
+{"meta_info": ".meta/tracker", "database": "postgres", "log_path": ".meta/logs/log.out", "user_log": ".meta/user_log", "host": "localhost", "orpheus_home": "/Users/Wesley/Documents/git/orpheus-db/implementation/", "meta_modifiedIds": ".meta/modified", "commit_path": ".meta/commit_tables", "user": "abc", "passphrase": "53c26b47facb3116fd1db51d67ae4073fa0883942bc98e2d8743a6c5a42a1489", "port": 5432}
