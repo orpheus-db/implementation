@@ -71,11 +71,11 @@ class DatabaseManager():
         self.cursor = self.connect.cursor()
 
 
-    # schema is a table
-    def create_dataset(self, inputfile, dataset, schema=None, header=False, attributes=None): 
+    # schema is a list of tuple of (attribute_name, attribute_type) as string
+    def create_dataset(self, inputfile, dataset, schema, header=False, attributes=None): 
         self.refresh_cursor()
         print "creating dataset %s to %s" % (dataset, self.currentDB)
-        # create a schema to store user specific information
+        # create a schema (in postgres) to store user specific information
         try:
             self.cursor.execute("CREATE SCHEMA %s;" % self.user)
             self.cursor.execute("CREATE TABLE %s (dataset_name text primary key);" % (self.user + '.datasets'))
@@ -85,6 +85,7 @@ class DatabaseManager():
 
 
         try:
+            # add current dataset name into user.datasets
             self.cursor.execute("INSERT INTO %s values('%s');" % (self.user + '.datasets', dataset))
         except psycopg2.IntegrityError: # happens when inserting duplicate key
             raise DatasetExistsError(dataset, self.user)
@@ -93,41 +94,51 @@ class DatabaseManager():
         try:
             # for each dataset, create 3 tables
             # dataset_datatable, which includes all records, rid as PK, based on schema
-            # dataset_version, which keeptrack of all version information, like version
+            # dataset_version, which keep track of all version information, like version
             # dataset_indexTbl, which includes all the vid and rid mapping, like indexTbl
 
-            # TODO: finish other input later
+            
             if '.csv' not in inputfile:
+                # TODO: finish other input later
                 raise NotImplementedError("Loading other than CSV file not implemented!")
                 return
 
             if not attributes:
-                raise NotImplementedError("No attributes not implemented!")
+                raise NotImplementedError("Attributes inferreing not implemented!")
                 return
 
 
-            print "Creating datatable"
+            print "Creating datatable using the schema provided"
             # create datatable
-            if schema:
-                self.cursor.execute("CREATE TABLE %s ( like %s including all);" % (dataset + "_datatable", schema))
-            else:
-                raise NotImplementedError("User specified schema not implemented!")
-                return
+            # self.cursor.execute("CREATE TABLE %s ( like %s including all);" % (dataset + "_datatable", schema))
+            # print "CREATE TABLE %s (rid int primary key, \
+            #                                       %s);" % (dataset + "_datatable", ",".join(map(lambda (attribute_name, attribute_type) : attribute_name + " " + attribute_type, schema)))
+            self.cursor.execute("CREATE TABLE %s (rid serial primary key, \
+                                                  %s);" % (dataset + "_datatable", ",".join(map(lambda (attribute_name, attribute_type) : attribute_name + " " + attribute_type, schema))))
 
             print "Creating version table"
             # create version table
-            self.cursor.execute("CREATE TABLE %s(vid int primary key, num_records int, parent integer[], children integer[], create_time timestamp, commit_time timestamp, commit_msg text);" % (dataset + "_version"))
+            self.cursor.execute("CREATE TABLE %s(vid int primary key, \
+                                                 num_records int, \
+                                                 parent integer[], \
+                                                 children integer[], \
+                                                 create_time timestamp, \
+                                                 commit_time timestamp, \
+                                                 commit_msg text);" % (dataset + "_version"))
 
             print "Creating index table"
             # create indexTbl table
-            self.cursor.execute("CREATE TABLE %s (vlist integer[], rlist integer[]);" % (dataset + "_indexTbl"))
+            self.cursor.execute("CREATE TABLE %s (vlist integer[], \
+                                                  rlist integer[]);" % (dataset + "_indexTbl"))
 
             # dump data into this dataset
             file_path = self.config['orpheus_home'] + inputfile
+
             if header:
                 self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV HEADER;" % (dataset + "_datatable", ",".join(attributes), file_path))
             else:
                 self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV;" % (dataset + "_datatable", ",".join(attributes), file_path))
+
 
             self.connect.commit()
         except Exception as e:
@@ -204,8 +215,8 @@ class DatabaseManager():
             connect.commit()
         except psycopg2.OperationalError:
             raise ConnectionError("connot connect to %s at %s:%s" % (db, server_config['host'], str(server_config['port'])))
-        except Exception as e:
-            raise e # throw the exception to main
+        except Exception as e: # unknown error
+            raise e
         return
 
 

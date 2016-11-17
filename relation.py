@@ -23,10 +23,7 @@ class RelationManager(object):
 
 
     def get_datatable_attribute(self, from_table):
-      # print 'get attributes now'
       selectTemplate = "SELECT column_name, data_type from INFORMATION_SCHEMA.COLUMNS where table_name = '%s' and column_name NOT IN ('rid');" % (from_table)
-      # print selectTemplate
-      # print self.conn.cursor
       self.conn.cursor.execute(selectTemplate)
       _datatable_attribute_types = self.conn.cursor.fetchall()
       # column name
@@ -35,6 +32,22 @@ class RelationManager(object):
       _attributes_type = map(lambda x: str(x[1]), _datatable_attribute_types)
       return _attributes, _attributes_type
 
+
+
+    def checkout_print(self, vlist, dataset, projection='*'):
+      datatable = dataset + "_datatable"
+      indextable = dataset + "_indexTbl"
+      if not self.check_table_exists(datatable):
+            raise RelationNotExistError(datatable)
+            return
+      # user can only see everything except rid
+      _attributes,_attributes_type = self.get_datatable_attribute(datatable)
+      recordlist = self.select_records_of_version_list(vlist, indextable)
+      if projection != '*':
+        _attributes = projection.split(',')
+      sql = "SELECT %s FROM %s WHERE rid = ANY('%s'::int[]);" % (",".join(_attributes), datatable, recordlist)
+      self.conn.cursor.execute(sql)
+      return _attributes, self.conn.cursor.fetchall()
 
     # to_file needs an absolute path
     def checkout(self, vlist, datatable, indextable, to_table=None, to_file=None, delimeters=',', header=False, ignore=False):
@@ -79,7 +92,7 @@ class RelationManager(object):
             self.get_primary_key(datatable)
             sql = "SELECT rid,%s INTO %s FROM %s WHERE rid = ANY('%s'::int[]);" \
                   % (', '.join(attributes), to_table, datatable, ridlist)
-        # print sql
+        print sql
         self.conn.cursor.execute(sql)
 
         sql = "SELECT %s,rid FROM %s;"%(', '.join(attributes),to_table)
@@ -144,7 +157,8 @@ class RelationManager(object):
       if not sample_table_attributes:
         sample_table_attributes,_ = self.get_datatable_attribute(sample_table)
       # sql = "CREATE TABLE %s ( like %s including all);" % (table_name, sample_table)
-      # an easier approach to create table
+      
+      # an easier approach to create empty table 
       sql = "CREATE TABLE %s AS SELECT %s FROM %s WHERE 1=2;" % (table_name, ",".join(sample_table_attributes), sample_table)
       self.conn.cursor.execute(sql)
       self.conn.connect.commit()

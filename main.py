@@ -14,8 +14,11 @@ from relation import RelationManager
 from version import VersionManager
 from metadata import MetadataManager
 from user_control import UserManager
+from schema_parser import Parser as SchemaParser
+from orpheus_sqlparser import parse_select as SQLParser
 
 from orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
+from db import DatasetExistsError
 
 class Context():
     def __init__(self):
@@ -23,7 +26,7 @@ class Context():
         try:
             with open(self.config_path, 'r') as f:
                 self.config = yaml.load(f)
-        except (IOError, KeyError):
+        except (IOError, KeyError) as e:
             raise BadStateError("config.yaml file not found or data not clean, abort")
             return
         except: # unknown error
@@ -41,6 +44,7 @@ def cli(ctx):
             ctx.obj[key] = user_obj[key]
         if not ctx.obj or not ctx.obj['user'] or not ctx.obj['database']:
             click.secho("No session in use, please call config first", fg='red')
+            return # stop the following commands
     except Exception as e:
         click.secho(str(e), fg='red')
 
@@ -95,10 +99,11 @@ def whoami(ctx):
 @cli.command()
 @click.argument('input', type=click.Path(exists=True))
 @click.argument('dataset')
-@click.option('--schema', '-s', help='Specify the schema (existed table) of this input data')
+@click.option('--table', '-t', help='Create the dataset with exisiting table schema')
+@click.option('--schema', '-s', help='Create the dataset with schema file', type=click.Path(exists=True))
 @click.option('--header', '-h', is_flag=True, help="If set, the first line of the input file should be header")
 @click.pass_context
-def init(ctx, input, dataset, schema, header):
+def init(ctx, input, dataset, table, schema, header):
     # TODO: add header support
     # By default, we connect to the database specified in the -config- command earlier
 
@@ -107,18 +112,31 @@ def init(ctx, input, dataset, schema, header):
     #    1.1 Load a csv or other format of the file into DB
     #    1.2 Schema
     # 2.add version control on a existing table in DB
+
     try:
         conn = DatabaseManager(ctx.obj)
         rel = RelationManager(conn)
 
-        attribute_name , _ = rel.get_datatable_attribute(schema)
+        if (not table and not schema) or (table and schema):
+            raise BadParametersError("Need either (not both) a table or a schema file")
+            return
+        abs_path = ctx.obj['orpheus_home'] + schema if schema and schema[0] != '/' else schema
+
+        # the attribute_name should not have rid
+        attribute_name , attribute_type = rel.get_datatable_attribute(table) if table else SchemaParser.get_attribute_from_file(abs_path)
+
     except Exception as e:
         click.secho(str(e), fg='red')
         return
 
     # at this point, we have a valid conn obj and rel obj
     try:
-        conn.create_dataset(input, dataset, schema=schema, attributes=attribute_name)
+
+        # schema of the dataset, of the type (name, type)
+        schema_tuple = zip(attribute_name, attribute_type)
+
+        # create new dataset
+        conn.create_dataset(input, dataset, schema_tuple, attributes=attribute_name)
         # get all rids in list
         lis_rid = rel.select_all_rid(dataset + '_datatable')
 
@@ -127,8 +145,9 @@ def init(ctx, input, dataset, schema, header):
         version.init_version_graph_dataset(dataset, lis_rid)
         version.init_index_table_dataset(dataset, lis_rid)
 
-        click.echo("%s create successful" % dataset)
-
+        click.echo("dataset %s create successful" % dataset)
+    except DatasetExistsError as e:
+        click.secho(str(e), fg='red')
     except Exception as e:
         # revert back to the state before create
         conn.drop_dataset(dataset)
@@ -163,6 +182,60 @@ def ls(ctx, dataset, table_name):
     except Exception as e:
         click.secho(str(e), fg='red')
 
+# execute a single line of sql
+# only support select for now
+def execute_sql_line(ctx, line):
+    try:
+        conn = DatabaseManager(ctx.obj)
+        relation = RelationManager(conn)
+        execution_dict = SQLParser(line) # SELECT only!
+    except Exception as e:
+        click.secho(str(e), fg='red')
+        return
+
+    dataset = execution_dict['dataset'][0] if 'dataset' in execution_dict else None
+    vlist = execution_dict['versions'] if 'dataset' in execution_dict else None
+    projection = ",".join(execution_dict['columns'])
+    print execution_dict
+    try:
+        if not dataset:
+            # normal sql select
+            conn.cursor.execute(line)
+            result_tuples = conn.cursor.fetchall()
+        else:
+            attribute_name, result_tuples = relation.checkout_print(vlist, dataset, projection=projection)
+
+            # print to console
+            print "\t".join(attribute_name)
+        for tup in result_tuples:
+            print "\t".join(map(str, tup))
+    except psycopg2.ProgrammingError as e:
+        click.secho(str(e.args), fg='red')
+        return
+    except Exception as e:
+        click.secho(str(e), fg='red')
+        return
+
+
+# the call back function to execute file
+# execute line by line
+def execute_sql_file(ctx, param, value):
+    if not value or ctx.resilient_parsing:
+        return
+    # value is the relative path of file
+    abs_path = ctx.obj['orpheus_home'] + value
+    click.echo("Executing SQL file at %s" % value)
+    with open(abs_path, 'r') as f:
+        for line in f:
+            execute_sql_line(line)
+    ctx.exit()
+
+@cli.command()
+@click.option('--file', '-f', callback=execute_sql_file, expose_value=False, is_eager=True, type=click.Path(exists=True))
+@click.option('--sql', prompt="Input sql statement")
+@click.pass_context
+def run(ctx, sql):
+    execute_sql_line(ctx, sql)
 
 @cli.command()
 @click.argument('dataset')
@@ -177,7 +250,7 @@ def ls(ctx, dataset, table_name):
 def checkout(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore, force):
     # check ctx.obj has permission or not
     if not to_table and not to_file:
-        raise BadParametersError("Need a destination, either a table or a file")
+        click.secho(str(BadParametersError("Need a destination, either a table (-t) or a file (-f)")), fg='red')
         return
 
     try:
@@ -217,19 +290,18 @@ def checkout(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore,
 @click.option('--msg','-m', help='Commit message', required = True)
 @click.option('--table_name','-t', help='The table to be committed') # changed to optional later
 @click.option('--file_name', '-f', help='The file to be committed', type=click.Path(exists=True))
-@click.option('--schema', '-s', help='Specify the schema (existed table) of this input data')
 @click.option('--delimeters', '-d', default=',', help='Specify the delimeter used for checkout file')
 @click.option('--header', '-h', is_flag=True, help="If set, the first line of checkout file will be the header")
 @click.pass_context
-def commit(ctx, msg, table_name, file_name, schema, delimeters, header):
+def commit(ctx, msg, table_name, file_name, delimeters, header):
 
     # sanity check
     if not table_name and not file_name:
-        raise BadParametersError("Need a source, either a table or a file")
+        click.secho(str(BadParametersError("Need a source, either a table (-t) or a file (-f)")), fg='red')
         return
 
     if table_name and file_name:
-        raise NotImplementedError("Can either commit a file or a table at a time")
+        click.secho(str(NotImplementedError("Can either commit a file or a table at a time")), fg='red')
         return
 
 
@@ -266,11 +338,10 @@ def commit(ctx, msg, table_name, file_name, schema, delimeters, header):
     try:
         # convert file into tmp_table first, then set the table_name to tmp_table
         if file_name:
-            if not schema:
-                raise NotImplementedError("Need a schema source for file %s" % file_name)
-            
-            _attributes, _attributes_type = relation.get_datatable_attribute(schema)
-            relation.create_relation_force('tmp_table', schema, sample_table_attributes=_attributes) # create a tmp table
+            # need to know the schema for this file
+            _attributes, _attributes_type = relation.get_datatable_attribute(datatable_name)
+
+            relation.create_relation_force('tmp_table', datatable_name, sample_table_attributes=_attributes) # create a tmp table
             relation.convert_csv_to_table(abs_path, 'tmp_table', _attributes , delimeters=delimeters, header=header) # push everything from csv to tmp_table
             table_name = 'tmp_table'
     except Exception as e:
@@ -317,9 +388,9 @@ def commit(ctx, msg, table_name, file_name, schema, delimeters, header):
             click.secho(str(e), fg='red')
             return
 
-    if file_name:
-        # TODO: drop tmp_table so the next commit can use
-        pass
+    if relation.check_table_exists('tmp_table'):
+        relation.drop_table('tmp_table')
+
 
     click.echo("commited")
 
