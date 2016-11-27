@@ -8,9 +8,9 @@ import user
 import json
 import pandas as pd
 
-from db import DatabaseManager
+from db import DatabaseManager, DatasetExistsError
 from access import AccessManager
-from relation import RelationManager
+from relation import RelationManager, RelationNotExistError
 from version import VersionManager
 from metadata import MetadataManager
 from user_control import UserManager
@@ -18,7 +18,6 @@ from schema_parser import Parser as SchemaParser
 from orpheus_sqlparser import parse_select as SQLParser
 
 from orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
-from db import DatasetExistsError
 
 class Context():
     def __init__(self):
@@ -158,12 +157,14 @@ def init(ctx, input, dataset, table, schema, header):
 @click.argument('dataset')
 @click.pass_context
 def drop(ctx, dataset):
-    try:
-        conn = DatabaseManager(ctx.obj)
-        click.echo("dropping dataset %s" % dataset)
-        conn.drop_dataset(dataset)
-    except Exception as e:
-        click.secho(str(e), fg='red')
+    if click.confirm('Are you sure you want to drop %s?' % dataset):
+        try:
+            conn = DatabaseManager(ctx.obj)
+            click.echo("dropping dataset %s" % dataset)
+            conn.drop_dataset(dataset)
+        except Exception as e:
+            click.secho(str(e), fg='red')
+
 
 @cli.command()
 @click.option('--dataset', '-d', help='Specify the dataset to show')
@@ -314,7 +315,7 @@ def commit(ctx, msg, table_name, file_name, delimeters, header):
         click.secho(str(e), fg='red')
         return
     if table_name and not relation.check_table_exists(table_name):
-        click.secho(str(relation.RelationNotExistError(table_name)), fg='red')
+        click.secho(str(RelationNotExistError(table_name)), fg='red')
         return
 
     # load parent information about the table
