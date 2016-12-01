@@ -7,6 +7,7 @@ import json
 
 from encryption import EncryptionTool
 from orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
+from orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX
 
 # Database Manager exceptions
 class UserNotSetError(Exception):
@@ -114,7 +115,7 @@ class DatabaseManager():
             # print "CREATE TABLE %s (rid int primary key, \
             #                                       %s);" % (dataset + "_datatable", ",".join(map(lambda (attribute_name, attribute_type) : attribute_name + " " + attribute_type, schema)))
             self.cursor.execute("CREATE TABLE %s (rid serial primary key, \
-                                                  %s);" % (dataset + "_datatable", ",".join(map(lambda (attribute_name, attribute_type) : attribute_name + " " + attribute_type, schema))))
+                                                  %s);" % (dataset + DATATABLE_SUFFIX, ",".join(map(lambda (attribute_name, attribute_type) : attribute_name + " " + attribute_type, schema))))
 
             print "Creating version table"
             # create version table
@@ -124,20 +125,20 @@ class DatabaseManager():
                                                  children integer[], \
                                                  create_time timestamp, \
                                                  commit_time timestamp, \
-                                                 commit_msg text);" % (dataset + "_version"))
+                                                 commit_msg text);" % (dataset + VERSIONTABLE_SUFFIX))
 
             print "Creating index table"
             # create indexTbl table
             self.cursor.execute("CREATE TABLE %s (vlist integer[], \
-                                                  rlist integer[]);" % (dataset + "_indexTbl"))
+                                                  rlist integer[]);" % (dataset + INDEXTABLE_SUFFIX))
 
             # dump data into this dataset
             file_path = self.config['orpheus_home'] + inputfile
 
             if header:
-                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV HEADER;" % (dataset + "_datatable", ",".join(attributes), file_path))
+                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV HEADER;" % (dataset + DATATABLE_SUFFIX, ",".join(attributes), file_path))
             else:
-                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV;" % (dataset + "_datatable", ",".join(attributes), file_path))
+                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV;" % (dataset + DATATABLE_SUFFIX, ",".join(attributes), file_path))
 
 
             self.connect.commit()
@@ -149,19 +150,19 @@ class DatabaseManager():
         self.refresh_cursor()
         # TODO: refactor for better approach?
         try:
-            self.cursor.execute("DROP table %s;" % (dataset + "_datatable"))
+            self.cursor.execute("DROP table %s;" % (dataset + DATATABLE_SUFFIX))
             self.connect.commit()
         except:
             self.refresh_cursor()
             
         try:
-            self.cursor.execute("DROP table %s;" % (dataset + "_version"))
+            self.cursor.execute("DROP table %s;" % (dataset + VERSIONTABLE_SUFFIX))
             self.connect.commit()
         except:
             self.refresh_cursor()
 
         try:
-            self.cursor.execute("DROP table %s;" % (dataset + "_indexTbl"))
+            self.cursor.execute("DROP table %s;" % (dataset + INDEXTABLE_SUFFIX))
             self.connect.commit()
         except:
             self.refresh_cursor()

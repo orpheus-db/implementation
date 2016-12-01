@@ -1,3 +1,5 @@
+# This code is 
+# http://pyparsing.wikispaces.com/file/view/select_parser.py/158651233/select_parser.py
 # select_parser.py
 # Copyright 2010, Paul McGuire
 #
@@ -12,9 +14,9 @@ select_stmt = Forward().setName("select statement")
 # keywords
 (UNION, ALL, AND, INTERSECT, EXCEPT, COLLATE, ASC, DESC, ON, USING, NATURAL, INNER, 
  CROSS, LEFT, OUTER, JOIN, AS, INDEXED, NOT, SELECT, DISTINCT, FROM, WHERE, GROUP, BY,
- HAVING, ORDER, BY, LIMIT, OFFSET, VERSION, OF, CVD) =  map(CaselessKeyword, """UNION, ALL, AND, INTERSECT, 
+ HAVING, ORDER, BY, LIMIT, OFFSET, VERSION, OF, CVD, META) =  map(CaselessKeyword, """UNION, ALL, AND, INTERSECT, 
  EXCEPT, COLLATE, ASC, DESC, ON, USING, NATURAL, INNER, CROSS, LEFT, OUTER, JOIN, AS, INDEXED, NOT, SELECT, 
- DISTINCT, FROM, WHERE, GROUP, BY, HAVING, ORDER, BY, LIMIT, OFFSET, VERSION, OF, CVD""".replace(",","").split())
+ DISTINCT, FROM, WHERE, GROUP, BY, HAVING, ORDER, BY, LIMIT, OFFSET, VERSION, OF, CVD, META""".replace(",","").split())
 
 (CAST, ISNULL, NOTNULL, NULL, IS, BETWEEN, ELSE, END, CASE, WHEN, THEN, EXISTS,
  COLLATE, IN, LIKE, GLOB, REGEXP, MATCH, ESCAPE, CURRENT_TIME, CURRENT_DATE, 
@@ -24,7 +26,7 @@ select_stmt = Forward().setName("select statement")
 
 keyword = MatchFirst((UNION, ALL, INTERSECT, EXCEPT, COLLATE, ASC, DESC, ON, USING, NATURAL, INNER, 
  CROSS, LEFT, OUTER, JOIN, AS, INDEXED, NOT, SELECT, DISTINCT, FROM, WHERE, GROUP, BY,
- HAVING, ORDER, BY, LIMIT, OFFSET, VERSION, OF, CVD, CAST, ISNULL, NOTNULL, NULL, IS, BETWEEN, ELSE, END, CASE, WHEN, THEN, EXISTS,
+ HAVING, ORDER, BY, LIMIT, OFFSET, VERSION, OF, CVD, META, CAST, ISNULL, NOTNULL, NULL, IS, BETWEEN, ELSE, END, CASE, WHEN, THEN, EXISTS,
  COLLATE, IN, LIKE, GLOB, REGEXP, MATCH, ESCAPE, CURRENT_TIME, CURRENT_DATE, 
  CURRENT_TIMESTAMP))
  
@@ -95,16 +97,17 @@ single_source = ( (Group(database_name("database") + "." + table_name("table")) 
                     Optional(Optional(AS) + table_alias("table_alias")) +
                     Optional(INDEXED + BY + index_name("name") | NOT + INDEXED)("index") | 
                   (LPAR + select_stmt + RPAR + Optional(Optional(AS) + table_alias)) | 
-                  (LPAR + join_source + RPAR) | VERSION + version_lis("versions") + OF + CVD + dataset_name("dataset"))
+                  (LPAR + join_source + RPAR) | VERSION + version_lis("versions") + OF + CVD + dataset_name("dataset") |
+                  META + OF + CVD + dataset_name("dataset"))
 
 join_source << single_source + ZeroOrMore(join_op + single_source + join_constraint)
 
 result_column = "*" | table_name + "." + "*" | (expr + Optional(Optional(AS) + column_alias))
-select_core = (SELECT + Optional(DISTINCT | ALL) + Group(delimitedList(result_column))("columns") +
+select_core = (SELECT + Optional(DISTINCT | ALL) + 
+                (Group(delimitedList(result_column))("columns") | VERSION) +
                 Optional(FROM + join_source) +
                 Optional(WHERE + expr("where_expr")) +
-                Optional(GROUP + BY + Group(delimitedList(ordering_term)("group_by_terms")) + 
-                Optional(HAVING + expr("having_expr"))))
+                Optional(GROUP + BY + Group(delimitedList(ordering_term)("group_by_terms"))))
 
 select_stmt << (select_core + ZeroOrMore(compound_operator + select_core) +
                 Optional(ORDER + BY + Group(delimitedList(ordering_term))("order_by_terms")) +

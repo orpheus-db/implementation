@@ -1,4 +1,5 @@
 import datetime
+from orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX
 
 class VersionManager(object):
     def __init__(self, conn):
@@ -10,7 +11,7 @@ class VersionManager(object):
         print "Initializing version graph"
         self.conn.refresh_cursor()
         init_version_sql = "INSERT INTO %s VALUES \
-                            (1, %s, '{-1}', '{}', '%s', '%s', 'init commit');" % (dataset + "_version", str(len(list_of_rid)), str(datetime.datetime.now()), str(datetime.datetime.now()))
+                            (1, %s, '{-1}', '{}', '%s', '%s', 'init commit');" % (dataset + VERSIONTABLE_SUFFIX, str(len(list_of_rid)), str(datetime.datetime.now()), str(datetime.datetime.now()))
         self.conn.cursor.execute(init_version_sql)
         self.conn.connect.commit()   
 
@@ -20,7 +21,7 @@ class VersionManager(object):
         # insert into indexTbl values ('{1,3,5}', '{1}')
         init_indextbl_sql = "INSERT INTO %s \
                              VALUES \
-                             ('{1}', '{%s}');" % (dataset + "_indexTbl", str(",".join(map(str, list_of_rid))))
+                             ('{1}', '{%s}');" % (dataset + INDEXTABLE_SUFFIX, str(",".join(map(str, list_of_rid))))
         self.conn.cursor.execute(init_indextbl_sql)
         self.conn.connect.commit()
 

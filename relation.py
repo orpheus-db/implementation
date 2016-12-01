@@ -34,9 +34,7 @@ class RelationManager(object):
 
 
 
-    def checkout_print(self, vlist, dataset, projection='*'):
-      datatable = dataset + "_datatable"
-      indextable = dataset + "_indexTbl"
+    def checkout_print(self, vlist, datatable, indextable, projection='*', where=None):
       if not self.check_table_exists(datatable):
             raise RelationNotExistError(datatable)
             return
@@ -45,8 +43,12 @@ class RelationManager(object):
       recordlist = self.select_records_of_version_list(vlist, indextable)
       if projection != '*':
         _attributes = projection.split(',')
-      sql = "SELECT %s FROM %s WHERE rid = ANY('%s'::int[]);" % (",".join(_attributes), datatable, recordlist)
+      if where:
+        sql = "SELECT %s FROM %s WHERE rid = ANY('%s'::int[]) AND %s;" % (",".join(_attributes), datatable, recordlist, "".join(where))
+      else:
+        sql = "SELECT %s FROM %s WHERE rid = ANY('%s'::int[]);" % (",".join(_attributes), datatable, recordlist)
       self.conn.cursor.execute(sql)
+      print sql
       return _attributes, self.conn.cursor.fetchall()
 
     # to_file needs an absolute path

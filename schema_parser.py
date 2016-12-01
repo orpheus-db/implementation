@@ -17,7 +17,6 @@ class ReservedFieldError(Exception):
 
 class Parser(object):
 
-	# replace with a generator if the file passed in is really large?
 	@staticmethod
 	def get_attribute_from_file(abs_path, delimiter=','):
 
@@ -25,7 +24,7 @@ class Parser(object):
 		PREDEFINED_TYPE = set(['int', 'float', 'text']) # and many more to be added
 
 		# Reserved attribute names
-		RESERVED_ATTRIBUTES = set('rid')
+		RESERVED_ATTRIBUTES = set('rid', 'vid')
 
 		attribute_name, attribute_type = [],[]
 		with open(abs_path, 'r') as f:
@@ -38,9 +37,14 @@ class Parser(object):
 					if cur_attribute in RESERVED_ATTRIBUTES:
 						raise ReservedFieldError(cur_attribute)
 						return
+
+					# use generator if file is really large	
 					attribute_name.append(cur_attribute)
 					attribute_type.append(cur_attribute_type)
 				except ValueError:
 					raise FormatError(abs_path)
 					return
-		return attribute_name, attribute_type
+		if not generator:
+			return attribute_name, attribute_type
+
+

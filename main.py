@@ -16,6 +16,7 @@ from metadata import MetadataManager
 from user_control import UserManager
 from schema_parser import Parser as SchemaParser
 from orpheus_sqlparser import parse_select as SQLParser
+from orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX
 
 from orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
 
@@ -78,13 +79,14 @@ def create_user(ctx, user, password):
         click.echo('User created.')
     except Exception as e:
         click.secho(str(e), fg='red')
+
+# TODO: check permission?
+    print ctx.obj
     
 @cli.command()
 @click.option('--database', '-d', help='Specify the database that you want to use without changing host and port')
 @click.pass_context
 def db(ctx, database):
-    # TODO: check permission?
-    print ctx.obj
     if database:
         ctx.obj['database'] = database
         UserManager.write_current_state(ctx.obj) # write to persisent store
@@ -100,9 +102,8 @@ def whoami(ctx):
 @click.argument('dataset')
 @click.option('--table', '-t', help='Create the dataset with exisiting table schema')
 @click.option('--schema', '-s', help='Create the dataset with schema file', type=click.Path(exists=True))
-@click.option('--header', '-h', is_flag=True, help="If set, the first line of the input file should be header")
 @click.pass_context
-def init(ctx, input, dataset, table, schema, header):
+def init(ctx, input, dataset, table, schema):
     # TODO: add header support
     # By default, we connect to the database specified in the -config- command earlier
 
@@ -137,7 +138,7 @@ def init(ctx, input, dataset, table, schema, header):
         # create new dataset
         conn.create_dataset(input, dataset, schema_tuple, attributes=attribute_name)
         # get all rids in list
-        lis_rid = rel.select_all_rid(dataset + '_datatable')
+        lis_rid = rel.select_all_rid(dataset + DATATABLE_SUFFIX)
 
         # init version info
         version = VersionManager(conn)
@@ -194,17 +195,26 @@ def execute_sql_line(ctx, line):
         click.secho(str(e), fg='red')
         return
 
-    dataset = execution_dict['dataset'][0] if 'dataset' in execution_dict else None
-    vlist = execution_dict['versions'] if 'dataset' in execution_dict else None
-    projection = ",".join(execution_dict['columns'])
     print execution_dict
+
+    dataset = execution_dict['dataset'][0] if 'dataset' in execution_dict else None
+    vlist = execution_dict['versions'] if 'versions' in execution_dict else None
+    projection = ",".join(execution_dict['columns'])
+    datatable = dataset + DATATABLE_SUFFIX if dataset else None
+    indextable = dataset + INDEXTABLE_SUFFIX if dataset else None
+    versiontable = dataset + VERSIONTABLE_SUFFIX if dataset else None
+    where_expr = execution_dict['where_expr'] if 'where_expr' in execution_dict else None
     try:
         if not dataset:
             # normal sql select
             conn.cursor.execute(line)
             result_tuples = conn.cursor.fetchall()
         else:
-            attribute_name, result_tuples = relation.checkout_print(vlist, dataset, projection=projection)
+            attribute_name, result_tuples = relation.checkout_print(vlist, 
+                                                                    datatable, 
+                                                                    indextable, 
+                                                                    projection=projection, 
+                                                                    where=where_expr)
 
             # print to console
             print "\t".join(attribute_name)
@@ -246,9 +256,8 @@ def run(ctx, sql):
 @click.option('--delimeters', '-d', default=',', help='Specify the delimeter used for checkout file')
 @click.option('--header', '-h', is_flag=True, help="If set, the first line of checkout file will be the header")
 @click.option('--ignore', '-i', is_flag=True, help='If set, checkout versions into table will ignore duplicated key')
-@click.option('--force', '-F', is_flag=True, help='If set, forcefully drop the table and create a new one')
 @click.pass_context
-def checkout(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore, force):
+def checkout(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore):
     # check ctx.obj has permission or not
     if not to_table and not to_file:
         click.secho(str(BadParametersError("Need a destination, either a table (-t) or a file (-f)")), fg='red')
@@ -266,8 +275,8 @@ def checkout(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore,
     try:
         metadata = MetadataManager(ctx.obj)
         meta_obj = metadata.load_meta()
-        datatable = dataset + "_datatable"
-        indextable = dataset + "_indexTbl"
+        datatable = dataset + DATATABLE_SUFFIX
+        indextable = dataset + INDEXTABLE_SUFFIX
 
         relation.checkout(vlist, datatable, indextable, to_table=to_table, to_file=abs_path, delimeters=delimeters, header=header, ignore=ignore)
         # update meta info
@@ -279,7 +288,7 @@ def checkout(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore,
         if to_file:
             click.echo("File %s has been cloned from version %s" % (to_file, ",".join(vlist)))
     except Exception as e:
-        if to_table and force:
+        if to_table:
             relation.drop_table(to_table)
         if to_file:
             pass # delete the file
@@ -332,9 +341,9 @@ def commit(ctx, msg, table_name, file_name, delimeters, header):
         return
     parent_name = parent_vid_list[0]
     parent_list = parent_vid_list[1]
-    datatable_name = parent_name + "_datatable"
-    indextable_name = parent_name + "_indexTbl"
-    graph_name = parent_name + "_version"
+    datatable_name = parent_name + DATATABLE_SUFFIX
+    indextable_name = parent_name + INDEXTABLE_SUFFIX
+    graph_name = parent_name + VERSIONTABLE_SUFFIX
 
     try:
         # convert file into tmp_table first, then set the table_name to tmp_table
@@ -359,7 +368,6 @@ def commit(ctx, msg, table_name, file_name, delimeters, header):
 
             # find the new records
             lis_of_newrecords = relation.select_complement_table(table_name, datatable_name, attributes=_attributes)
-            
             lis_of_newrecords = [map(str, list(x)) for x in lis_of_newrecords]
             lis_of_newrecords = map(lambda x : '(' + ','.join(x) + ')', lis_of_newrecords)
 

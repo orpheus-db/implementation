@@ -1,6 +1,18 @@
-1. Security of user information
-2. Unit Tests of each command
-3. Compact index table
+1. Security of user information #NextVersion
+2. Unit Tests of each command 
+3. Compact index table #NextVersion
+4. Grant access #NextVersion
+5. Add verbose mode
+6. csv -> table, schema #Done
+7. SQL parser
+8. Change relative path to support invoke on a differnt dir, save $Orpheus_home$ to Unix Enviromental parameters
+9. db connection check
+10. Change user password settings.
+11. tracker overwrite, get rid of the old mapping.
+12. adding author field
+13. Change every table to public schema
+14. Drop tmp_table after using it
+15. commit check records
 
 Minors:
 1. Fix the venv activate in quick_start.sh
