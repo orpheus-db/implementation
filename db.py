@@ -57,14 +57,14 @@ class DatabaseManager():
         print "connect to DB %s" % self.currentDB
         try:
             if self.verbose:
-                click.echo('Trying connect to %s' % (self.currentDB))
-            logging.info('Trying to connext to %s' % (self.currentDB))
+                click.echo('Trying to connect to %s' % (self.currentDB))
+            logging.info('Trying to connect to %s' % (self.currentDB))
             self.connect = psycopg2.connect(self.connect_str)
             self.cursor = self.connect.cursor()
         except psycopg2.OperationalError as e:
             logging.error('%s is not open' % (self.currentDB))
             # click.echo(e, file=sys.stderr)
-            raise ConnectionError("connot connect to %s, check login credential or connection" % self.currentDB)
+            raise ConnectionError("connot connect to %s @ %s:%s, check connection" % (self.currentDB, self.config['host'], self.config['port']))
         return self
 
     def refresh_cursor(self):
@@ -120,6 +120,7 @@ class DatabaseManager():
             print "Creating version table"
             # create version table
             self.cursor.execute("CREATE TABLE %s(vid int primary key, \
+                                                 author text, \
                                                  num_records int, \
                                                  parent integer[], \
                                                  children integer[], \

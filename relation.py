@@ -16,6 +16,11 @@ class ReservedRelationError(Exception):
   def __str__(self):
       return "relation %s is a reserved name, please use a different one" % self.name
 
+class ColumnNotExistError(Exception):
+  def __init__(self, column):
+      self.name = column
+  def __str__(self):
+      return "column %s does not exist" % self.name
 
 class RelationManager(object):
     def __init__(self, conn):
@@ -34,7 +39,7 @@ class RelationManager(object):
 
 
 
-    def checkout_print(self, vlist, datatable, indextable, projection='*', where=None):
+    def checkout_data_print(self, vlist, datatable, indextable, projection='*', where=None):
       if not self.check_table_exists(datatable):
             raise RelationNotExistError(datatable)
             return
@@ -47,6 +52,34 @@ class RelationManager(object):
         sql = "SELECT %s FROM %s WHERE rid = ANY('%s'::int[]) AND %s;" % (",".join(_attributes), datatable, recordlist, "".join(where))
       else:
         sql = "SELECT %s FROM %s WHERE rid = ANY('%s'::int[]);" % (",".join(_attributes), datatable, recordlist)
+      self.conn.cursor.execute(sql)
+      print sql
+      return _attributes, self.conn.cursor.fetchall()
+
+    def checkout_meta_print(self, versiontable, projection='*', where=None):
+      if not self.check_table_exists(versiontable):
+          raise RelationNotExistError(datatable)
+          return
+      _attributes,_attributes_type = self.get_datatable_attribute(versiontable)
+
+      #Subject to change in later version
+      #need to change the where clause to match the corresponding type
+      #for example, text -> 'text' 
+      version_type_map = {}
+      for (a,b) in zip(_attributes, _attributes_type):
+        version_type_map[a] = b
+
+      if where:
+        # where can be any type, need to interpreter
+        try:
+          where_type = version_type_map[where[0]] # the attribute to do select on
+        except KeyError:
+          raise ColumnNotExistError(where[0])
+          return
+        where_clause = where[0] + where[1] + "'%s'" % where[2] if where_type=='text' else "".join(where)
+        sql = "SELECT %s from %s WHERE %s;" % (projection, versiontable, where_clause)
+      else:
+        sql = "SELECT %s from %s;" % (projection, versiontable)
       self.conn.cursor.execute(sql)
       print sql
       return _attributes, self.conn.cursor.fetchall()

@@ -19,12 +19,12 @@ class Parser(object):
 
 	@staticmethod
 	def get_attribute_from_file(abs_path, delimiter=','):
-
 		# Postgresql supportted type
 		PREDEFINED_TYPE = set(['int', 'float', 'text']) # and many more to be added
 
 		# Reserved attribute names
-		RESERVED_ATTRIBUTES = set('rid', 'vid')
+		RESERVED_ATTRIBUTES = set(['rid', 'vid'])
+
 
 		attribute_name, attribute_type = [],[]
 		with open(abs_path, 'r') as f:
@@ -44,7 +44,6 @@ class Parser(object):
 				except ValueError:
 					raise FormatError(abs_path)
 					return
-		if not generator:
-			return attribute_name, attribute_type
+		return attribute_name, attribute_type
 
 

@@ -103,11 +103,12 @@ single_source = ( (Group(database_name("database") + "." + table_name("table")) 
 join_source << single_source + ZeroOrMore(join_op + single_source + join_constraint)
 
 result_column = "*" | table_name + "." + "*" | (expr + Optional(Optional(AS) + column_alias))
-select_core = (SELECT + Optional(DISTINCT | ALL) + 
-                (Group(delimitedList(result_column))("columns") | VERSION) +
+select_core = ((SELECT + Optional(DISTINCT | ALL) + 
+                Group(delimitedList(result_column))("columns")  +
                 Optional(FROM + join_source) +
                 Optional(WHERE + expr("where_expr")) +
-                Optional(GROUP + BY + Group(delimitedList(ordering_term)("group_by_terms"))))
+                Optional(GROUP + BY + Group(delimitedList(ordering_term)("group_by_terms")))) |
+                (SELECT + VERSION + Optional(FROM + join_source)  + Optional(WHERE + expr("where_expr"))) )
 
 select_stmt << (select_core + ZeroOrMore(compound_operator + select_core) +
                 Optional(ORDER + BY + Group(delimitedList(ordering_term))("order_by_terms")) +

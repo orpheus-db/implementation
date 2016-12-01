@@ -14,18 +14,24 @@ from relation import RelationManager, RelationNotExistError
 from version import VersionManager
 from metadata import MetadataManager
 from user_control import UserManager
-from schema_parser import Parser as SchemaParser
+from schema_parser import Parser as SimpleSchemaParser
+
 from orpheus_sqlparser import parse_select as SQLParser
 from orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX
-
 from orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
 
 class Context():
     def __init__(self):
-        self.config_path = 'config.yaml'
+        self.config_file = 'config.yaml'
+        if 'ORPHEUS_HOME' not in os.environ:
+            os.environ['ORPHEUS_HOME'] = os.getcwd()
+        self.config_path = os.environ['ORPHEUS_HOME'] + '/' + self.config_file            
         try:
             with open(self.config_path, 'r') as f:
                 self.config = yaml.load(f)
+            # if user overwrite the ORPHEUS_HOME, rewrite the enviormental parameters
+            if 'orpheus_home' in self.config:
+                os.environ['ORPHEUS_HOME'] = self.config['orpheus_home']
         except (IOError, KeyError) as e:
             raise BadStateError("config.yaml file not found or data not clean, abort")
             return
@@ -38,7 +44,7 @@ class Context():
 @click.pass_context
 def cli(ctx):
     try:
-        ctx.obj = Context().config
+        ctx.obj = Context().config #Orpheus context obj
         user_obj = UserManager.get_current_state()
         for key in user_obj:
             ctx.obj[key] = user_obj[key]
@@ -55,6 +61,7 @@ def cli(ctx):
 def config(ctx, user, password):
     newctx = ctx.obj # default
     try:
+        conn = DatabaseManager(ctx.obj)
         if UserManager.verify_credential(user, password):
             from encryption import EncryptionTool
             newctx['user'] = user
@@ -74,6 +81,7 @@ def create_user(ctx, user, password):
     # create user in UserManager
     click.echo("creating user into %s" % ctx.obj['database'])
     try:
+        conn = DatabaseManager(ctx.obj)
         UserManager.create_user(user, password)
         DatabaseManager.create_user(user, password, ctx.obj['database']) #TODO: need revise
         click.echo('User created.')
@@ -87,15 +95,28 @@ def create_user(ctx, user, password):
 @click.option('--database', '-d', help='Specify the database that you want to use without changing host and port')
 @click.pass_context
 def db(ctx, database):
-    if database:
-        ctx.obj['database'] = database
-        UserManager.write_current_state(ctx.obj) # write to persisent store
-    click.echo('using: %s' % ctx.obj['database'])
+    try:
+        conn = DatabaseManager(ctx.obj)
+        if database:
+            ctx.obj['database'] = database
+            UserManager.write_current_state(ctx.obj) # write to persisent store
+        click.echo('using: %s' % ctx.obj['database'])
+    except Exception as e:
+        click.secho(str(e), fg='red')
 
 @cli.command()
 @click.pass_context
 def whoami(ctx):
-    click.echo('logged in as: %s' % ctx.obj['user'])
+    try:
+        conn = DatabaseManager(ctx.obj)
+        click.echo('logged in as: %s' % ctx.obj['user'])
+    except Exception as e:
+        click.secho(str(e), fg='red')
+
+@cli.command()
+@click.pass_context
+def wtf(ctx):
+    print 'hello world'
 
 @cli.command()
 @click.argument('input', type=click.Path(exists=True))
@@ -112,15 +133,16 @@ def init(ctx, input, dataset, table, schema):
     #    1.1 Load a csv or other format of the file into DB
     #    1.2 Schema
     # 2.add version control on a existing table in DB
-
     try:
+        print "line 133"
         conn = DatabaseManager(ctx.obj)
         rel = RelationManager(conn)
 
         if (not table and not schema) or (table and schema):
             raise BadParametersError("Need either (not both) a table or a schema file")
             return
-        abs_path = ctx.obj['orpheus_home'] + schema if schema and schema[0] != '/' else schema
+
+        abs_path = os.getcwd() + '/' + schema if schema and schema[0] != '/' else schema
 
         # the attribute_name should not have rid
         attribute_name , attribute_type = rel.get_datatable_attribute(table) if table else SchemaParser.get_attribute_from_file(abs_path)
@@ -131,7 +153,7 @@ def init(ctx, input, dataset, table, schema):
 
     # at this point, we have a valid conn obj and rel obj
     try:
-
+        print "line 152"
         # schema of the dataset, of the type (name, type)
         schema_tuple = zip(attribute_name, attribute_type)
 
@@ -199,7 +221,7 @@ def execute_sql_line(ctx, line):
 
     dataset = execution_dict['dataset'][0] if 'dataset' in execution_dict else None
     vlist = execution_dict['versions'] if 'versions' in execution_dict else None
-    projection = ",".join(execution_dict['columns'])
+    projection = ",".join(execution_dict['columns']) if 'columns' in execution_dict else None
     datatable = dataset + DATATABLE_SUFFIX if dataset else None
     indextable = dataset + INDEXTABLE_SUFFIX if dataset else None
     versiontable = dataset + VERSIONTABLE_SUFFIX if dataset else None
@@ -210,11 +232,19 @@ def execute_sql_line(ctx, line):
             conn.cursor.execute(line)
             result_tuples = conn.cursor.fetchall()
         else:
-            attribute_name, result_tuples = relation.checkout_print(vlist, 
-                                                                    datatable, 
-                                                                    indextable, 
-                                                                    projection=projection, 
-                                                                    where=where_expr)
+            if not projection: #meaning this is select version
+                attributes_name, result_tuples = relation.checkout_meta_print(versiontable,
+                                                                                projection='*',
+                                                                                where=where_expr)
+            else:
+                if vlist: #meaning this is select from desired version
+                    attribute_name, result_tuples = relation.checkout_data_print(vlist, 
+                                                                            datatable, 
+                                                                            indextable, 
+                                                                            projection=projection, 
+                                                                            where=where_expr)
+                else: #meaning this is selecting column based on versions
+                    pass
 
             # print to console
             print "\t".join(attribute_name)
@@ -246,7 +276,11 @@ def execute_sql_file(ctx, param, value):
 @click.option('--sql', prompt="Input sql statement")
 @click.pass_context
 def run(ctx, sql):
-    execute_sql_line(ctx, sql)
+    try:
+        conn = DatabaseManager(ctx.obj)
+        execute_sql_line(ctx, sql)
+    except Exception as e:
+        click.secho(str(e), fg='red')
 
 @cli.command()
 @click.argument('dataset')

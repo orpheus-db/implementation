@@ -5,13 +5,14 @@ class VersionManager(object):
     def __init__(self, conn):
         self.conn = conn;
 
-    def init_version_graph_dataset(self, dataset, list_of_rid):
+    def init_version_graph_dataset(self, dataset, list_of_rid, user):
         # using CREATE SQL command
         # table name = graph_name = dataset_name + "version_graph" (or any nicer name..)
         print "Initializing version graph"
         self.conn.refresh_cursor()
         init_version_sql = "INSERT INTO %s VALUES \
-                            (1, %s, '{-1}', '{}', '%s', '%s', 'init commit');" % (dataset + VERSIONTABLE_SUFFIX, str(len(list_of_rid)), str(datetime.datetime.now()), str(datetime.datetime.now()))
+                            (1, '%s', %s, '{-1}', '{}', '%s', '%s', 'init commit');" % \
+                            (dataset + VERSIONTABLE_SUFFIX, user, str(len(list_of_rid)), str(datetime.datetime.now()), str(datetime.datetime.now()))
         self.conn.cursor.execute(init_version_sql)
         self.conn.connect.commit()   
 
@@ -25,7 +26,7 @@ class VersionManager(object):
         self.conn.cursor.execute(init_indextbl_sql)
         self.conn.connect.commit()
 
-    def update_version_graph(self, version_graph_name, num_of_records, parent_list, table_create_time, msg):
+    def update_version_graph(self, version_graph_name, user, num_of_records, parent_list, table_create_time, msg):
         # print "update_version_graph"
         # create new version
         parent_list_string='\'{' + ', '.join(parent_list) + '}\''
@@ -33,7 +34,7 @@ class VersionManager(object):
         table_create_time = table_create_time or commit_time
         max_vid = self.get_curt_max_vid(version_graph_name)
         curt_vid = max_vid + 1
-        values = "(%s, %s, %s, %s, %s, %s, %s)" % (curt_vid, num_of_records, parent_list_string, "'{}'", "'%s'" % table_create_time, "'%s'" % commit_time, "'%s'" % msg)
+        values = "(%s, '%s', %s, %s, %s, %s, %s, %s)" % (curt_vid, user, num_of_records, parent_list_string, "'{}'", "'%s'" % table_create_time, "'%s'" % commit_time, "'%s'" % msg)
         sql = "INSERT INTO %s VALUES %s;"% (version_graph_name, values)
         # print sql
         self.conn.cursor.execute(sql)
