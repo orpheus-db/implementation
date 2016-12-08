@@ -14,9 +14,9 @@ from relation import RelationManager, RelationNotExistError
 from version import VersionManager
 from metadata import MetadataManager
 from user_control import UserManager
-from schema_parser import Parser as SimpleSchemaParser
+from orpheus_schema_parser import Parser as SimpleSchemaParser
 
-from orpheus_sqlparser import parse_select as SQLParser
+from orpheus_sqlparser import SQLParser
 from orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX
 from orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
 
@@ -97,6 +97,7 @@ def create_user(ctx, user, password):
 def db(ctx, database):
     try:
         conn = DatabaseManager(ctx.obj)
+        print ctx.obj
         if database:
             ctx.obj['database'] = database
             UserManager.write_current_state(ctx.obj) # write to persisent store
@@ -114,11 +115,6 @@ def whoami(ctx):
         click.secho(str(e), fg='red')
 
 @cli.command()
-@click.pass_context
-def wtf(ctx):
-    print 'hello world'
-
-@cli.command()
 @click.argument('input', type=click.Path(exists=True))
 @click.argument('dataset')
 @click.option('--table', '-t', help='Create the dataset with exisiting table schema')
@@ -134,7 +130,6 @@ def init(ctx, input, dataset, table, schema):
     #    1.2 Schema
     # 2.add version control on a existing table in DB
     try:
-        print "line 133"
         conn = DatabaseManager(ctx.obj)
         rel = RelationManager(conn)
 
@@ -145,15 +140,20 @@ def init(ctx, input, dataset, table, schema):
         abs_path = os.getcwd() + '/' + schema if schema and schema[0] != '/' else schema
 
         # the attribute_name should not have rid
-        attribute_name , attribute_type = rel.get_datatable_attribute(table) if table else SchemaParser.get_attribute_from_file(abs_path)
+        # attribute_name , attribute_type = rel.get_datatable_attribute(table) if table else SchemaParser.get_attribute_from_file(abs_path)
+        if table:
+            attribute_name , attribute_type = rel.get_datatable_attribute(table)
+        else:
+            attribute_name , attribute_type = SimpleSchemaParser.get_attribute_from_file(abs_path)
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         click.secho(str(e), fg='red')
         return
 
     # at this point, we have a valid conn obj and rel obj
     try:
-        print "line 152"
         # schema of the dataset, of the type (name, type)
         schema_tuple = zip(attribute_name, attribute_type)
 
@@ -164,7 +164,8 @@ def init(ctx, input, dataset, table, schema):
 
         # init version info
         version = VersionManager(conn)
-        version.init_version_graph_dataset(dataset, lis_rid)
+        
+        version.init_version_graph_dataset(dataset, lis_rid, ctx.obj['user'])
         version.init_index_table_dataset(dataset, lis_rid)
 
         click.echo("dataset %s create successful" % dataset)
@@ -232,13 +233,14 @@ def execute_sql_line(ctx, line):
             conn.cursor.execute(line)
             result_tuples = conn.cursor.fetchall()
         else:
+            attributes_name, result_tuples = [], []
             if not projection: #meaning this is select version
                 attributes_name, result_tuples = relation.checkout_meta_print(versiontable,
                                                                                 projection='*',
                                                                                 where=where_expr)
             else:
                 if vlist: #meaning this is select from desired version
-                    attribute_name, result_tuples = relation.checkout_data_print(vlist, 
+                    attributes_name, result_tuples = relation.checkout_data_print(vlist, 
                                                                             datatable, 
                                                                             indextable, 
                                                                             projection=projection, 
@@ -247,7 +249,7 @@ def execute_sql_line(ctx, line):
                     pass
 
             # print to console
-            print "\t".join(attribute_name)
+            print "\t".join(attributes_name)
         for tup in result_tuples:
             print "\t".join(map(str, tup))
     except psycopg2.ProgrammingError as e:
@@ -277,9 +279,13 @@ def execute_sql_file(ctx, param, value):
 @click.pass_context
 def run(ctx, sql):
     try:
+        # execute_sql_line(ctx, sql)
         conn = DatabaseManager(ctx.obj)
-        execute_sql_line(ctx, sql)
+        parser = SQLParser(conn)
+        print parser.parse(sql)
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         click.secho(str(e), fg='red')
 
 @cli.command()
@@ -422,7 +428,7 @@ def commit(ctx, msg, table_name, file_name, delimeters, header):
             table_create_time = metadata.load_table_create_time(table_name) if table_name != 'tmp_table' else None
 
             # update version graph
-            curt_vid = version.update_version_graph(graph_name, len(current_version_rid), parent_list, table_create_time, msg)
+            curt_vid = version.update_version_graph(graph_name, ctx.obj['user'], len(current_version_rid), parent_list, table_create_time, msg)
 
             # update index table
             version.update_index_table(indextable_name, curt_vid, current_version_rid)

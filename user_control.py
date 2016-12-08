@@ -29,18 +29,19 @@ class UserManager(object):
 		return user in [usr for usr in listdir(cls.user_path())] and isfile("/".join([cls.user_path(), usr, 'config']))
 
 	@classmethod
-	def create_user(cls, user, password):
+	def create_user(cls, user, password=None):
 		from os import makedirs
 		if cls.check_user_exist(user):
 			raise LocalUserExistError("username %s exists, try a different one" % user)
 			return None
-		passphrase = EncryptionTool.passphrase_hash(password)
+		user_obj = {
+				'user' : user
+		}
+		if password:
+			passphrase = EncryptionTool.passphrase_hash(password)
+			user_obj['passphrase'] = passphrase	
 		user_directory = '/'.join([cls.user_path(),user])
 		makedirs(user_directory) # make the directory, need to check if have permission
-		user_obj = {
-			'user' : user,
-			'passphrase' : passphrase
-		}
 		with open('/'.join([user_directory, 'config']), 'w+') as f:
 			f.write(json.dumps(user_obj))
 		return 1

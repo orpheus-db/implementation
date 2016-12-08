@@ -1,133 +1,106 @@
-# This code is 
-# http://pyparsing.wikispaces.com/file/view/select_parser.py/158651233/select_parser.py
-# select_parser.py
-# Copyright 2010, Paul McGuire
-#
-# a simple SELECT statement parser, taken from SQLite's SELECT statement
-# definition at http://www.sqlite.org/lang_select.html
-#
-from pyparsing import *
+# This class contains a class called SQLParser that handles the parsing of richer syntax of SQL.
+import re
+import orpheus_const as const
+from relation import RelationManager
 
-LPAR,RPAR,COMMA = map(Suppress,"(),")
-select_stmt = Forward().setName("select statement")
+class InvalidSyntaxError(Exception):
+  def __init__(self, statement):
+      self.statement = statement
+  def __str__(self):
+      return "Error parsing '%s'"
 
-# keywords
-(UNION, ALL, AND, INTERSECT, EXCEPT, COLLATE, ASC, DESC, ON, USING, NATURAL, INNER, 
- CROSS, LEFT, OUTER, JOIN, AS, INDEXED, NOT, SELECT, DISTINCT, FROM, WHERE, GROUP, BY,
- HAVING, ORDER, BY, LIMIT, OFFSET, VERSION, OF, CVD, META) =  map(CaselessKeyword, """UNION, ALL, AND, INTERSECT, 
- EXCEPT, COLLATE, ASC, DESC, ON, USING, NATURAL, INNER, CROSS, LEFT, OUTER, JOIN, AS, INDEXED, NOT, SELECT, 
- DISTINCT, FROM, WHERE, GROUP, BY, HAVING, ORDER, BY, LIMIT, OFFSET, VERSION, OF, CVD, META""".replace(",","").split())
+class SQLParser(object):
 
-(CAST, ISNULL, NOTNULL, NULL, IS, BETWEEN, ELSE, END, CASE, WHEN, THEN, EXISTS,
- COLLATE, IN, LIKE, GLOB, REGEXP, MATCH, ESCAPE, CURRENT_TIME, CURRENT_DATE, 
- CURRENT_TIMESTAMP) = map(CaselessKeyword, """CAST, ISNULL, NOTNULL, NULL, IS, BETWEEN, ELSE, 
- END, CASE, WHEN, THEN, EXISTS, COLLATE, IN, LIKE, GLOB, REGEXP, MATCH, ESCAPE, 
- CURRENT_TIME, CURRENT_DATE, CURRENT_TIMESTAMP""".replace(",","").split())
+	# takes in a connection object
+	def __init__(self, conn):
+		self.conn = conn
+		self.lis_key_words = "UNION,ALL,AND,INTERSECT,EXCEPT,COLLATE,ASC,DESC,ON,USING,NATURAL,INNER,CROSS,LEFT,OUTER,JOIN,AS,INDEXED,NOT,SELECT,DISTINCT,FROM,WHERE,GROUP,BY,HAVING,ORDER,BY,LIMIT,OFFSET,COUNT,MAX,MIN"
+		self.lis_punct = ",.;()|><=+-"
 
-keyword = MatchFirst((UNION, ALL, INTERSECT, EXCEPT, COLLATE, ASC, DESC, ON, USING, NATURAL, INNER, 
- CROSS, LEFT, OUTER, JOIN, AS, INDEXED, NOT, SELECT, DISTINCT, FROM, WHERE, GROUP, BY,
- HAVING, ORDER, BY, LIMIT, OFFSET, VERSION, OF, CVD, META, CAST, ISNULL, NOTNULL, NULL, IS, BETWEEN, ELSE, END, CASE, WHEN, THEN, EXISTS,
- COLLATE, IN, LIKE, GLOB, REGEXP, MATCH, ESCAPE, CURRENT_TIME, CURRENT_DATE, 
- CURRENT_TIMESTAMP))
- 
-identifier = ~keyword + Word(alphas, alphanums+"_")
-collation_name = identifier.copy()
-column_name = identifier.copy()
-column_alias = identifier.copy()
-table_name = identifier.copy()
-table_alias = identifier.copy()
-index_name = identifier.copy()
-function_name = identifier.copy()
-parameter_name = identifier.copy()
-database_name = identifier.copy()
-dataset_name = identifier.copy()
+	# rule-based to extract column name touched by this sql statement
+	def column_names(self, raw_statement):
+		# replace all reserved keywords and find the remaining fields word
+
+		# replace sql keywords
+		replacement_dict = {}
+		for keyword in self.lis_key_words.split(','):
+			replacement_dict[keyword] = ''
+		return_str = re.sub(r'\b(\w+)\b', lambda m:replacement_dict.get(m.group(1), m.group(1)), raw_statement)
+
+		# replace the unnecessary punctation
+		for punct in self.lis_punct:
+			 return_str = return_str.replace(punct, ' ')
+
+		# replace the unnecessary fixed int and text
+		# TODO: add more stuff here, timestamp?
+		return_str = re.sub(r'\b(\d+)\b', '', return_str) # int value
+		return_str = re.sub(r'\b(\"\w+\")\b', '', return_str) # predefined text
+
+		return set(return_str.split())
+
+	def get_fields_mapping(self, dataset_name, attributes):
+		# mapping from attribute name to corresponding table
+		# by default, d = datatable, i = indextable, v = versiontable
+		fields_mapping = {'vid' : 'i'}
+		for attribute in attributes:
+			fields_mapping[attribute] = 'd'
+		return fields_mapping
+		
 
 
-# expression
-expr = Forward().setName("expression")
+	# main logic to transfer line to executable sql statments, rule based
+	def parse(self, line):
+		# two cases
+		# 1. version is specified, version 1,2 from cvd ds1
+		# 2. version is not specified
+		version_specified_re = re.compile('.*FROM\sVERSION\s(\d+|\d+(,\d+)+)\sOF\sCVD\s(\w+);?')
+		version_matched = version_specified_re.match(line)
+		if version_matched:
+			replacement_re = re.compile('FROM\sVERSION\s(\d+|\d+(,\d+)+)\sOF\sCVD\s(\w+)')
+			# this line contains FROM VERSION * OF CVD *
+			vlist = version_matched.group(1) # list of version separted by comma
+			dataset_name = version_matched.group(3) # whatever after keyword CVD
+			datatable = dataset_name + const.DATATABLE_SUFFIX
+			indextable = dataset_name + const.INDEXTABLE_SUFFIX
+			relation = RelationManager(self.conn)
+			rlist = relation.select_records_of_version_list(vlist.split(','), indextable)
+			replacement_from_clause = "FROM %s WHERE rid = ANY('%s'::int[])" % (datatable, rlist)
+			return re.sub(replacement_re, replacement_from_clause, line)
+		version_unknown_re = re.compile('.*FROM\sCVD\s(\w+);?')
+		version_unknown_matched = version_unknown_re.match(line)
+		if version_unknown_matched:
+			replacement_re = re.compile('FROM\sCVD\s(\w+);?')
 
-integer = Regex(r"[+-]?\d+")
-numeric_literal = Regex(r"\d+(\.\d*)?([eE][+-]?\d+)?")
-string_literal = QuotedString("'")
-blob_literal = Combine(oneOf("x X") + "'" + Word(hexnums) + "'")
-literal_value = ( numeric_literal | string_literal | blob_literal |
-    NULL | CURRENT_TIME | CURRENT_DATE | CURRENT_TIMESTAMP )
-bind_parameter = (
-    Word("?",nums) |
-    Combine(oneOf(": @ $") + parameter_name)
-    )
-type_name = oneOf("TEXT REAL INTEGER BLOB NULL")
+			dataset_name = version_unknown_matched.group(1) # whatever after keyword CVD
+			datatable = dataset_name + const.DATATABLE_SUFFIX
+			indextable = dataset_name + const.INDEXTABLE_SUFFIX
+			versiontable = dataset_name + const.VERSIONTABLE_SUFFIX
 
-version_lis = Group( integer ^ (integer + OneOrMore( Suppress(",") + integer)))
+			relation = RelationManager(self.conn)
+			datatable_attributes, _ = relation.get_datatable_attribute(dataset_name + const.DATATABLE_SUFFIX)
 
-expr_term = (
-    CAST + LPAR + expr + AS + type_name + RPAR |
-    EXISTS + LPAR + select_stmt + RPAR |
-    function_name + LPAR + Optional(delimitedList(expr)) + RPAR |
-    literal_value |
-    bind_parameter |
-    version_lis |
-    identifier
-    )
+			# get the mapping from each field to alias
+			fields_mapping = self.get_fields_mapping(dataset_name, datatable_attributes)
 
-UNARY,BINARY,TERNARY=1,2,3
-expr << operatorPrecedence(expr_term,
-    [
-    (oneOf('- + ~') | NOT, UNARY, opAssoc.LEFT),
-    ('||', BINARY, opAssoc.LEFT),
-    (oneOf('* / %'), BINARY, opAssoc.LEFT),
-    (oneOf('+ -'), BINARY, opAssoc.LEFT),
-    (oneOf('<< >> & |'), BINARY, opAssoc.LEFT),
-    (oneOf('< <= > >='), BINARY, opAssoc.LEFT),
-    (oneOf('= == != <>') | IS | IN | LIKE | GLOB | MATCH | REGEXP, BINARY, opAssoc.LEFT),
-    ('||', BINARY, opAssoc.LEFT),
-    ((BETWEEN,AND), TERNARY, opAssoc.LEFT),
-    ])
+			# get list of touched columns
+			list_of_column = self.column_names(re.sub(replacement_re, "", line))
 
-compound_operator = (UNION + Optional(ALL) | INTERSECT | EXCEPT)
+			line = re.sub(replacement_re, 'FROM %s d, %s i, %s v' % (datatable, indextable, versiontable), line)
 
-ordering_term = expr + Optional(COLLATE + collation_name) + Optional(ASC | DESC)
-
-join_constraint = Optional(ON + expr | USING + LPAR + Group(delimitedList(column_name)) + RPAR)
-
-join_op = COMMA | (Optional(NATURAL) + Optional(INNER | CROSS | LEFT + OUTER | LEFT | OUTER) + JOIN)
-
-join_source = Forward()
-single_source = ( (Group(database_name("database") + "." + table_name("table")) | table_name("table")) + 
-                    Optional(Optional(AS) + table_alias("table_alias")) +
-                    Optional(INDEXED + BY + index_name("name") | NOT + INDEXED)("index") | 
-                  (LPAR + select_stmt + RPAR + Optional(Optional(AS) + table_alias)) | 
-                  (LPAR + join_source + RPAR) | VERSION + version_lis("versions") + OF + CVD + dataset_name("dataset") |
-                  META + OF + CVD + dataset_name("dataset"))
-
-join_source << single_source + ZeroOrMore(join_op + single_source + join_constraint)
-
-result_column = "*" | table_name + "." + "*" | (expr + Optional(Optional(AS) + column_alias))
-select_core = ((SELECT + Optional(DISTINCT | ALL) + 
-                Group(delimitedList(result_column))("columns")  +
-                Optional(FROM + join_source) +
-                Optional(WHERE + expr("where_expr")) +
-                Optional(GROUP + BY + Group(delimitedList(ordering_term)("group_by_terms")))) |
-                (SELECT + VERSION + Optional(FROM + join_source)  + Optional(WHERE + expr("where_expr"))) )
-
-select_stmt << (select_core + ZeroOrMore(compound_operator + select_core) +
-                Optional(ORDER + BY + Group(delimitedList(ordering_term))("order_by_terms")) +
-                Optional(LIMIT + (integer + OFFSET + integer | integer + COMMA + integer)))
-
-def parse_select(text):
-	return select_stmt.parseString(text).asDict()
-
-'''
-tests = """\
-    select * from version 1,2,3 of cvd ds1
-    select a,b,c from version 1 of cvd aaa where z > 100;
-    select d,e,f from version 1,2,3 of cvd aaa where z > 100 group by a having b;""".splitlines()
-for t in tests:
-    print t
-    try:
-        # print select_stmt.parseString(t).dump()
-        print select_stmt.parseString(t).asDict()
-    except ParseException, pe:
-        print pe.msg
-    print
-'''
+			print list_of_column
+			print fields_mapping
+			for column in list_of_column:
+				print column
+				if column == '*':
+					# what should i do?
+					pass
+				elif column == 'vid':
+					line = line.replace('vid', 'unnest(i.vlist)')
+					print 'hello'
+				else:
+					try:
+						line = line.replace(column, fields_mapping[column] + '.' + column)
+					except KeyError: # means user defined alias
+						pass # do not replace it 
+			print line
+			
