@@ -18,7 +18,7 @@ class SQLParser(object):
 		self.lis_punct = ",.;()|><=+-"
 
 	# rule-based to extract column name touched by this sql statement
-	def column_names(self, raw_statement):
+	def get_touched_column_names(self, raw_statement):
 		# replace all reserved keywords and find the remaining fields word
 
 		# replace sql keywords
@@ -38,14 +38,43 @@ class SQLParser(object):
 
 		return set(return_str.split())
 
-	def get_fields_mapping(self, dataset_name, attributes):
+	def get_fields_mapping(self, attributes):
 		# mapping from attribute name to corresponding table
 		# by default, d = datatable, i = indextable, v = versiontable
 		fields_mapping = {'vid' : 'i'}
 		for attribute in attributes:
 			fields_mapping[attribute] = 'd'
+
+		versiontable_attributes = ["author", "num_records", "parent", "children", "create_time", "commit_time", "commit_msg"] 
+		# take in version table attributes
+		for version_attribute in versiontable_attributes:
+			fields_mapping[version_attribute] = 'v'
+		
 		return fields_mapping
 		
+	# get what tables are touched by columns
+	def get_touched_table(self, touched_columns, fields_mapping):
+		touched_table = set()
+		for column in touched_columns:
+			try:
+				touched_table.add(fields_mapping[column])
+			except KeyError:
+				pass # user defined alias
+		return touched_table
+		
+	# return replaced from clause
+	def get_from_clasue(self, dataset_name, touched_table):
+		# rule based !
+		datatable = dataset_name + const.DATATABLE_SUFFIX
+		indextable = dataset_name + const.INDEXTABLE_SUFFIX
+		versiontable = dataset_name + const.VERSIONTABLE_SUFFIX
+		if 'd' in touched_table and 'i' in touched_table:
+			return "FROM %s, %s" % (datatable + ' d', indextable + ' i')
+		elif 'v' in touched_table and 'i' in touched_table:
+			return "FROM %s, %s" % (versiontable + ' v', indextable + ' i')
+		else:
+			return "FROM %s, %s, %s" % (versiontable + ' v', indextable + ' i', datatable + ' d')
+
 
 
 	# main logic to transfer line to executable sql statments, rule based
@@ -80,12 +109,17 @@ class SQLParser(object):
 			datatable_attributes, _ = relation.get_datatable_attribute(dataset_name + const.DATATABLE_SUFFIX)
 
 			# get the mapping from each field to alias
-			fields_mapping = self.get_fields_mapping(dataset_name, datatable_attributes)
+			fields_mapping = self.get_fields_mapping(datatable_attributes)
 
 			# get list of touched columns
-			list_of_column = self.column_names(re.sub(replacement_re, "", line))
+			list_of_column = self.get_touched_column_names(re.sub(replacement_re, "", line))
 
-			line = re.sub(replacement_re, 'FROM %s d, %s i, %s v' % (datatable, indextable, versiontable), line)
+
+			# replacement string judged by touched columns
+			replacement_str = self.get_from_clasue(dataset_name, self.get_touched_table(list_of_column, fields_mapping))
+			line = re.sub(replacement_re, replacement_str, line)
+
+			# add where clause
 
 			print list_of_column
 			print fields_mapping
@@ -95,8 +129,7 @@ class SQLParser(object):
 					# what should i do?
 					pass
 				elif column == 'vid':
-					line = line.replace('vid', 'unnest(i.vlist)')
-					print 'hello'
+					line = line.replace('vid', 'i.vid')
 				else:
 					try:
 						line = line.replace(column, fields_mapping[column] + '.' + column)

@@ -22,7 +22,7 @@ class VersionManager(object):
         # insert into indexTbl values ('{1,3,5}', '{1}')
         init_indextbl_sql = "INSERT INTO %s \
                              VALUES \
-                             ('{1}', '{%s}');" % (dataset + INDEXTABLE_SUFFIX, str(",".join(map(str, list_of_rid))))
+                             (1, '{%s}');" % (dataset + INDEXTABLE_SUFFIX, str(",".join(map(str, list_of_rid))))
         self.conn.cursor.execute(init_indextbl_sql)
         self.conn.connect.commit()
 
@@ -84,7 +84,7 @@ class VersionManager(object):
     #     self.conn.connect.commit()
 
     def update_index_table(self, index_table_name, new_vid, new_rids):
-        sql = 'INSERT INTO %s VALUES (ARRAY[%s], ARRAY%s);' % (index_table_name, new_vid, new_rids)
+        sql = 'INSERT INTO %s VALUES (%s, ARRAY%s);' % (index_table_name, new_vid, new_rids)
         self.conn.cursor.execute(sql)
         self.conn.connect.commit()
 

@@ -130,7 +130,7 @@ class DatabaseManager():
 
             print "Creating index table"
             # create indexTbl table
-            self.cursor.execute("CREATE TABLE %s (vlist integer[], \
+            self.cursor.execute("CREATE TABLE %s (vid int, \
                                                   rlist integer[]);" % (dataset + INDEXTABLE_SUFFIX))
 
             # dump data into this dataset
