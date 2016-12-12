@@ -15,7 +15,7 @@ class SQLParser(object):
 	def __init__(self, conn):
 		self.conn = conn
 		self.lis_key_words = "UNION,ALL,AND,INTERSECT,EXCEPT,COLLATE,ASC,DESC,ON,USING,NATURAL,INNER,CROSS,LEFT,OUTER,JOIN,AS,INDEXED,NOT,SELECT,DISTINCT,FROM,WHERE,GROUP,BY,HAVING,ORDER,BY,LIMIT,OFFSET,COUNT,MAX,MIN"
-		self.lis_punct = ",.;()|><=+-"
+		self.lis_punct = ",;()|><=+-"
 
 	# rule-based to extract column name touched by this sql statement
 	def get_touched_column_names(self, raw_statement):
@@ -35,6 +35,7 @@ class SQLParser(object):
 		# TODO: add more stuff here, timestamp?
 		return_str = re.sub(r'\b(\d+)\b', '', return_str) # int value
 		return_str = re.sub(r'\b(\"\w+\")\b', '', return_str) # predefined text
+		return_str = re.sub(r'\b(\'\w+\')\b', '', return_str)
 
 		return set(return_str.split())
 
@@ -62,8 +63,16 @@ class SQLParser(object):
 				pass # user defined alias
 		return touched_table
 		
+
+	def get_where_clause(self, touched_table):
+		# rule based!
+		if 'd' in touched_table and 'i' in touched_table:
+			return "d.rid = ANY(i.rlist)"
+		else:
+			return None
+
 	# return replaced from clause
-	def get_from_clasue(self, dataset_name, touched_table):
+	def get_from_clause(self, dataset_name, touched_table):
 		# rule based !
 		datatable = dataset_name + const.DATATABLE_SUFFIX
 		indextable = dataset_name + const.INDEXTABLE_SUFFIX
@@ -72,8 +81,29 @@ class SQLParser(object):
 			return "FROM %s, %s" % (datatable + ' d', indextable + ' i')
 		elif 'v' in touched_table and 'i' in touched_table:
 			return "FROM %s, %s" % (versiontable + ' v', indextable + ' i')
+		elif 'd' in touched_table and len(touched_table) == 1: # meaning there is only datatable attributes are touched
+			return "FROM %s" % datatable + ' d'
+		elif 'v' in touched_table and len(touched_table) == 1: # meaning there is only versiontable attributes are touched
+			return "FROM %s" % versiontable + ' v'
 		else:
 			return "FROM %s, %s, %s" % (versiontable + ' v', indextable + ' i', datatable + ' d')
+
+	# such sh*tty code, please have a better implementation
+	# where is defined as anthing atfer WHERE but before a ORDER BY or a GROUP BY or a ;
+	def find_where_clause(self, line):
+		start_idx = line.find("WHERE")
+		if start_idx < 0:
+			return None, None
+		end_idx = start_idx + 5
+		stop_words = set([" ORDER BY", " GROUP BY"])
+		stop_punct = set([')'])
+		while end_idx < len(line):
+			if line[end_idx:end_idx + 9] in stop_words:
+				return start_idx, end_idx
+			if line[end_idx:end_idx + 1] in stop_punct:
+				return start_idx, end_idx
+			end_idx += 1
+		return start_idx, end_idx
 
 
 
@@ -114,17 +144,31 @@ class SQLParser(object):
 			# get list of touched columns
 			list_of_column = self.get_touched_column_names(re.sub(replacement_re, "", line))
 
+			# get a set of touched table from touched columns
+			touched_table = self.get_touched_table(list_of_column, fields_mapping)
 
 			# replacement string judged by touched columns
-			replacement_str = self.get_from_clasue(dataset_name, self.get_touched_table(list_of_column, fields_mapping))
+			replacement_str = self.get_from_clause(dataset_name, touched_table)
 			line = re.sub(replacement_re, replacement_str, line)
+
+			# need to add where clause by how table is touched
+			s,e = self.find_where_clause(line)
+			if not s and not e:
+				# there is no where in line
+				pass
+			else:
+				where_clause = line[s:e]
+				# following are rules
+				additional_where_clause = self.get_where_clause(touched_table)
+				if additional_where_clause:
+					line = line[:s] + where_clause + " AND %s" % additional_where_clause + line[e:]
 
 			# add where clause
 
 			print list_of_column
 			print fields_mapping
 			for column in list_of_column:
-				print column
+				# print column
 				if column == '*':
 					# what should i do?
 					pass
@@ -132,7 +176,9 @@ class SQLParser(object):
 					line = line.replace('vid', 'i.vid')
 				else:
 					try:
-						line = line.replace(column, fields_mapping[column] + '.' + column)
+						print column, column.find('.')
+						if column.find('.') < 0:
+							line = line.replace(column, fields_mapping[column] + '.' + column)
 					except KeyError: # means user defined alias
 						pass # do not replace it 
 			print line
