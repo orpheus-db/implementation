@@ -2,10 +2,24 @@
 
 OrpheusDB is an open-sourced database that enable data version capability on relational database system.
 
-This repository should be viewed as an implementation of ongoing research under the project OrpheusDB at the University of Illinois at Urbana Champaign led by [Prof. Aditya Parameswaran][prof].
+This repository is an implementation of ongoing research under the project OrpheusDB at the University of Illinois at Urbana Champaign led by [Prof. Aditya Parameswaran][prof].
 
 ### Version
 1.0.0
+
+### System Requirement
+* Python 2.7.x
+* PostgreSQL >= 9.5
+
+### Install
+OrpheusDB comes with standard 'setup.py' script for installation. An easier way to install is through pip
+'''shell
+pip install .
+'''
+By default, 'dh' is the alias for OrpheusDB user interface.
+
+### Commands
+TODO
 
 ### Todos
  - db run
