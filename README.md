@@ -14,10 +14,10 @@ This repository is an implementation of ongoing research under the project Orphe
 ### Install
 OrpheusDB comes with standard `setup.py` script for installation. An easier way to install is through pip. By default, `dh` is the alias for OrpheusDB user interface.
 
-'''
+```
 pip install .
 dh --help
-'''
+```
 
 ### Commands
 TODO
