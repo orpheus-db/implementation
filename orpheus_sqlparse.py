@@ -5,7 +5,7 @@ from sqlparse.sql import Identifier, Token, Where
 
 import orpheus_const as const
 from relation import RelationManager
-
+from collections import defaultdict
 
 class InvalidSyntaxError(Exception):
   def __init__(self, statement):
@@ -50,7 +50,7 @@ class SQLParser(object):
 	# anything in this parsed statement
 	def get_touched_column_names(self, parent, stop_words=set()):
 		tokens = parent.flatten()
-		column_names = {}
+		column_names = defaultdict(list)
 		for token in tokens:
 			if token.ttype == sqlparse.tokens.Name:
 				# this is a column
@@ -58,7 +58,7 @@ class SQLParser(object):
 				if column_value not in stop_words:
 					token_parent = token.parent
 					token_index = token_parent.token_index(token)
-					column_names[column_value] = (token_parent, token_index)
+					column_names[column_value].append((token_parent, token_index))
 		return column_names
 
 	# return replaced from clause
@@ -187,15 +187,15 @@ class SQLParser(object):
 			parent.insert_before(new_idex, self.construct_identifier(" where " + where_constraint))
 		else:
 			where_token = parent.tokens[where_indx]
-			where_token.tokens.extend(self.construct_identifier(" and " + where_constraint))
+			where_token.tokens.extend(self.construct_identifier(" and " + where_constraint + " "))
 
 		# replace all the touched columns by prefix a alias
 		for column in touched_column_names.keys():
-			(column_parent, column_idx) = touched_column_names[column]
-			if column in fields_mapping: # only those we found in tables
-				# replace them
-				mapped_table_alias = fields_mapping[column]
-				column_parent.tokens = column_parent.tokens[:column_idx] + [self.construct_identifier("%s.%s" % (mapped_table_alias, column))] + column_parent.tokens[column_idx + 1:]
+			for (column_parent, column_idx) in touched_column_names[column]:
+				if column in fields_mapping: # only those we found in tables
+					# replace them
+					mapped_table_alias = fields_mapping[column]
+					column_parent.tokens = column_parent.tokens[:column_idx] + [self.construct_identifier("%s.%s" % (mapped_table_alias, column))] + column_parent.tokens[column_idx + 1:]
 
 
 
