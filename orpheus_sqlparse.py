@@ -177,17 +177,19 @@ class SQLParser(object):
 
 		# replace the from clause
 		parent.tokens = parent.tokens[:cvd_idx] + [self.construct_identifier(table_constraint)] + parent[cvd_idx+1:]
+
 		where_constraint = self.get_where_clause(touched_table)
 
-		# replace the where clause
-		where_indx = self.find_where_index(parent)
-		if where_indx < 0:
-			# no where, needs to add
-			new_idex = self.find_where_insert(parent) # find the place to insert new where
-			parent.insert_before(new_idex, self.construct_identifier(" where " + where_constraint))
-		else:
-			where_token = parent.tokens[where_indx]
-			where_token.tokens.extend(self.construct_identifier(" and " + where_constraint + " "))
+		# replace the where clause if needed
+		if where_constraint:
+			where_indx = self.find_where_index(parent)
+			if where_indx < 0:
+				# no where, needs to add
+				new_idex = self.find_where_insert(parent) # find the place to insert new where
+				parent.insert_before(new_idex, self.construct_identifier(" where " + where_constraint))
+			else:
+				where_token = parent.tokens[where_indx]
+				where_token.tokens.extend(self.construct_identifier(" and " + where_constraint + " "))
 
 		# replace all the touched columns by prefix a alias
 		for column in touched_column_names.keys():
@@ -233,7 +235,7 @@ class SQLParser(object):
 
 				touched_column_names = self.get_touched_column_names(parent, stop_words=set(self.reserved_column_names + [dataset_name]))
 
-				print touched_column_names
+				# print touched_column_names
 
 				self.replace_unknown_version(parent, cvd_idx, dataset_name, fields_mapping, touched_column_names)
 
