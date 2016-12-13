@@ -112,7 +112,7 @@ class SQLParser(object):
 		# two cases
 		# 1. version is specified, version 1,2 from cvd ds1
 		# 2. version is not specified
-		version_specified_re = re.compile('.*FROM\sVERSION\s(\d+|\d+(,\d+)+)\sOF\sCVD\s(\w+);?')
+		version_specified_re = re.compile('.*?FROM\sVERSION\s(\d+|\d+(,\d+)+)\sOF\sCVD\s(\w+);?')
 		version_matched = version_specified_re.match(line)
 		if version_matched:
 			replacement_re = re.compile('FROM\sVERSION\s(\d+|\d+(,\d+)+)\sOF\sCVD\s(\w+)')
@@ -124,7 +124,7 @@ class SQLParser(object):
 			relation = RelationManager(self.conn)
 			rlist = relation.select_records_of_version_list(vlist.split(','), indextable)
 			replacement_from_clause = "FROM %s WHERE rid = ANY('%s'::int[])" % (datatable, rlist)
-			return re.sub(replacement_re, replacement_from_clause, line)
+			return re.sub(replacement_re, replacement_from_clause, line, 1) # replace the first one
 		version_unknown_re = re.compile('.*FROM\sCVD\s(\w+);?')
 		version_unknown_matched = version_unknown_re.match(line)
 		if version_unknown_matched:
@@ -153,18 +153,19 @@ class SQLParser(object):
 
 			# need to add where clause by how table is touched
 			s,e = self.find_where_clause(line)
+			additional_where_clause = self.get_where_clause(touched_table)
 			if not s and not e:
 				# there is no where in line
+				# find the place to insert where
+				# the place should be after FROM clause but before an ORDER BY, an GROUP BY or ;
 				pass
 			else:
 				where_clause = line[s:e]
 				# following are rules
-				additional_where_clause = self.get_where_clause(touched_table)
 				if additional_where_clause:
 					line = line[:s] + where_clause + " AND %s" % additional_where_clause + line[e:]
 
 			# add where clause
-
 			print list_of_column
 			print fields_mapping
 			for column in list_of_column:
