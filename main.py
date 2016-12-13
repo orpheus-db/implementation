@@ -16,7 +16,7 @@ from metadata import MetadataManager
 from user_control import UserManager
 from orpheus_schema_parser import Parser as SimpleSchemaParser
 
-from orpheus_sqlparser import SQLParser
+from orpheus_sqlparse import SQLParser
 from orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX
 from orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
 

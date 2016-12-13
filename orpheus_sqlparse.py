@@ -14,19 +14,6 @@ class InvalidSyntaxError(Exception):
       return "Error parsing '%s'" % self.statement
 
 
-# Hard coded table alias
-INDEXTABLE_ALIAS = 'i'
-DATATABLE_ALIAS = 'd'
-VERSIONTABLE_ALIAS = 'v'
-
-# predefined list of tokens
-WHITESPACE_tok = Token(sqlparse.tokens.Whitespace, ' ')
-WHERE_tok = Token('', 'WHERE')
-
-
-RID_INDEX_tok = Token('', "d.rid = ANY(i.rlist)")
-
-
 class SQLParser(object):
 
 	def __init__(self, conn):

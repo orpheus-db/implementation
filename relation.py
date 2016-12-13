@@ -243,7 +243,8 @@ class RelationManager(object):
     def select_records_of_version_list(self, vlist, indextable):
         targetv= ','.join(vlist)
         print "get rids of version %s" % targetv
-        sql = "SELECT distinct rlist FROM %s WHERE vlist && (ARRAY[%s]);" % (indextable, targetv)
+        # sql = "SELECT distinct rlist FROM %s WHERE vlist && (ARRAY[%s]);" % (indextable, targetv)
+        sql = "SELECT distinct rlist FROM %s WHERE vid = ANY(ARRAY[%s]);" % (indextable, targetv)
         # print sql
         self.conn.cursor.execute(sql)
         data = [','.join(map(str,x[0])) for x in self.conn.cursor.fetchall()]
