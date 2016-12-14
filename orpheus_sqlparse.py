@@ -207,40 +207,47 @@ class SQLParser(object):
 		relation = RelationManager(self.conn)
 		line = raw_sql.lower()
 		try:
-			# two cases
-			# 1. version is specified, version 1,2 from cvd ds1
-			# 2. version is not specified, from CVD 
-			# TODO: add more cases? 
-			version_specified_re = re.compile('.*?from\sversion\s(\d+|\d+(,\d+)+)\sof\scvd\s(\w+);?')
-			version_matched = version_specified_re.match(line)
-			if version_matched: # found case 1
-				# vlist = version_matched.group(1) # list of version separted by comma
-				# dataset_name = version_matched.group(3) # whatever after keyword CVD
-				parsed_statement = sqlparse.parse(line)[0]
-				vlist, dataset_name, parent, version_idx = self.get_dataset_name_and_versions(parsed_statement)
-				self.replace_known_version(dataset_name, vlist, parent, version_idx)
-				return str(parsed_statement)
-			version_unknown_re = re.compile('.*from\scvd\s(\w+);?')
-			version_unknown_matched = version_unknown_re.match(line)
-			if version_unknown_matched: # found case 2
-				parsed_statement = sqlparse.parse(line)[0]
-				dataset_name, parent, cvd_idx = self.find_cvd_handle(parsed_statement)
+			while 1:
+				# two cases
+				# 1. version is specified, version 1,2 from cvd ds1
+				# 2. version is not specified, from CVD 
+				# TODO: add more cases? 
+				version_specified_re = re.compile('.*?from\sversion\s(\d+|\d+(,\d+)+)\sof\scvd\s(\w+);?')
+				version_matched = version_specified_re.match(line)
+				if version_matched: # found case 1
+					# vlist = version_matched.group(1) # list of version separted by comma
+					# dataset_name = version_matched.group(3) # whatever after keyword CVD
+					parsed_statement = sqlparse.parse(line)[0]
+					vlist, dataset_name, parent, version_idx = self.get_dataset_name_and_versions(parsed_statement)
+					self.replace_known_version(dataset_name, vlist, parent, version_idx)
+					line = str(parsed_statement)
+					continue
+				version_unknown_re = re.compile('.*from\scvd\s(\w+);?')
+				version_unknown_matched = version_unknown_re.match(line)
+				if version_unknown_matched: # found case 2
+					parsed_statement = sqlparse.parse(line)[0]
+					dataset_name, parent, cvd_idx = self.find_cvd_handle(parsed_statement)
 
-				datatable_attributes, _ = self.relation.get_datatable_attribute(dataset_name + const.DATATABLE_SUFFIX)
+					datatable_attributes, _ = self.relation.get_datatable_attribute(dataset_name + const.DATATABLE_SUFFIX)
 
-				# get the mapping from each field to alias
-				fields_mapping = self.get_fields_mapping(datatable_attributes)
+					# get the mapping from each field to alias
+					fields_mapping = self.get_fields_mapping(datatable_attributes)
 
-				print fields_mapping
+					print fields_mapping
 
-				touched_column_names = self.get_touched_column_names(parent, stop_words=set(self.reserved_column_names + [dataset_name]))
+					touched_column_names = self.get_touched_column_names(parent, stop_words=set(self.reserved_column_names + [dataset_name]))
 
-				# print touched_column_names
+					# print touched_column_names
 
-				self.replace_unknown_version(parent, cvd_idx, dataset_name, fields_mapping, touched_column_names)
+					self.replace_unknown_version(parent, cvd_idx, dataset_name, fields_mapping, touched_column_names)
 
-				return str(parsed_statement)
+					line = str(parsed_statement)
+					continue
+
+				# either no keyword found or all resolved
+				break
 			# print parsed_statement
+			return line
 
 		except:
 			import traceback

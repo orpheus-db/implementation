@@ -32,28 +32,38 @@ dh create_user
 dh config
 dh whoami
 ```
-OrpheusDB provides the most basic implementation for user information, subject to change in later version.
+OrpheusDB provides the most basic implementation for user information, i.e. there is no password protection. However, this feature is subject to change in future version.
 
-The `init` command provides ways to load file into OrpheusDB as CVD as the first version. To let OrpheusDB know what is the schema for this dataset, user can provide a sample schema file through option `-s`. In the current release, only `csv` file format is supported.
+The `init` command provides ways to load file into OrpheusDB (CVD), with the all records as the first version. To let OrpheusDB know what is the schema for this dataset, user can provide a sample schema file through option `-s`. In the current release, only `csv` file format is supported. In this example, `data.csv` file contains 3 attributes, namely `age`, `employee_id' and 'salary'.
 ```
 dh init data.csv dataset1 -s sample_schema.csv
 ```
 
-User can checkout desired version from he `checkout` command, to either a file or a table. Again, only `csv` format is supported.
+User can checkout desired version from the `checkout` command, to either a file or a table. Again, only `csv` format is supported.
 ```
 dh checkout dataset1 -v 1 -f checkout.csv
 ```
 
-After changes are made to checkout versions, OrpheusDB can commit these changes to its corresponding CVD assuming the schema remains the same.
+After changes are made to the previous checkout versions, OrpheusDB can commit these changes to its corresponding CVD assuming unchanged schema.
 ```
 dh commit -f checkout.csv -m 'first commit'
 ```
+Any changed or new records from commit file will be appended to the corresponding CVD, labaled with a new version. One special case is the committing of a subset of previous checkedout version. For such case, OrpheusDB will commit as user wishes.
 
 To avoid the cost of additional storage, OrpheusDB also supports query against CVD. The run command will prompt user with input to execute SQL command directly. If `-f` is specified, it will execute the SQL file specified.  
 ```
 dh run
 ```
 
+OrpheusDB supports a richer syntax of SQL statements. During the execution, OrpheusDB will detect keywords like `CVD` so it knows the query is against CVD. This statement will select the `age` column from version `1` and `2`.
+```
+SELECT age FROM VERSION 1,2 OF CVD dataset1
+```
+
+If version number is unknown, OrpheusDB also supports query against it. The follow statement will select those version numbers that any records reside in match the where constraint. It is worth noticing that the `GROUP BY` clause is required to aggreate on version.
+```
+SELECT vid FROM CVD ds1 WHERE age = 25 GROUP BY vid
+```
 
 ### Todos
  - db run
