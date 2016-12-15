@@ -89,30 +89,20 @@ class SQLParser(object):
 
 	# return the first occurence of verions (1,2), OF cvd (ds1)
 	def get_dataset_name_and_versions(self, parent):
-		tokens = parent.tokens
-		# unnest parenthesis
-		lis = []
-		for token in tokens:
-			if type(token) == sqlparse.sql.Parenthesis:
-				# print "line 68"
-				lis.extend(token.tokens)
-			else:
-				lis.append(token)
-		# find the keyword VERSION and set its parent
-		vlist, dataset_name, parent, version_idx = [], "", None, None
-		for i,token in enumerate(lis):
+		tokens = list(parent.flatten())
+		parent, dataset_name, version_idx, vlist = None, None, None, None
+		for i,token in enumerate(tokens):
 			if token.value == 'version':
 				parent = token.parent
+				while type(parent) != sqlparse.sql.Parenthesis and type(parent) != sqlparse.sql.Statement:
+					# stops when we find a handle to either () or statement
+					token = parent
+					parent = parent.parent # traverse up tree
 				version_idx = parent.token_index(token)
-				vlist = lis[i+2].value
-				dataset_name = lis[i+6].value.split()[-1]
-				# print "line 80"
 				break
-				# vlist_id = lis[i+2].ttype
-				# if vlist_id is tokens.Number.Integer:
-				# 	vlist = lis[i+2].value
-				# 	dataset_name = lis[i+6].value.split()[-1]
-				# elif:
+
+		vlist = parent.tokens[version_idx + 2].value
+		dataset_name = parent.tokens[version_idx + 6].value.split()[-1]
 		return vlist, dataset_name, parent, version_idx
 
 	# find the first occurence of CVD, return the name of CVD, its handle and index
@@ -146,7 +136,7 @@ class SQLParser(object):
 		for i,token in enumerate(lis):
 			if token.value == 'group' or token.value == 'order':
 				return i - 1 # anything that before group by or order by, -1 for the space
-		return len(lis) if lis[-1].value != ')' else len(lis) - 1
+		return len(lis) if lis[-1].value != ')' and lis[-1].value != ';' else len(lis) - 1
 
 
 	# version known, replace the tokens

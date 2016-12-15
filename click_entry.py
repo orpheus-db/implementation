@@ -207,58 +207,6 @@ def ls(ctx, dataset, table_name):
     except Exception as e:
         click.secho(str(e), fg='red')
 
-# execute a single line of sql
-# only support select for now
-def execute_sql_line(ctx, line):
-    try:
-        conn = DatabaseManager(ctx.obj)
-        relation = RelationManager(conn)
-        execution_dict = SQLParser(line) # SELECT only!
-    except Exception as e:
-        click.secho(str(e), fg='red')
-        return
-
-    print execution_dict
-
-    dataset = execution_dict['dataset'][0] if 'dataset' in execution_dict else None
-    vlist = execution_dict['versions'] if 'versions' in execution_dict else None
-    projection = ",".join(execution_dict['columns']) if 'columns' in execution_dict else None
-    datatable = dataset + DATATABLE_SUFFIX if dataset else None
-    indextable = dataset + INDEXTABLE_SUFFIX if dataset else None
-    versiontable = dataset + VERSIONTABLE_SUFFIX if dataset else None
-    where_expr = execution_dict['where_expr'] if 'where_expr' in execution_dict else None
-    try:
-        if not dataset:
-            # normal sql select
-            conn.cursor.execute(line)
-            result_tuples = conn.cursor.fetchall()
-        else:
-            attributes_name, result_tuples = [], []
-            if not projection: #meaning this is select version
-                attributes_name, result_tuples = relation.checkout_meta_print(versiontable,
-                                                                                projection='*',
-                                                                                where=where_expr)
-            else:
-                if vlist: #meaning this is select from desired version
-                    attributes_name, result_tuples = relation.checkout_data_print(vlist, 
-                                                                            datatable, 
-                                                                            indextable, 
-                                                                            projection=projection, 
-                                                                            where=where_expr)
-                else: #meaning this is selecting column based on versions
-                    pass
-
-            # print to console
-            print "\t".join(attributes_name)
-        for tup in result_tuples:
-            print "\t".join(map(str, tup))
-    except psycopg2.ProgrammingError as e:
-        click.secho(str(e.args), fg='red')
-        return
-    except Exception as e:
-        click.secho(str(e), fg='red')
-        return
-
 
 # the call back function to execute file
 # execute line by line
@@ -266,11 +214,14 @@ def execute_sql_file(ctx, param, value):
     if not value or ctx.resilient_parsing:
         return
     # value is the relative path of file
+    conn = DatabaseManager(ctx.obj)
+    parser = SQLParser(conn)
     abs_path = ctx.obj['orpheus_home'] + value
     click.echo("Executing SQL file at %s" % value)
     with open(abs_path, 'r') as f:
         for line in f:
-            execute_sql_line(line)
+            executable_sql = parser.parse(line)
+            print executable_sql
     ctx.exit()
 
 @cli.command()
@@ -282,7 +233,10 @@ def run(ctx, sql):
         # execute_sql_line(ctx, sql)
         conn = DatabaseManager(ctx.obj)
         parser = SQLParser(conn)
-        print parser.parse(sql)
+        executable_sql = parser.parse(sql)
+        print executable_sql
+        # print conn.execute_sql(executable_sql)
+
     except Exception as e:
         import traceback
         traceback.print_exc()

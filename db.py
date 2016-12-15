@@ -33,6 +33,10 @@ class DatasetExistsError(Exception):
     def __str__(self):
         return 'dataset %s exists under user %s' % (self.value, self.user)
 
+class SQLSyntaxError(Exception):
+    def __str__(self):
+        return 'Error during executing sql, please revise!'
+
 class DatabaseManager():
     def __init__(self, config):
         # yaml config passed from ctx
@@ -66,6 +70,13 @@ class DatabaseManager():
             # click.echo(e, file=sys.stderr)
             raise ConnectionError("connot connect to %s @ %s:%s, check connection" % (self.currentDB, self.config['host'], self.config['port']))
         return self
+
+    def execute_sql(self, sql):
+        try:
+            self.cursor.execute(sql)
+            return self.cursor.fetchall()
+        except psycopg2.ProgrammingError:
+            raise SQLSyntaxError()
 
     def refresh_cursor(self):
         self.connect = psycopg2.connect(self.connect_str)
