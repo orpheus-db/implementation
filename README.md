@@ -1,17 +1,36 @@
 # OrpheusDB
+OrpheusDB is a hosted system that supports _dataset version management_. OrpheusDB is built on top of standard relational databases, thus it inherits much of the same benefits of relational databases, while also compactly storing, tracking, and recreating versions
+on demand.
 
-OrpheusDB is an open-sourced database that enable data version capability on relational database system.
+OrpheusDB is a multi-year project, supported by the National Science Foundation via award number XXX. It shares the vision of the vision paper on the DataHub project in supporting collaborative data analytics.
 
-This repository is an implementation of ongoing research under the project OrpheusDB at the University of Illinois at Urbana Champaign led by [Prof. Aditya Parameswaran][prof].
+
+% OrpheusDB is an open-sourced database that enable data version capability on relational database system.
+% This repository is an implementation of ongoing research under the project OrpheusDB at the University of Illinois at Urbana Champaign led by [Prof. Aditya Parameswaran][prof].
+
 
 ### Version
-1.0.0
+The current version is 1.0.0.
+
+### Features
+OrpheusDB is built using [PostgreSQL][postgressite] and [Click][clicksite], a command line tool written in Python. Our current version supports advanced querying capabilities, using both the SQL queries and the git-style version control commands. 
+
+Users can operate on collaborative versioned datasets(CVD) much like they would with source code version control. The _checkout_ command allows users to materialize one or more specific versions of a CVD as a newly created regular table within a relational database or as a csv file; the _commit_ command allows users to adds a new version to CVD by making the local changes made by the user on their materialized table or the csv file visible to others. Moreover, we also support commands, including _init_, _create\_user_, _config_, _whoami_, _ls_, _db_, _drop_, and _optimize_.
+
+OrpheusDB also supports the use of SQL commands on versioned datasets via the command line using the _run_command. It allows users to directly execute SQL queries on one or more versions of a dataset without table materialization. Moreover, it allows users to apply  aggregation functions grouped by version ids or identify versions that satisfy some property. % TODO: UPDATE/INSERT/REMOVE
+
+### Key Design Innovations
+* OrpheusDB is instead built on top of a traditional relational database, we inherit all of the benefits in the relational database systems "for free"
+* OrpheusDB supports advanced querying and versioning capabilities, via both the SQL queries and the git-style version control commands.
+* The data model and partition optimization algorithm in OrpheusDB provide efficient version control performance over large scaled datasets. 
+
 
 ### System Requirement
+Prior to install OrpheusDB locally,  users need to make sure that the following software are setup successfully: 
 * Python 2.7.x
 * PostgreSQL >= 9.5
 
-### Install
+### Installation Instructions
 OrpheusDB comes with standard `setup.py` script for installation. An easier way to install is through pip. By default, `dh` is the alias for OrpheusDB user interface.
 
 ```
@@ -26,7 +45,7 @@ OrpheusDB needs to know where is the underlying relational database storage befo
 Collaborative Version Dataset is the unit of operation in OrpheusDB. Each CVD stores dataset and its version information.
 
 ### Tutorials
-Create a OrpheusDB user named `abc`. Upon finishing, it will be pushed to the underlying data storage with *SUPERUSER* privilege. Command `config` is to login through created user.
+Create an OrpheusDB user named `tester`. Upon finishing, it will be pushed to the underlying data storage with *SUPERUSER* privilege. Command `config` is to login through created user.
 ```
 dh create_user
 dh config
@@ -34,7 +53,7 @@ dh whoami
 ```
 OrpheusDB provides the most basic implementation for user information, i.e. there is no password protection. However, this feature is subject to change in future version.
 
-The `init` command provides ways to load file into OrpheusDB (CVD), with the all records as the first version. To let OrpheusDB know what is the schema for this dataset, user can provide a sample schema file through option `-s`. In the current release, only `csv` file format is supported. In this example, `data.csv` file contains 3 attributes, namely `age`, `employee_id' and 'salary'.
+The `init` command provides ways to load file into OrpheusDB (as a CVD), with the all records as its first version. To let OrpheusDB know what is the schema for this dataset, user can provide a sample schema file through option `-s`. In the current release, only `csv` file format is supported. In this example, `data.csv` file contains 3 attributes, namely `age`, `employee_id' and 'salary'.
 ```
 dh init data.csv dataset1 -s sample_schema.csv
 ```
@@ -48,7 +67,7 @@ After changes are made to the previous checkout versions, OrpheusDB can commit t
 ```
 dh commit -f checkout.csv -m 'first commit'
 ```
-Any changed or new records from commit file will be appended to the corresponding CVD, labaled with a new version. One special case is the committing of a subset of previous checkedout version. For such case, OrpheusDB will commit as user wishes.
+Any changed or new records from commit file will be appended to the corresponding CVD, labeled with a new version. One special case is the committing of a subset of previous checkedout version. For such case, OrpheusDB will commit as user wishes.
 
 To avoid the cost of additional storage, OrpheusDB also supports query against CVD. The run command will prompt user with input to execute SQL command directly. If `-f` is specified, it will execute the SQL file specified.  
 ```
@@ -60,7 +79,7 @@ OrpheusDB supports a richer syntax of SQL statements. During the execution, Orph
 SELECT age FROM VERSION 1,2 OF CVD dataset1
 ```
 
-If version number is unknown, OrpheusDB also supports query against it. The follow statement will select those version numbers that any records reside in match the where constraint. It is worth noticing that the `GROUP BY` clause is required to aggreate on version.
+If version number is unknown, OrpheusDB also supports query against it. The follow statement will select those version numbers that any records reside in match the where constraint. It is worth noticing that the `GROUP BY` clause is required to aggregate on version.
 ```
 SELECT vid FROM CVD ds1 WHERE age = 25 GROUP BY vid
 ```
@@ -81,3 +100,4 @@ MIT
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
 
    [prof]: http://web.engr.illinois.edu/~adityagp/#
+   [clicksite]: 
