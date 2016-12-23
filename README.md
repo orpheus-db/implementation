@@ -66,7 +66,7 @@ dh config
 dh whoami
 ```
 
-The `init` command provides ways to load file (currently a csv file) into OrpheusDB (as a CVD), with the all records as its first version. To let OrpheusDB know what is the schema for this dataset, user can provide a sample schema file through option `-s`. Each line in the schema file has the following format `<attribute name>, <type of the attribute>`. In this example, `data.csv` file contains 3 attributes, namely `age`, `employee_id' and 'salary'.
+The `init` command provides ways to load file (currently a csv file) into OrpheusDB (as a CVD), with the all records as its first version. To let OrpheusDB know what is the schema for this dataset, user can provide a sample schema file through option `-s`. Each line in the schema file has the following format `<attribute name>, <type of the attribute>`. In this example, `data.csv` file contains 3 attributes, namely `age`, `employee_id` and `salary`.
 
 <!-- In the current release, only `csv` file format is supported in the `init`. -->
 
@@ -74,30 +74,34 @@ The `init` command provides ways to load file (currently a csv file) into Orpheu
 dh init data.csv dataset1 -s sample_schema.csv
 ```
 
-User can checkout desired version from the `checkout` command, to either a file or a table. Again, only `csv` format is supported.
+User can checkout one or more desired versions through the `checkout` command, to either a csv file or a structured table in RDMS. <!-- Again, only `csv` format is supported. --> In this example, it checkouts the version 1 of CVD dataset1 as a csv file named checkout.csv. 
 ```
 dh checkout dataset1 -v 1 -f checkout.csv
 ```
+Any changed or new records from commit file will be appended to the corresponding CVD, labeled with a new version. One special case is the committing of a subset of previous checkedout version. For such case, OrpheusDB will commit as user wishes.
 
-After changes are made to the previous checkout versions, OrpheusDB can commit these changes to its corresponding CVD assuming unchanged schema.
+After changes are made to the previous checkout versions, OrpheusDB can commit these changes to its corresponding CVD assuming unchanged schema. 
+
+In this example, it commits the modified checkout.csv back to CVD dataset1. Note here since OrpheusDB internally logged the CVD that checkout.csv was checked out from, there is no need to specify the CVD name in the `commit` command. 
 ```
 dh commit -f checkout.csv -m 'first commit'
 ```
-Any changed or new records from commit file will be appended to the corresponding CVD, labeled with a new version. One special case is the committing of a subset of previous checkedout version. For such case, OrpheusDB will commit as user wishes.
 
 To avoid the cost of additional storage, OrpheusDB also supports query against CVD. The run command will prompt user with input to execute SQL command directly. If `-f` is specified, it will execute the SQL file specified.  
 ```
 dh run
 ```
 
-OrpheusDB supports a richer syntax of SQL statements. During the execution, OrpheusDB will detect keywords like `CVD` so it knows the query is against CVD. This statement will select the `age` column from version `1` and `2`.
+OrpheusDB supports a richer syntax of SQL statements. During the execution, OrpheusDB will detect keywords like `CVD` so it knows the query is against CVD. In this example, OrpheusDB will select the `age` column from CVD dataset1 whose version id is equal to either `1` or `2`.
 ```
 SELECT age FROM VERSION 1,2 OF CVD dataset1
 ```
 
-If version number is unknown, OrpheusDB also supports query against it. The follow statement will select those version numbers that any records reside in match the where constraint. It is worth noticing that the `GROUP BY` clause is required to aggregate on version.
+If version number is unknown, OrpheusDB also supports query against it. The follow statement will select those version numbers that any records reside in match the where constraint. It is worth noticing that the `GROUP BY` clause is required to aggregate on versions.
+
+In this example, OrpheusDB selects all the versions that have one or more records whose age equals to 25.
 ```
-SELECT vid FROM CVD ds1 WHERE age = 25 GROUP BY vid
+SELECT vid FROM CVD dataset1 WHERE age = 25 GROUP BY vid
 ```
 
 ### Todos
