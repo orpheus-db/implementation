@@ -14,14 +14,14 @@ The current version is 1.0.0.
 ### Features
 OrpheusDB is built using [PostgreSQL][postgressite] and [Click][clicksite], a command line tool written in Python. Our current version supports advanced querying capabilities, using both the SQL queries and the git-style version control commands. 
 
-Users can operate on collaborative versioned datasets(CVD) much like they would with source code version control. The _checkout_ command allows users to materialize one or more specific versions of a CVD as a newly created regular table within a relational database or as a csv file; the _commit_ command allows users to adds a new version to CVD by making the local changes made by the user on their materialized table or the csv file visible to others. Moreover, we also support commands, including _init_, _create\_user_, _config_, _whoami_, _ls_, _db_, _drop_, and _optimize_.
+Users can operate on collaborative versioned datasets (CVD) much like they would with source code version control. The _checkout_ command allows users to materialize one or more specific versions of a CVD as a newly created regular table within a relational database or as a csv file; the _commit_ command allows users to add a new version to CVD by making the local changes made by the user on their materialized table or on their exported csv file visible to others. Other commands we support are _init_, _create\_user_, _config_, _whoami_, _ls_, _db_, _drop_, and _optimize_.
 
-OrpheusDB also supports the use of SQL commands on versioned datasets via the command line using the _run_ command. It allows users to directly execute SQL queries on one or more versions of a dataset without table materialization. Moreover, it allows users to apply  aggregation functions grouped by version ids or identify versions that satisfy some property. <!-- TODO: UPDATE/INSERT/REMOVE -->
+OrpheusDB also supports the use of SQL commands on CVD via the command line using the _run_ command. It allows users to directly execute SQL queries on one or more versions of a dataset without table materialization. Moreover, it allows users to apply  aggregation functions grouped by version ids or identify versions that satisfy some property. <!-- TODO: UPDATE/INSERT/REMOVE -->
 
 ### Key Design Innovations
-* OrpheusDB is instead built on top of a traditional relational database, we inherit all of the benefits in the relational database systems "for free"
+* OrpheusDB is built on top of a traditional relational database, thus it inherits all of the benefits in the relational database systems "for free"
 * OrpheusDB supports advanced querying and versioning capabilities, via both the SQL queries and the git-style version control commands.
-* The data model and partition optimization algorithm in OrpheusDB provide efficient version control performance over large scaled datasets. 
+* The data model and partition optimization algorithm in OrpheusDB provide efficient version control performance over large-scaled datasets. 
 
 
 ### System Requirement
