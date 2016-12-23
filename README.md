@@ -57,14 +57,19 @@ The fundamental unit of storage within OrpheusDB is a collaborative versioned da
 <!-- Collaborative Version Dataset is the unit of operation in OrpheusDB. Each CVD stores dataset and its version information. Each version is represented with an unique version vid, _vid_. -->
 
 ### User Tutorials
-To start with, user can create an OrpheusDB username with a password via the `create\_user` command. Upon finishing, it will be pushed to the underlying data storage with *SUPERUSER* privilege. Command `config` is to login through created user and `whoami` is to check the current user name that is currently logged in.Please note here that OrpheusDB provides the most basic implementation for user information, i.e. there is no password protection. However, this feature is subject to change in future version.
+To start with, user can create an OrpheusDB username with a password via the `create_user` command. Upon finishing, it will be pushed to the underlying data storage with SUPERUSER privilege. Command `config` is to login through created user and `whoami` is to check the current user name that is currently logged in. 
+
+Please note here that OrpheusDB provides the most basic implementation for user information, i.e. there is no password protection. However, this feature is subject to change in future version.
 ```
 dh create_user
 dh config
 dh whoami
 ```
 
-The `init` command provides ways to load file into OrpheusDB (as a CVD), with the all records as its first version. To let OrpheusDB know what is the schema for this dataset, user can provide a sample schema file through option `-s`. In the current release, only `csv` file format is supported. In this example, `data.csv` file contains 3 attributes, namely `age`, `employee_id' and 'salary'.
+The `init` command provides ways to load file (currently a csv file) into OrpheusDB (as a CVD), with the all records as its first version. To let OrpheusDB know what is the schema for this dataset, user can provide a sample schema file through option `-s`. Each line in the schema file has the following format `<attribute name>, <type of the attribute>`. In this example, `data.csv` file contains 3 attributes, namely `age`, `employee_id' and 'salary'.
+
+<!-- In the current release, only `csv` file format is supported in the `init`. -->
+
 ```
 dh init data.csv dataset1 -s sample_schema.csv
 ```
