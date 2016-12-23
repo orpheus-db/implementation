@@ -181,10 +181,14 @@ class SQLParser(object):
 				where_token = parent.tokens[where_indx]
 				where_token.tokens.extend(self.construct_identifier(" and " + where_constraint + " "))
 
+		# print touched_column_names
+
 		# replace all the touched columns by prefix a alias
 		for column in touched_column_names.keys():
 			for (column_parent, column_idx) in touched_column_names[column]:
 				if column in fields_mapping: # only those we found in tables
+					if '.' in column_parent.value:
+						continue
 					# replace them
 					mapped_table_alias = fields_mapping[column]
 					column_parent.tokens = column_parent.tokens[:column_idx] + [self.construct_identifier("%s.%s" % (mapped_table_alias, column))] + column_parent.tokens[column_idx + 1:]

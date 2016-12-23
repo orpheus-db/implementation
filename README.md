@@ -85,12 +85,15 @@ SELECT vid FROM CVD ds1 WHERE age = 25 GROUP BY vid
 ```
 
 ### Todos
- - db run
+ - ~~db run~~
  - ~~change user password settings~~
  - tracker overwrite, get rid of the old mapping
  - change cvd to public schema
  - update meta after dropping dataset
  - update load current state path from .meta/config
+ - $ORPHEUS_HOME$ in bashrc
+ - verbose mode
+ - mock testing
  
 License
 ----
