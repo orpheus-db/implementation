@@ -39,7 +39,7 @@ OrpheusDB comes with standard `setup.py` script for installation. The required p
 
 Users are able to install any of missing dependencies themselves via `pip`. Alternatively, an easier way to install all dependencies is through `pip install .`
 
-After installation, users can include use `dh --help` to list all the supported commands in OrpheusDB. By default, `dh` is the alias for OrpheusDB user interface.
+After installation, users can use `dh --help` to list all the available commands in OrpheusDB. By default, `dh` is the alias for OrpheusDB user interface.
 
 <!--
 ```
@@ -51,17 +51,18 @@ dh --help
 ### Configuration
 OrpheusDB needs to know where is the underlying relational database storage before execution. To specify such, change the corresponding fields in `config.yaml`.
 
-### Collaborative Version Dataset (CVD)
-Collaborative Version Dataset is the unit of operation in OrpheusDB. Each CVD stores dataset and its version information.
+### Dataset Version Control in OrpheusDB
+The fundamental unit of storage within OrpheusDB is a collaborative versioned dataset (CVD) to which one or more users can contribute. Each CVD corresponds to a relation with a fixed schema, and implicitly contains many versions of that relation. There is a many-to-many relationship between records in the relation and versions that is captured within the CVD: each record can belong to many versions, and each version can contain many records. Each version has a unique version id, vid, and each record has its unique record id, rid. The record ids are used to identify immutable records within the CVD and are not visible to end-users of OrpheusDB.
 
-### Tutorials
-Create an OrpheusDB user named `tester`. Upon finishing, it will be pushed to the underlying data storage with *SUPERUSER* privilege. Command `config` is to login through created user.
+<!-- Collaborative Version Dataset is the unit of operation in OrpheusDB. Each CVD stores dataset and its version information. Each version is represented with an unique version vid, _vid_. -->
+
+### User Tutorials
+To start with, user can create an OrpheusDB username with a password via the `create\_user` command. Upon finishing, it will be pushed to the underlying data storage with *SUPERUSER* privilege. Command `config` is to login through created user and `whoami` is to check the current user name that is currently logged in.Please note here that OrpheusDB provides the most basic implementation for user information, i.e. there is no password protection. However, this feature is subject to change in future version.
 ```
 dh create_user
 dh config
 dh whoami
 ```
-OrpheusDB provides the most basic implementation for user information, i.e. there is no password protection. However, this feature is subject to change in future version.
 
 The `init` command provides ways to load file into OrpheusDB (as a CVD), with the all records as its first version. To let OrpheusDB know what is the schema for this dataset, user can provide a sample schema file through option `-s`. In the current release, only `csv` file format is supported. In this example, `data.csv` file contains 3 attributes, namely `age`, `employee_id' and 'salary'.
 ```
