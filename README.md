@@ -2,7 +2,7 @@
 [OrpheusDB][orpheus] is a hosted system that supports _dataset version management_. OrpheusDB is built on top of standard relational databases, thus it inherits much of the same benefits of relational databases, while also compactly storing, tracking, and recreating versions
 on demand.
 
-OrpheusDB is a multi-year project, supported by the National Science Foundation via award number XXX. It shares the vision of the vision paper on the DataHub[datahub] project in supporting collaborative data analytics.
+OrpheusDB is a multi-year project, supported by the National Science Foundation via award number XXX. It shares the vision of the vision paper on the [DataHub][datahub] project in supporting collaborative data analytics.
 
 
 <!-- OrpheusDB is an open-sourced database that enable data version capability on relational database system.This repository is an implementation of ongoing research under the project OrpheusDB at the University of Illinois at Urbana Champaign led by [Prof. Aditya Parameswaran][prof]. -->
@@ -102,6 +102,7 @@ MIT
 [//]: # (These are reference links used in the body of this note and get stripped out when the markdown processor does its job. There is no need to format nicely because it shouldn't be seen. Thanks SO - http://stackoverflow.com/questions/4823468/store-comments-in-markdown-syntax)
 
    [prof]: http://web.engr.illinois.edu/~adityagp/#
-   [clicksite]: 
+   [clicksite]: http://click.pocoo.org/5/
    [orpheus]: http://orpheus-db.github.io/
    [datahub]: https://arxiv.org/abs/1409.0798
+   [postgressite]: https://www.postgresql.org/
