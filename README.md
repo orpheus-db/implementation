@@ -16,12 +16,12 @@ OrpheusDB is built using [PostgreSQL][postgressite] and [Click][clicksite], a co
 
 Users can operate on collaborative versioned datasets (CVD) much like they would with source code version control. The _checkout_ command allows users to materialize one or more specific versions of a CVD as a newly created regular table within a relational database or as a csv file; the _commit_ command allows users to add a new version to CVD by making the local changes made by the user on their materialized table or on their exported csv file visible to others. Other commands we support are _init_, _create\_user_, _config_, _whoami_, _ls_, _db_, _drop_, and _optimize_.
 
-OrpheusDB also supports the use of SQL commands on CVD via the command line using the _run_ command. It allows users to directly execute SQL queries on one or more versions of a dataset without table materialization. Moreover, it allows users to apply  aggregation functions grouped by version ids or identify versions that satisfy some property. <!-- TODO: UPDATE/INSERT/REMOVE -->
+Users can also input SQL queries on CVD via the command line using the _run_ command. It allows users to directly execute SQL queries on one or more versions of a dataset without table materialization. Moreover, it allows users to apply  aggregation functions grouped by version ids or identify versions that satisfy some property. <!-- TODO: UPDATE/INSERT/REMOVE -->
 
 ### Key Design Innovations
 * OrpheusDB is built on top of a traditional relational database, thus it inherits all of the benefits in the relational database systems "for free"
 * OrpheusDB supports advanced querying and versioning capabilities, via both the SQL queries and the git-style version control commands.
-* The data model and partition optimization algorithm in OrpheusDB provide efficient version control performance over large-scaled datasets. 
+* OrpheusDB has powerful data model and partition optimization algorithm for providing efficient version control performance over large-scaled datasets. 
 
 
 ### System Requirement
@@ -30,12 +30,23 @@ Prior to install OrpheusDB locally,  users need to make sure that the following 
 * PostgreSQL >= 9.5
 
 ### Installation Instructions
-OrpheusDB comes with standard `setup.py` script for installation. An easier way to install is through pip. By default, `dh` is the alias for OrpheusDB user interface.
+OrpheusDB comes with standard `setup.py` script for installation. The required python dependency packages include
+* click >= 6.6
+* psycopy2 >= 2.6.2
+* pandas >= 0.19.0
+* pyyaml >= 3.12
+* pyparsing >=2.1.1
 
+Users are able to install any of missing dependencies themselves via 'pip'. Alternatively, an easier way to install all dependencies is through 'pip install .'
+
+After installation, users can include use 'dh --help' to list all the supported commands in OrpheusDB. By default, `dh` is the alias for OrpheusDB user interface.
+
+<!--
 ```
 pip install .
 dh --help
 ```
+-->
 
 ### Configuration
 OrpheusDB needs to know where is the underlying relational database storage before execution. To specify such, change the corresponding fields in `config.yaml`.
