@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(
-	name='datahub',
+	name='orpheus',
 	version='1.0',
     py_modules=['main', 
 	 			'db', 
