@@ -107,7 +107,7 @@ SELECT vid FROM CVD dataset1 WHERE age = 25 GROUP BY vid
  - ~~db run~~
  - ~~change user password settings~~
  - tracker overwrite, get rid of the old mapping
- - change cvd to public schema
+ - ~~change cvd to public schema~~ Not work for INFORMATION_SCHEMA.COLUMNS 
  - update meta after dropping dataset
  - update load current state path from .meta/config
  - $ORPHEUS_HOME$ in bashrc
