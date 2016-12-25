@@ -17,7 +17,7 @@ from user_control import UserManager
 from orpheus_schema_parser import Parser as SimpleSchemaParser
 
 from orpheus_sqlparse import SQLParser
-from orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX
+from orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX, PUBLIC_SCHEMA
 from orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
 
 class Context():
@@ -160,7 +160,7 @@ def init(ctx, input, dataset, table, schema):
         # create new dataset
         conn.create_dataset(input, dataset, schema_tuple, attributes=attribute_name)
         # get all rids in list
-        lis_rid = rel.select_all_rid(dataset + DATATABLE_SUFFIX)
+        lis_rid = rel.select_all_rid(PUBLIC_SCHEMA + dataset + DATATABLE_SUFFIX)
 
         # init version info
         version = VersionManager(conn)
@@ -335,6 +335,7 @@ def commit(ctx, msg, table_name, file_name, delimeters, header):
         return
     parent_name = parent_vid_list[0]
     parent_list = parent_vid_list[1]
+
     datatable_name = parent_name + DATATABLE_SUFFIX
     indextable_name = parent_name + INDEXTABLE_SUFFIX
     graph_name = parent_name + VERSIONTABLE_SUFFIX

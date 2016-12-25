@@ -1,9 +1,9 @@
 import datetime
-from orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX
+from orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX, PUBLIC_SCHEMA
 
 class VersionManager(object):
     def __init__(self, conn):
-        self.conn = conn;
+        self.conn = conn
 
     def init_version_graph_dataset(self, dataset, list_of_rid, user):
         # using CREATE SQL command
@@ -12,7 +12,7 @@ class VersionManager(object):
         self.conn.refresh_cursor()
         init_version_sql = "INSERT INTO %s VALUES \
                             (1, '%s', %s, '{-1}', '{}', '%s', '%s', 'init commit');" % \
-                            (dataset + VERSIONTABLE_SUFFIX, user, str(len(list_of_rid)), str(datetime.datetime.now()), str(datetime.datetime.now()))
+                            (PUBLIC_SCHEMA + dataset + VERSIONTABLE_SUFFIX, user, str(len(list_of_rid)), str(datetime.datetime.now()), str(datetime.datetime.now()))
         self.conn.cursor.execute(init_version_sql)
         self.conn.connect.commit()   
 
@@ -22,7 +22,7 @@ class VersionManager(object):
         # insert into indexTbl values ('{1,3,5}', '{1}')
         init_indextbl_sql = "INSERT INTO %s \
                              VALUES \
-                             (1, '{%s}');" % (dataset + INDEXTABLE_SUFFIX, str(",".join(map(str, list_of_rid))))
+                             (1, '{%s}');" % (PUBLIC_SCHEMA + dataset + INDEXTABLE_SUFFIX, str(",".join(map(str, list_of_rid))))
         self.conn.cursor.execute(init_indextbl_sql)
         self.conn.connect.commit()
 
