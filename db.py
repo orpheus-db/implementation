@@ -5,7 +5,6 @@ import psycopg2
 import sys
 import json
 
-from encryption import EncryptionTool
 from orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
 from orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX, PUBLIC_SCHEMA
 
@@ -221,9 +220,8 @@ class DatabaseManager():
             conn_string = "host=" + server_config['host'] + " port=" + str(server_config['port']) + " dbname=" + db
             connect = psycopg2.connect(conn_string)
             cursor = connect.cursor()
-            passphrase = EncryptionTool.passphrase_hash(password)
-            cursor.execute("CREATE USER %s WITH LOGIN ENCRYPTED PASSWORD ' %s ' SUPERUSER;" % (user, passphrase)) # TODO: use different flags
-
+            # passphrase = EncryptionTool.passphrase_hash(password)
+            cursor.execute("CREATE USER %s SUPERUSER;" % user) # TODO: add password detection later
             connect.commit()
         except psycopg2.OperationalError:
             raise ConnectionError("connot connect to %s at %s:%s" % (db, server_config['host'], str(server_config['port'])))

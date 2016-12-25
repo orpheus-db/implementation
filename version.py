@@ -89,8 +89,6 @@ class VersionManager(object):
         self.conn.connect.commit()
 
 
-
-
     def clean(self):
         print "version clean"
 
