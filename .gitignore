@@ -36,3 +36,6 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Orpheus related files #
+.meta/*
