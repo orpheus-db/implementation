@@ -5,9 +5,8 @@ import psycopg2
 import sys
 import json
 
-from encryption import EncryptionTool
 from orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
-from orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX
+from orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX, PUBLIC_SCHEMA
 
 # Database Manager exceptions
 class UserNotSetError(Exception):
@@ -119,14 +118,13 @@ class DatabaseManager():
                 raise NotImplementedError("Attributes inferreing not implemented!")
                 return
 
+            # create cvd into public schema
+            #TODO: change to private schema in later version
 
             print "Creating datatable using the schema provided"
             # create datatable
-            # self.cursor.execute("CREATE TABLE %s ( like %s including all);" % (dataset + "_datatable", schema))
-            # print "CREATE TABLE %s (rid int primary key, \
-            #                                       %s);" % (dataset + "_datatable", ",".join(map(lambda (attribute_name, attribute_type) : attribute_name + " " + attribute_type, schema)))
             self.cursor.execute("CREATE TABLE %s (rid serial primary key, \
-                                                  %s);" % (dataset + DATATABLE_SUFFIX, ",".join(map(lambda (attribute_name, attribute_type) : attribute_name + " " + attribute_type, schema))))
+                                                  %s);" % (PUBLIC_SCHEMA + dataset + DATATABLE_SUFFIX, ",".join(map(lambda (attribute_name, attribute_type) : attribute_name + " " + attribute_type, schema))))
 
             print "Creating version table"
             # create version table
@@ -137,20 +135,20 @@ class DatabaseManager():
                                                  children integer[], \
                                                  create_time timestamp, \
                                                  commit_time timestamp, \
-                                                 commit_msg text);" % (dataset + VERSIONTABLE_SUFFIX))
+                                                 commit_msg text);" % (PUBLIC_SCHEMA + dataset + VERSIONTABLE_SUFFIX))
 
             print "Creating index table"
             # create indexTbl table
             self.cursor.execute("CREATE TABLE %s (vid int, \
-                                                  rlist integer[]);" % (dataset + INDEXTABLE_SUFFIX))
+                                                  rlist integer[]);" % (PUBLIC_SCHEMA + dataset + INDEXTABLE_SUFFIX))
 
             # dump data into this dataset
             file_path = self.config['orpheus_home'] + inputfile
 
             if header:
-                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV HEADER;" % (dataset + DATATABLE_SUFFIX, ",".join(attributes), file_path))
+                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV HEADER;" % (PUBLIC_SCHEMA + dataset + DATATABLE_SUFFIX, ",".join(attributes), file_path))
             else:
-                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV;" % (dataset + DATATABLE_SUFFIX, ",".join(attributes), file_path))
+                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV;" % (PUBLIC_SCHEMA + dataset + DATATABLE_SUFFIX, ",".join(attributes), file_path))
 
 
             self.connect.commit()
@@ -162,19 +160,19 @@ class DatabaseManager():
         self.refresh_cursor()
         # TODO: refactor for better approach?
         try:
-            self.cursor.execute("DROP table %s;" % (dataset + DATATABLE_SUFFIX))
+            self.cursor.execute("DROP table %s;" % (PUBLIC_SCHEMA + dataset + DATATABLE_SUFFIX))
             self.connect.commit()
         except:
             self.refresh_cursor()
             
         try:
-            self.cursor.execute("DROP table %s;" % (dataset + VERSIONTABLE_SUFFIX))
+            self.cursor.execute("DROP table %s;" % (PUBLIC_SCHEMA + dataset + VERSIONTABLE_SUFFIX))
             self.connect.commit()
         except:
             self.refresh_cursor()
 
         try:
-            self.cursor.execute("DROP table %s;" % (dataset + INDEXTABLE_SUFFIX))
+            self.cursor.execute("DROP table %s;" % (PUBLIC_SCHEMA + dataset + INDEXTABLE_SUFFIX))
             self.connect.commit()
         except:
             self.refresh_cursor()
@@ -222,9 +220,8 @@ class DatabaseManager():
             conn_string = "host=" + server_config['host'] + " port=" + str(server_config['port']) + " dbname=" + db
             connect = psycopg2.connect(conn_string)
             cursor = connect.cursor()
-            passphrase = EncryptionTool.passphrase_hash(password)
-            cursor.execute("CREATE USER %s WITH LOGIN ENCRYPTED PASSWORD ' %s ' SUPERUSER;" % (user, passphrase)) # TODO: use different flags
-
+            # passphrase = EncryptionTool.passphrase_hash(password)
+            cursor.execute("CREATE USER %s SUPERUSER;" % user) # TODO: add password detection later
             connect.commit()
         except psycopg2.OperationalError:
             raise ConnectionError("connot connect to %s at %s:%s" % (db, server_config['host'], str(server_config['port'])))
