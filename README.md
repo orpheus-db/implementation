@@ -65,7 +65,7 @@ dh config
 dh whoami
 ```
 
-The `init` command provides ways to load a csv file into OrpheusDB as a CVD, with the all records as its first version (i.e., vid = 1). To let OrpheusDB know what is the schema for this dataset, user can provide a sample schema file through option `-s`. Each line in the schema file has the format `<attribute name>, <type of the attribute>`. In the following example, `data.csv` file contains 3 attributes, namely `age`, `employee_id` and `salary`.
+The `init` command provides ways to load a csv file into OrpheusDB as a CVD, with the all records as its first version (i.e., vid = 1). To let OrpheusDB know what is the schema for this dataset, user can provide a sample schema file through option `-s`. Each line in the schema file has the format `<attribute name>, <type of the attribute>`. In the following example, `data.csv` file contains 3 attributes, namely `age`, `employee_id` and `salary`. The command below loads the `data.csv` into OrpheusDB as a CVD named `dataset1` whose scheme is indicated in the ``sample_schema.csv`. 
 
 <!-- In the current release, only `csv` file format is supported in the `init`. -->
 
@@ -93,15 +93,26 @@ dh run
 
 OrpheusDB supports a rich syntax of SQL statements. During the execution, OrpheusDB will detect keywords like `CVD` so it knows the query is against CVD. In the following example, OrpheusDB will select the `age` column from CVD dataset1 whose version id is equal to either `1` or `2`.
 ```
-SELECT age FROM VERSION 1,2 OF CVD dataset1
+SELECT age FROM VERSION 1,2 OF CVD dataset1;
 ```
 
 If version number is unknown, OrpheusDB also supports query against it. The follow statement will select those version numbers that any records reside in match the conditions listed in the where constraint. It is worth noticing that the `GROUP BY` clause is required to aggregate on versions.
 
 In the following example, OrpheusDB will select all the version ids that have one or more records whose age equals to 25.
 ```
-SELECT vid FROM CVD dataset1 WHERE age = 25 GROUP BY vid
+SELECT vid FROM CVD dataset1 WHERE age = 25 GROUP BY vid;
 ```
+A few more examples are:
+(1). Find all versions in CVD dataset1 that have more than 100 records whose salary is larger than 7400.
+```
+SELECT vid FROM CVD dataset1 WHERE salary > 7400 GROUP BY vid HAVING COUNT(employee_id) > 100;
+```
+(2). Find all versions whose commit time is later than December 1st, 2017.
+```
+SELECT vid FROM CVD dataset1 WHERE commit_time >  '2017-12-01';
+```
+
+
 
 ### Todos
  - ~~db run~~
