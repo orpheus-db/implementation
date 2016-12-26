@@ -91,6 +91,7 @@ dh run
 ```
 
 OrpheusDB supports a rich syntax of SQL statements. During the execution, OrpheusDB will detect keywords like `CVD` so it knows the query is against CVD. There are mainly the following two types of queries supported.
+
 1. Query against known version of a particular dataset
 2. Query against unknown version of a particular dataset
 
@@ -99,7 +100,7 @@ To query against known version(s), version number needs to be specified. In the 
 SELECT age FROM VERSION 1,2 OF CVD dataset1;
 ```
 
-If version number is unknown, OrpheusDB supports query of finding desired version number. In the following example, OrpheusDB will select all the version ids that have one or more records whose age equals to 25. It is worth noticing that the `GROUP BY` clause is required to aggregate on version number.
+If version number is unknown, OrpheusDB supports query of finding desired version number. In the following examples, OrpheusDB will select all the version ids that have one or more records whose age equals to 25. It is worth noticing that the `GROUP BY` clause is required to aggregate on version number.
 ```
 SELECT vid FROM CVD dataset1 WHERE age = 25 GROUP BY vid;
 ```
