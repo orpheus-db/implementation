@@ -1,6 +1,8 @@
 # OrpheusDB
 [OrpheusDB][orpheus] is a hosted system that supports _relational dataset version management_. OrpheusDB is built on top of standard relational databases, thus it inherits much of the same benefits of relational databases, while also compactly storing, tracking, and recreating versions on demand, all very efficiently.
 
+OrpheusDB is built using [PostgreSQL][postgressite] and [Click][clicksite], a command line tool written in Python. Our current version supports advanced querying capabilities, using both the git-style version control commands, as well as SQL queries on one or more dataset versions. The paper describing the design, functionality, optimization, and experimental comparison can be found [at this link][papersite].
+
 OrpheusDB is a multi-year project, supported by the National Science Foundation via award number 1513407. It shares the vision of the vision paper on the [DataHub][datahub] project in supporting collaborative data analytics.
 
 
@@ -10,28 +12,29 @@ OrpheusDB is a multi-year project, supported by the National Science Foundation 
 ### Version
 The current version is 1.0.0 (Released January 1, 2017).
 
-### Features
-OrpheusDB is built using [PostgreSQL][postgressite] and [Click][clicksite], a command line tool written in Python. Our current version supports advanced querying capabilities, using both the git-style version control commands, as well as SQL queries on one or more dataset versions.
-
-Our basic concept is that of a collaborative versioned dataset, or CVD -- a CVD is the basic unit of storage within OrpheusDB, representing a collection of versions of a single relational dataset. Users can operate on CVDs much like they would with source code version control. The _checkout_ command allows users to materialize one or more specific versions of a CVD as a newly created regular table within a relational database or as a csv file; the _commit_ command allows users to add a new version to a CVD by making the local changes made by the user on their materialized table or on their exported csv file visible to others. Other git-style commands we support include _init_, _create\_user_, _config_, _whoami_, _ls_, _db_, _drop_, and _optimize_.
-
-Users can also execute SQL queries on one or more relational dataset versions within a CVD via the command line using the _run_ command, without requiring the corresponding dataset versions to be materialized. Beyond executing queries on a small number of versions, users can also apply aggregation grouped by version ids, or identify versions that satisfy some property. <!-- TODO: UPDATE/INSERT/REMOVE -->
 
 ### Key Design Innovations
 * OrpheusDB is built on top of a traditional relational database, thus it inherits all of the standard benefits of relational database systems "for free"
 * OrpheusDB supports advanced querying and versioning capabilities, via both SQL queries and git-style version control commands.
-* OrpheusDB uses a sophisticated data model, coupled with partition optimization algorithms, to provide efficient version control performance over large-scale datasets. 
+* OrpheusDB uses a sophisticated data model, coupled with partition optimization algorithms, to provide efficient version control performance over large-scale datasets. (The partition optimization algorithms are not part of this release.)
 
 ### Dataset Version Control in OrpheusDB
-The fundamental unit of storage within OrpheusDB is a collaborative versioned dataset (CVD) to which one or more users can contribute. Each CVD corresponds to a relation with a fixed schema, and implicitly contains many versions of that relation. There is a many-to-many relationship between records in the relation and versions that is captured within the CVD: each record can belong to many versions, and each version can contain many records. Each version has a unique version id integer, namely vid.
+The fundamental unit of storage within OrpheusDB is a collaborative versioned dataset (CVD) to which one or more users can contribute, 
+representing a collection of versions of a single relational dataset.  Each CVD corresponds to a relation with a fixed schema. There is a many-to-many relationship between records in the relation and versions that is captured within the CVD: each record can belong to many versions, and each version can contain many records. Each version of the CVDhas a unique version id integer, namely vid.
 <!-- Collaborative Version Dataset is the unit of operation in OrpheusDB. Each CVD stores dataset and its version information. Each version is represented with an unique version vid, _vid_. --> 
 
+Users can operate on CVDs much like they would with source code version control. The _checkout_ command allows users to materialize one or more specific versions of a CVD as a newly created regular table within a relational database or as a csv file; the _commit_ command allows users to add a new version to a CVD by making the local changes made by the user on their materialized table or on their exported csv file visible to others. Other git-style commands we support include _init_, _create\_user_, _config_, _whoami_, _ls_, _db_, _drop_, and _optimize_.
+
+Users can also execute SQL queries on one or more relational dataset versions within a CVD via the command line using the _run_ command, without requiring the corresponding dataset versions to be materialized. Beyond executing queries on a small number of versions, users can also apply aggregation grouped by version ids, or identify versions that satisfy some property. <!-- TODO: UPDATE/INSERT/REMOVE -->
+
+
+
 ### Data Model
-Each CVD in OrpheusDB corresponds to three underlying relational tables: the _data_ table, the _index_ table, and the _version_ table. To capture dataset versions, we represent the records of a dataset in the _data_ table and `arrays` of the versions(i.e., vid) that each record belongs to in a separate _index_ table. Moreover, we store version-level provenance information in the _version_ table, including attributes such as `author`, `num_records`,  `parent`, `children`, `create_time`, `commit_time` and `commit_msg`.
+Each CVD in OrpheusDB corresponds to three underlying relational tables: the _data_ table, the _index_ table, and the _version_ table. To capture dataset versions, we represent the records of a dataset in the _data_ table and mapping between versions and records in the _index_ table. Finally, we store version-level provenance information in the _version_ table, including attributes such as `author`, `num_records`,  `parent`, `children`, `create_time`, `commit_time`, and `commit_msg`.
 
 <!-- Our experimental evaluation demonstrates that, comparing to other alternatively data models, our data model paired with the partition optimizer has about `10x` less storage consumption, `1000x` faster for the commit operation.  -->
 
-Our experimental evaluation demonstrates that, comparing to other alternative data models, our data model plus the partition optimizer result in `10x` less storage consumption, `1000x` less time for _commit_ and comparable query performance for the _checkout_ command. In other words, OrpheusDB acheives an efficient balance between storage consumptions and query latencies.
+Our experimental evaluation demonstrates that, compared to other alternative data models, our data model, coupled with the partition optimizer results in **10x** less storage consumption, **1000x** less time for _commit_ and comparable query performance for the _checkout_ command. In other words, OrpheusDB acheives an efficient balance between storage consumption and query latencies.
 
 ### System Requirement
 OrpheusDB requires the following software to be installed successfully prior to setup: 
@@ -151,3 +154,4 @@ MIT
    [orpheus]: http://orpheus-db.github.io/
    [datahub]: https://arxiv.org/abs/1409.0798
    [postgressite]: https://www.postgresql.org/
+   [papersite]:http://data-people.cs.illinois.edu/papers/orpheus.pdf
