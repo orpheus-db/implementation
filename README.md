@@ -22,6 +22,17 @@ Users can also execute SQL queries on one or more relational dataset versions wi
 * OrpheusDB supports advanced querying and versioning capabilities, via both SQL queries and git-style version control commands.
 * OrpheusDB uses a sophisticated data model, coupled with partition optimization algorithms, to provide efficient version control performance over large-scale datasets. 
 
+### Dataset Version Control in OrpheusDB
+The fundamental unit of storage within OrpheusDB is a collaborative versioned dataset (CVD) to which one or more users can contribute. Each CVD corresponds to a relation with a fixed schema, and implicitly contains many versions of that relation. There is a many-to-many relationship between records in the relation and versions that is captured within the CVD: each record can belong to many versions, and each version can contain many records. Each version has a unique version id integer, namely vid.
+<!-- Collaborative Version Dataset is the unit of operation in OrpheusDB. Each CVD stores dataset and its version information. Each version is represented with an unique version vid, _vid_. --> 
+
+### Data Model
+Each CVD in OrpheusDB corresponds to three underlying relational tables: the _data_ table, the _index_ table, and the _version_ table. To capture dataset versions, we represent the records of a dataset in the _data_ table and an additional _index_ table containing `arrays` of the versions(i.e., vid) that each record belongs to. Moreover, in the _version_ table, we store version-level provenance information, including attributes such as `author`, `num_records`,  `parent`, `children`, `create_time`, `commit_time` and `commit_msg`.
+
+<!-- Our experimental evaluation demonstrates that, comparing to other alternatively data models, our data model paired with the partition optimizer has about `10x` less storage consumption, `1000x` faster for the commit operation.  -->
+
+Our experimental evaluation demonstrates that, comparing to the data model that represent the dataset as a relation and add an extra attribute corresponding to the version number vid, our data model paired with the partition optimizer has about `10x` less storage consumption, `1000x` faster for the _commit_ command and comparable performance for the _checkout_ command. In other words, OrpheusDB has an efficient balance for both storage consumption and query latency. 
+
 
 ### System Requirement
 OrpheusDB requires the following software to be installed successfully prior to setup: 
@@ -49,10 +60,6 @@ dh --help
 
 ### Configuration
 OrpheusDB needs to know where the underlying relational database storage is located before execution. To specify the associated parameters, change the corresponding fields in `config.yaml`.
-
-### Dataset Version Control in OrpheusDB
-The fundamental unit of storage within OrpheusDB is a collaborative versioned dataset (CVD) to which one or more users can contribute. Each CVD corresponds to a relation with a fixed schema, and implicitly contains many versions of that relation. There is a many-to-many relationship between records in the relation and versions that is captured within the CVD: each record can belong to many versions, and each version can contain many records. Each version has a unique version id integer, namely vid.
-<!-- Collaborative Version Dataset is the unit of operation in OrpheusDB. Each CVD stores dataset and its version information. Each version is represented with an unique version vid, _vid_. -->
 
 ### User Tutorials
 To start with, user can create an OrpheusDB username with a password via the `create_user` command. Upon finishing, it will be pushed to the underlying data storage with a SUPERUSER privilege. Command `config` is used to login through created user and `whoami` is used to list the current user name that is currently logged in. 
@@ -110,9 +117,9 @@ A few more SQL examples are:
 ```
 SELECT vid FROM CVD dataset1 WHERE salary > 7400 GROUP BY vid HAVING COUNT(employee_id) > 100;
 ```
-(2). Find all versions in CVD `dataset1` whose commit time is later than December 1st, 2017.
+(2). Find all versions in CVD `dataset1` whose commit time is later than December 1st, 2016.
 ```
-SELECT vid FROM CVD dataset1 WHERE commit_time >  '2017-12-01';
+SELECT vid FROM CVD dataset1 WHERE commit_time >  '2016-12-01';
 ```
 
 
