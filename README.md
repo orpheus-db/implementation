@@ -16,7 +16,7 @@ The current version is 1.0.0 (Released January 1, 2017).
 ### Key Design Innovations
 * OrpheusDB is built on top of a traditional relational database, thus it inherits all of the standard benefits of relational database systems "for free"
 * OrpheusDB supports advanced querying and versioning capabilities, via both SQL queries and git-style version control commands.
-* OrpheusDB uses a sophisticated data model, coupled with partition optimization algorithms[^1], to provide efficient version control performance over large-scale datasets. 
+* OrpheusDB uses a sophisticated data model, coupled with partition optimization algorithms [^1], to provide efficient version control performance over large-scale datasets. 
 
 ### Dataset Version Control in OrpheusDB
 The fundamental unit of storage within OrpheusDB is a _collaborative versioned dataset (CVD)_ to which one or more users can contribute, 
@@ -155,4 +155,4 @@ MIT
    [datahub]: https://arxiv.org/abs/1409.0798
    [postgressite]: https://www.postgresql.org/
    [papersite]:http://data-people.cs.illinois.edu/papers/orpheus.pdf
-   [^1]:The partition optimization algorithms are not part of this release.
+   [^1]: The partition optimization algorithms are not part of this release.
