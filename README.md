@@ -1,9 +1,9 @@
 # OrpheusDB: Bolt-On Versioning for Relational Databases
 [OrpheusDB][orpheus] is a hosted system that supports _relational dataset version management_. OrpheusDB is built on top of standard relational databases, thus it inherits much of the same benefits of relational databases, while also compactly storing, tracking, and recreating versions on demand, all very efficiently.
 
-OrpheusDB is built using [PostgreSQL][postgressite] and [Click][clicksite], a command line tool written in Python. Our current version supports advanced querying capabilities, using both the git-style version control commands, as well as SQL queries on one or more dataset versions. The paper describing the design, functionality, optimization, and experimental comparison can be found [at this link][papersite].
+OrpheusDB is built using [PostgreSQL][postgressite] and [Click][clicksite], a command line tool written in Python. Our current version supports advanced querying capabilities, using both the git-style version control commands, as well as SQL queries on one or more dataset versions. The paper describing the design, functionality, optimization, and performance evaluation can be found [at this link][papersite].
 
-OrpheusDB is a multi-year project, supported by the National Science Foundation via award number 1513407. It shares the vision of the vision paper on the [DataHub][datahub] project in supporting collaborative data analytics.
+OrpheusDB is a multi-year project, supported by the National Science Foundation via award number 1513407. It shares the vision of the [DataHub][datahub] project in supporting collaborative data analytics.
 
 
 <!-- OrpheusDB is an open-sourced database that enable data version capability on relational database system.This repository is an implementation of ongoing research under the project OrpheusDB at the University of Illinois at Urbana Champaign led by [Prof. Aditya Parameswaran][prof]. -->
