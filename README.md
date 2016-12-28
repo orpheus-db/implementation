@@ -27,11 +27,11 @@ The fundamental unit of storage within OrpheusDB is a collaborative versioned da
 <!-- Collaborative Version Dataset is the unit of operation in OrpheusDB. Each CVD stores dataset and its version information. Each version is represented with an unique version vid, _vid_. --> 
 
 ### Data Model
-Each CVD in OrpheusDB corresponds to three underlying relational tables: the _data_ table, the _index_ table, and the _version_ table. To capture dataset versions, we represent the records of a dataset in the _data_ table and `arrays` of the versions(i.e., vid) that each record belongs to in an separate _index_ table. Moreover, we store version-level provenance information in the _version_ table, including attributes such as `author`, `num_records`,  `parent`, `children`, `create_time`, `commit_time` and `commit_msg`.
+Each CVD in OrpheusDB corresponds to three underlying relational tables: the _data_ table, the _index_ table, and the _version_ table. To capture dataset versions, we represent the records of a dataset in the _data_ table and `arrays` of the versions(i.e., vid) that each record belongs to in a separate _index_ table. Moreover, we store version-level provenance information in the _version_ table, including attributes such as `author`, `num_records`,  `parent`, `children`, `create_time`, `commit_time` and `commit_msg`.
 
 <!-- Our experimental evaluation demonstrates that, comparing to other alternatively data models, our data model paired with the partition optimizer has about `10x` less storage consumption, `1000x` faster for the commit operation.  -->
 
-Our experimental evaluation demonstrates that, comparing to other alternative data models, our data model plus the partition optimizer result in `10x` less storage consumption, `1000x` less time for _commit_ and comparable query performance for the _checkout_ command. In other words, the OrpheusDB has an efficient balance between storage consumptions and query latencies.
+Our experimental evaluation demonstrates that, comparing to other alternative data models, our data model plus the partition optimizer result in `10x` less storage consumption, `1000x` less time for _commit_ and comparable query performance for the _checkout_ command. In other words, the OrpheusDB supports an efficient balance between storage consumptions and query latencies.
 
 ### System Requirement
 OrpheusDB requires the following software to be installed successfully prior to setup: 
