@@ -39,3 +39,4 @@ Thumbs.db
 
 # Orpheus related files #
 .meta/*
+.meta/logs/log.out
