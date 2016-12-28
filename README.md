@@ -31,7 +31,7 @@ Each CVD in OrpheusDB corresponds to three underlying relational tables: the _da
 
 <!-- Our experimental evaluation demonstrates that, comparing to other alternatively data models, our data model paired with the partition optimizer has about `10x` less storage consumption, `1000x` faster for the commit operation.  -->
 
-Our experimental evaluation demonstrates that, comparing to the data model that represent the dataset as a relation and add an extra attribute corresponding to the version number vid, our data model paired with the partition optimizer has about `10x` less storage consumption, `1000x` faster for the _commit_ command and comparable performance for the _checkout_ command. In other words, OrpheusDB has an efficient balance for both storage consumption and query latency. 
+Our experimental evaluation demonstrates that, comparing to the data model that represents the dataset as a relation and add an extra attribute corresponding to the version number vid, our data model paired with the partition optimizer have about `10x` less storage consumption, `1000x` less time for the _commit_ command and comparable query performance for the _checkout_ command. In other words, the OrpheusDB has an efficient balance for both storage consumption and query latency. 
 
 
 ### System Requirement
