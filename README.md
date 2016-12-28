@@ -19,8 +19,8 @@ The current version is 1.0.0 (Released January 1, 2017).
 * OrpheusDB uses a sophisticated data model, coupled with partition optimization algorithms, to provide efficient version control performance over large-scale datasets. (The partition optimization algorithms are not part of this release.)
 
 ### Dataset Version Control in OrpheusDB
-The fundamental unit of storage within OrpheusDB is a collaborative versioned dataset (CVD) to which one or more users can contribute, 
-representing a collection of versions of a single relational dataset.  Each CVD corresponds to a relation with a fixed schema. There is a many-to-many relationship between records in the relation and versions that is captured within the CVD: each record can belong to many versions, and each version can contain many records. Each version of the CVDhas a unique version id integer, namely vid.
+The fundamental unit of storage within OrpheusDB is a _collaborative versioned dataset (CVD)_ to which one or more users can contribute, 
+representing a collection of versions of a single relational dataset, with a fixed schema. There is a many-to-many relationship between records in the relation and versions that is captured within the CVD: each record can belong to many versions, and each version can contain many records. <!--Each version of the CVDhas a unique version id integer, namely vid.-->
 <!-- Collaborative Version Dataset is the unit of operation in OrpheusDB. Each CVD stores dataset and its version information. Each version is represented with an unique version vid, _vid_. --> 
 
 Users can operate on CVDs much like they would with source code version control. The _checkout_ command allows users to materialize one or more specific versions of a CVD as a newly created regular table within a relational database or as a csv file; the _commit_ command allows users to add a new version to a CVD by making the local changes made by the user on their materialized table or on their exported csv file visible to others. Other git-style commands we support include _init_, _create\_user_, _config_, _whoami_, _ls_, _db_, _drop_, and _optimize_.
@@ -128,7 +128,7 @@ SELECT vid FROM CVD dataset1 WHERE commit_time >  '2016-12-01';
 
 ### Development Plan
 We plan to release versions of OrpheusDB in a regular manner, adding on further
-querying and query optimization capabilities, as well as regular bug-fixes.
+querying, partitioning, and query optimization capabilities, as well as regular bug-fixes.
 The known bugs are listed below.
 
 ### Todos
