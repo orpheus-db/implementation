@@ -1,0 +1,22 @@
+1. Security of user information #NextVersion
+2. Unit Tests of each command 
+3. Compact index table #NextVersion
+4. Grant access #NextVersion
+5. Add verbose mode
+6. csv -> table, schema #Done
+7. SQL parser #Rewrite SQL logic
+8. Change relative path to support invoke on a differnt dir, save $ORPHEUS_HOME$ 
+to Unix Enviromental parameters #Not possible through setup.py, may need additiona script. Save to next version
+9. db connection check #Done
+10. Change user password settings. Get rid of password in first release. 
+11. tracker overwrite, get rid of the old mapping.
+12. adding author field #Done
+13. Change every table to public schema
+14. Drop tmp_table after using it #Hard coded to overwrite when needed
+15. commit check records #Not necessary
+16. update meta after dropping dataset
+17. update load current state path from .meta/config
+
+Minors:
+1. Fix the venv activate in quick_start.sh
+
