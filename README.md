@@ -64,7 +64,7 @@ dh --help
 OrpheusDB needs to know where the underlying relational database-based storage engine is located before execution. To specify the associated parameters, change the corresponding fields in `config.yaml`.
 
 ### User Tutorials
-To start with, user can create an OrpheusDB username with a password via the `create_user` command. Upon finishing, it will be pushed to the underlying data storage with a SUPERUSER privilege. Command `config` is used to login through created user and `whoami` is used to list the current user name that is currently logged in. 
+By default, OrpheusDB is connected to PostgresSQL via user `postgres` with no password. User can create an OrpheusDB username with a password via the `create_user` command. Upon finishing, it will be pushed to the underlying data storage with a SUPERUSER privilege. Command `config` is used to login through created user and `whoami` is used to list the current user name that is currently logged in. 
 
 Please note here that OrpheusDB provides the most basic implementation for user information, i.e. there is no password protection. However, this feature is subject to change in future versions.
 ```
