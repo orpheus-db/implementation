@@ -49,7 +49,7 @@ OrpheusDB comes with a standard `setup.py` script for installation. The required
 * pyyaml >= 3.12
 * pyparsing >=2.1.1
 
-Users are able to install any of missing dependencies themselves via `pip`. Alternatively, an easier way to install all the requisite dependencies is via `pip install .`
+Users are able to install any of missing dependencies themselves via `pip`. Alternatively, an easier way to install all the requisite dependencies is via `pip install .` (If you encounter permission errors, install via `sudo -H pip install .`)
 
 After installation, users can use `dh --help` to list all the available commands in OrpheusDB. By default, `dh` is the alias for OrpheusDB user interface.
 
