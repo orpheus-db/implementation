@@ -3,7 +3,7 @@ host: localhost
 port: 5432
 
 # Orpheus Home dir
-orpheus_home: /Users/Wesley/Documents/git/orpheus-db/implementation/
+orpheus_home: #Please specify the Orpheus home directiory
 
 # Meta dir 
 # TODO: hide them under orpheus_home
