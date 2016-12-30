@@ -73,7 +73,8 @@ class DatabaseManager():
     def execute_sql(self, sql):
         try:
             self.cursor.execute(sql)
-            return self.cursor.fetchall()
+            for row in self.cursor.fetchall():
+                print row
         except psycopg2.ProgrammingError:
             raise SQLSyntaxError()
 

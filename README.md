@@ -79,7 +79,7 @@ The `init` command provides ways to load a csv file into OrpheusDB as a CVD, wit
 <!-- In the current release, only `csv` file format is supported in the `init`. -->
 
 ```
-dh init data.csv dataset1 -s sample_schema.csv
+dh init test/data.csv dataset1 -s test/sample_schema.csv
 ```
 
 User can checkout one or more desired versions through the `checkout` command, to either a csv file or a structured table in RDBMS. <!-- Again, only `csv` format is supported. --> In the following example, version 1 of CVD dataset1 is checked out as a csv file named checkout.csv. 
@@ -107,20 +107,20 @@ OrpheusDB supports a rich syntax of SQL statements on versions and CVDs. During 
 1. Query against known version(s) of a particular dataset
 2. Query against unknown version(s) of a particular dataset
 
-To query against known version(s), the version number needs to be specified. In the following example, OrpheusDB will select the `age` column from CVD dataset1 whose version id is equal to either `1` or `2`.
+To query against known version(s), the version number needs to be specified. In the following example, OrpheusDB will select the `employee_id` and  `age` columns from CVD dataset1 whose version id is equal to either `1` or `2`.
 ```
-SELECT age FROM VERSION 1,2 OF CVD dataset1;
+SELECT employee_id, age FROM VERSION 1,2 OF CVD dataset1;
 ```
 
-If version number is unknown, OrpheusDB supports queries where the desired version number is also identified. In the following examples, OrpheusDB will select all the version ids that have one or more records whose age equals to 25. It is worth noting that the `GROUP BY` clause is required to aggregate on version number.
+If version number is unknown, OrpheusDB supports queries where the desired version number is also identified. In the following examples, OrpheusDB will select all the version ids that have one or more records whose age is less than 25. It is worth noting that the `GROUP BY` clause is required to aggregate on version number.
 ```
-SELECT vid FROM CVD dataset1 WHERE age = 25 GROUP BY vid;
+SELECT vid FROM CVD dataset1 WHERE age < 25 GROUP BY vid;
 ```
 Here are a couple other examples of SQL on versions:
 
-(1). Find all versions in CVD `dataset1` that have more than 100 records where salary is larger than 7400.
+(1). Find all versions in CVD `dataset1` that have more than 5 records where salary is larger than 7400.
 ```
-SELECT vid FROM CVD dataset1 WHERE salary > 7400 GROUP BY vid HAVING COUNT(employee_id) > 100;
+SELECT vid FROM CVD dataset1 WHERE salary > 7400 GROUP BY vid HAVING COUNT(employee_id) > 5;
 ```
 (2). Find all versions in CVD `dataset1` whose commit time is later than December 1st, 2016.
 ```

@@ -235,7 +235,7 @@ def run(ctx, sql):
         parser = SQLParser(conn)
         executable_sql = parser.parse(sql)
         #print executable_sql
-        print conn.execute_sql(executable_sql)
+        conn.execute_sql(executable_sql)
 
     except Exception as e:
         import traceback
@@ -249,7 +249,7 @@ def run(ctx, sql):
 @click.option('--to_file', '-f', help='Specify the location of file')
 @click.option('--delimeters', '-d', default=',', help='Specify the delimeter used for checkout file')
 @click.option('--header', '-h', is_flag=True, help="If set, the first line of checkout file will be the header")
-@click.option('--ignore', '-i', is_flag=True, help='If set, checkout versions into table will ignore duplicated key')
+@click.option('--ignore', '-i', is_flag=False, help='If set, checkout versions into table will ignore duplicated key')
 @click.pass_context
 def checkout(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore):
     # check ctx.obj has permission or not
