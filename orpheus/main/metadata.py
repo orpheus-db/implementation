@@ -13,7 +13,7 @@ class MetadataManager(object):
             self.meta_info = config['meta_info']
             self.meta_modifiedIds = config['meta_modifiedIds']
         except KeyError as e:
-            raise sys_exception.BadStateError("context missing field %s, abort" % e.args[0])
+            raise sys_exception.BadStateError("Context missing field %s, abort" % e.args[0])
 
     # Read metadata
     def load_meta(self):
@@ -28,7 +28,7 @@ class MetadataManager(object):
         f = open(self.meta_info, 'w')
         f.write(json.dumps(new_meta))
         f.close()
-        print "meta data committed"
+        print "Metadata committed"
 
     # can change to static method
     def update(self, to_table, to_file, dataset, vlist, old_meta):
@@ -79,7 +79,7 @@ class MetadataManager(object):
             # parent_vid = "\'{%s}\'" % ",".join(str(x) for x in parent_vid_lis)
             return parent_vid_lis
         except KeyError:
-            raise sys_exception.BadStateError("meta information missing field %s, abort" % e.args[0])
+            raise sys_exception.BadStateError("Metadata information missing field %s, abort" % e.args[0])
             return None
 
     def load_table_create_time(self,table_name):

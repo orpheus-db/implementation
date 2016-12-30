@@ -30,7 +30,7 @@ class DatasetExistsError(Exception):
         self.value = value
         self.user = user
     def __str__(self):
-        return 'dataset %s exists under user %s' % (self.value, self.user)
+        return 'Dataset %s exists under user %s' % (self.value, self.user)
 
 class SQLSyntaxError(Exception):
     def __str__(self):
@@ -85,7 +85,7 @@ class DatabaseManager():
     # schema is a list of tuple of (attribute_name, attribute_type) as string
     def create_dataset(self, inputfile, dataset, schema, header=False, attributes=None): 
         self.refresh_cursor()
-        print "creating dataset %s to %s" % (dataset, self.currentDB)
+        print "Creating dataset %s to %s" % (dataset, self.currentDB)
         # create a schema (in postgres) to store user specific information
         try:
             self.cursor.execute("CREATE SCHEMA %s;" % self.user)
@@ -224,7 +224,7 @@ class DatabaseManager():
             cursor.execute("CREATE USER %s SUPERUSER;" % user) # TODO: add password detection later
             connect.commit()
         except psycopg2.OperationalError:
-            raise ConnectionError("connot connect to %s at %s:%s" % (db, server_config['host'], str(server_config['port'])))
+            raise ConnectionError("Cannot connect to %s at %s:%s" % (db, server_config['host'], str(server_config['port'])))
         except Exception as e: # unknown error
             raise e
         return

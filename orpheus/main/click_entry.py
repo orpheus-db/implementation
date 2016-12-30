@@ -29,6 +29,9 @@ class Context():
         try:
             with open(self.config_path, 'r') as f:
                 self.config = yaml.load(f)
+
+            if not self.config['orpheus_home'].endswith("/"):
+                self.config['orpheus_home'] += "/" 
             # if user overwrite the ORPHEUS_HOME, rewrite the enviormental parameters
             if 'orpheus_home' in self.config:
                 os.environ['ORPHEUS_HOME'] = self.config['orpheus_home']
@@ -36,7 +39,7 @@ class Context():
             raise BadStateError("config.yaml file not found or data not clean, abort")
             return
         except: # unknown error
-            raise BadStateError("unknown error during loding config file, abort")
+            raise BadStateError("Unknown error during loding config file, abort")
             return
 
 
@@ -73,14 +76,12 @@ def config(ctx, user, password, database):
         from encryption import EncryptionTool
         newctx['passphrase'] = EncryptionTool.passphrase_hash(password)
         UserManager.write_current_state(newctx) # pass down to user manager
-        click.echo('Logged in database %s as: %s ' % (ctx.obj['database'],ctx.obj['user']))
+        click.echo('Logged to database %s as: %s ' % (ctx.obj['database'],ctx.obj['user']))
     except Exception as e:
         click.secho(str(e), fg='red')
 
 
 @cli.command()
-#@click.option('--user', prompt='Enter user name', help='Specify the user name that you want to create.')
-#@click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True, help='Specify the password that you want to use.')
 @click.pass_context
 def create_user(ctx):
     # check this user has permission to create new user or not
@@ -166,7 +167,7 @@ def init(ctx, input, dataset, table, schema):
         version.init_version_graph_dataset(dataset, lis_rid, ctx.obj['user'])
         version.init_index_table_dataset(dataset, lis_rid)
 
-        click.echo("dataset %s create successful" % dataset)
+        click.echo("Dataset %s create successful" % dataset)
     except DatasetExistsError as e:
         click.secho(str(e), fg='red')
     except Exception as e:
@@ -182,7 +183,7 @@ def drop(ctx, dataset):
     if click.confirm('Are you sure you want to drop %s?' % dataset):
         try:
             conn = DatabaseManager(ctx.obj)
-            click.echo("dropping dataset %s" % dataset)
+            click.echo("Dropping dataset %s" % dataset)
             conn.drop_dataset(dataset)
         except Exception as e:
             click.secho(str(e), fg='red')

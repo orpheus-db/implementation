@@ -2,25 +2,25 @@ class RelationNotExistError(Exception):
   def __init__(self, tablename):
       self.name = tablename
   def __str__(self):
-      return "relation %s does not exist" % self.name
+      return "Relation %s does not exist" % self.name
 
 class RelationOverwriteError(Exception):
   def __init__(self, tablename):
       self.name = tablename
   def __str__(self):
-      return "relation %s exists, add flag to allow overwrite" % self.name
+      return "Relation %s exists, add flag to allow overwrite" % self.name
 
 class ReservedRelationError(Exception):
   def __init__(self, tablename):
       self.name = tablename
   def __str__(self):
-      return "relation %s is a reserved name, please use a different one" % self.name
+      return "Relation %s is a reserved name, please use a different one" % self.name
 
 class ColumnNotExistError(Exception):
   def __init__(self, column):
       self.name = column
   def __str__(self):
-      return "column %s does not exist" % self.name
+      return "Column %s does not exist" % self.name
 
 class RelationManager(object):
     def __init__(self, conn):
@@ -227,7 +227,7 @@ class RelationManager(object):
         return new_rids
 
     def clean(self):
-      print "clean"#????
+      print "Clean"#????
 
     @staticmethod
     def reserve_table_check(name):
