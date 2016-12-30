@@ -55,19 +55,28 @@ def cli(ctx):
         click.secho(str(e), fg='red')
 
 @cli.command()
+@click.option('--database', prompt='Enter database name', help='Specify the database name that you want to configure to.')
 @click.option('--user', prompt='Enter user name', help='Specify the user name that you want to configure to.')
-@click.option('--password', prompt=True, hide_input=True, help='Specify the password.')
+@click.option('--password', prompt=True, hide_input=True, help='Specify the password.', default='')
 @click.pass_context
-def config(ctx, user, password):
+def config(ctx, user, password, database):
     newctx = ctx.obj # default
+
     try:
-        conn = DatabaseManager(ctx.obj)
-        if UserManager.verify_credential(user, password):
-            from encryption import EncryptionTool
-            newctx['user'] = user
-            newctx['passphrase'] = EncryptionTool.passphrase_hash(password)
-            UserManager.write_current_state(newctx) # pass down to user manager
-            click.echo('logged in as %s' % user)
+        newctx['database'] = database
+        newctx['user'] = user
+        newctx['passphrase'] = password
+        conn = DatabaseManager(newctx)
+    except Exception as e:
+        click.secho(str(e), fg='red')
+        return
+
+    try:
+        UserManager.create_user(user, password) 
+        from encryption import EncryptionTool
+        newctx['passphrase'] = EncryptionTool.passphrase_hash(password)
+        UserManager.write_current_state(newctx) # pass down to user manager
+        click.echo('Logged in as %s!' % user)
     except Exception as e:
         click.secho(str(e), fg='red')
 

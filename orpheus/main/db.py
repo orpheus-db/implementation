@@ -57,7 +57,7 @@ class DatabaseManager():
 
 
     def connect_db(self):
-        print "connect to DB %s" % self.currentDB
+        print "Connecting to DB %s" % self.currentDB
         try:
             if self.verbose:
                 click.echo('Trying to connect to %s' % (self.currentDB))
@@ -67,7 +67,7 @@ class DatabaseManager():
         except psycopg2.OperationalError as e:
             logging.error('%s is not open' % (self.currentDB))
             # click.echo(e, file=sys.stderr)
-            raise ConnectionError("connot connect to %s @ %s:%s, check connection" % (self.currentDB, self.config['host'], self.config['port']))
+            raise ConnectionError("Cannot connect to Database %s @ %s:%s. Check connection, username, password and database name." % (self.currentDB, self.config['host'], self.config['port']))
         return self
 
     def execute_sql(self, sql):

@@ -1,1 +1,1 @@
-{"meta_info": ".meta/tracker", "database": "postgres", "log_path": ".meta/logs/log.out", "user_log": ".meta/user_log", "host": "localhost", "meta_modifiedIds": ".meta/modified", "commit_path": ".meta/commit_tables", "user": "postgres", "passphrase": "", "port": 5432}
+{"user": "", "passphrase": "", "database": ""}

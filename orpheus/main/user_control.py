@@ -32,7 +32,6 @@ class UserManager(object):
 	def create_user(cls, user, password=None):
 		from os import makedirs
 		if cls.check_user_exist(user):
-			raise LocalUserExistError("username %s exists, try a different one" % user)
 			return None
 		user_obj = {
 				'user' : user
@@ -64,8 +63,11 @@ class UserManager(object):
 
 	@classmethod
 	def write_current_state(cls, obj):
+		user_obj = {"database": "", "user": "", "passphrase": ""}
+		for key in user_obj:
+			user_obj[key] = obj[key]
 		with open(cls.config_path(), 'w') as f:
-			f.write(json.dumps(obj))
+			f.write(json.dumps(user_obj))
 
 
 	@classmethod
