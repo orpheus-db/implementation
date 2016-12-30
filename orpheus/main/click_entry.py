@@ -48,9 +48,6 @@ def cli(ctx):
         user_obj = UserManager.get_current_state()
         for key in user_obj:
             ctx.obj[key] = user_obj[key]
-        if not ctx.obj or not ctx.obj['user'] or not ctx.obj['database']:
-            click.secho("No session in use, please call config first", fg='red')
-            return # stop the following commands
     except Exception as e:
         click.secho(str(e), fg='red')
 
@@ -82,23 +79,28 @@ def config(ctx, user, password, database):
 
 
 @cli.command()
-@click.option('--user', prompt='Enter user name', help='Specify the user name that you want to create.')
-@click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True, help='Specify the password that you want to use.')
+#@click.option('--user', prompt='Enter user name', help='Specify the user name that you want to create.')
+#@click.option('--password', prompt=True, hide_input=True, confirmation_prompt=True, help='Specify the password that you want to use.')
 @click.pass_context
-def create_user(ctx, user, password):
+def create_user(ctx):
     # check this user has permission to create new user or not
     # create user in UserManager
-    click.echo("creating user into %s" % ctx.obj['database'])
+    if not ctx.obj['user'] or not ctx.obj['database']:
+        click.secho("No session in use, please call config first", fg='red')
+        return # stop the following commands
+
+    user = click.prompt('Please enter user name')
+    password = click.prompt('Please enter password', hide_input=True, confirmation_prompt=True)
+
+    click.echo("Creating user into %s" % ctx.obj['database'])
     try:
-        conn = DatabaseManager(ctx.obj)
         UserManager.create_user(user, password)
         DatabaseManager.create_user(user, password, ctx.obj['database']) #TODO: need revise
         click.echo('User created.')
     except Exception as e:
         click.secho(str(e), fg='red')
 
-# TODO: check permission?
-    print ctx.obj
+    # TODO: check permission?
     
 @cli.command()
 @click.option('--database', '-d', help='Specify the database that you want to use without changing host and port')
