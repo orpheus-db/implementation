@@ -39,7 +39,7 @@ class MetadataManager(object):
         # return old_meta
 
     def update_tablemap(self, to_table, dataset, vlist, old_meta):
-        print "update metadata."
+        print "Update metadata."
         old_meta['table_map'][to_table] = dataset, vlist
         old_meta['table_created_time'][to_table] = str(datetime.datetime.now())
         # self.commit_meta(_meta)

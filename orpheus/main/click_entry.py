@@ -197,6 +197,7 @@ def ls(ctx, dataset, table_name):
     # if no dataset specified, show the list of dataset the current user owns
     try:
         conn = DatabaseManager(ctx.obj)
+        print "The current database contains the following CVDs:\n"
         if not dataset:
             click.echo("\n".join(conn.list_dataset()))
         else:
@@ -220,7 +221,7 @@ def execute_sql_file(ctx, param, value):
     with open(abs_path, 'r') as f:
         for line in f:
             executable_sql = parser.parse(line)
-            print executable_sql
+            #print executable_sql
     ctx.exit()
 
 @cli.command()
@@ -233,7 +234,7 @@ def run(ctx, sql):
         conn = DatabaseManager(ctx.obj)
         parser = SQLParser(conn)
         executable_sql = parser.parse(sql)
-        print executable_sql
+        #print executable_sql
         print conn.execute_sql(executable_sql)
 
     except Exception as e:
@@ -386,7 +387,7 @@ def commit(ctx, msg, table_name, file_name, delimeters, header):
 
             # update index table
             version.update_index_table(indextable_name, curt_vid, current_version_rid)
-            print "Commiting version %s with %s records" % (curt_vid, current_version_rid)
+            print "Commiting version %s with %s records" % (curt_vid, len(current_version_rid))
         except Exception as e:
             click.secho(str(e), fg='red')
             return
@@ -395,7 +396,7 @@ def commit(ctx, msg, table_name, file_name, delimeters, header):
         relation.drop_table('tmp_table')
 
 
-    click.echo("commited")
+    click.echo("Commited")
 
 
 

@@ -227,7 +227,7 @@ class SQLParser(object):
 					# get the mapping from each field to alias
 					fields_mapping = self.get_fields_mapping(datatable_attributes)
 
-					print fields_mapping
+					#print fields_mapping
 
 					touched_column_names = self.get_touched_column_names(parent, stop_words=set(self.reserved_column_names + [dataset_name]))
 

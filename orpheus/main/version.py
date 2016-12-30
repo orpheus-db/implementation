@@ -90,7 +90,7 @@ class VersionManager(object):
 
 
     def clean(self):
-        print "version clean"
+        print "Version clean: Under Construction."
 
     def get_curt_max_vid(self,version_graph_name):
         sql = "SELECT MAX(vid) FROM %s;" % version_graph_name
@@ -103,7 +103,7 @@ class VersionManager(object):
     def select_records_of_version_list(self, vlist):
         targetv= ','.join(vlist)
         sql = "SELECT distinct rlist FROM indexTbl WHERE vlist && (ARRAY[%s]);"%targetv
-        print sql
+        #print sql
         self.conn.cursor.execute(sql)
         data = self.conn.cursor.fetchall()
         data_string=''

@@ -53,7 +53,7 @@ class RelationManager(object):
       else:
         sql = "SELECT %s FROM %s WHERE rid = ANY('%s'::int[]);" % (",".join(_attributes), datatable, recordlist)
       self.conn.cursor.execute(sql)
-      print sql
+      #print sql
       return _attributes, self.conn.cursor.fetchall()
 
     def checkout_meta_print(self, versiontable, projection='*', where=None):
@@ -81,7 +81,7 @@ class RelationManager(object):
       else:
         sql = "SELECT %s from %s;" % (projection, versiontable)
       self.conn.cursor.execute(sql)
-      print sql
+      #print sql
       return _attributes, self.conn.cursor.fetchall()
 
     # to_file needs an absolute path
@@ -100,7 +100,7 @@ class RelationManager(object):
 
         _attributes,_attributes_type = self.get_datatable_attribute(datatable)
         recordlist = self.select_records_of_version_list(vlist, indextable)
-        print recordlist
+        #print recordlist
         if to_table:
           self.checkout_table(_attributes, recordlist, datatable, to_table, ignore)
         if to_file:
@@ -127,7 +127,7 @@ class RelationManager(object):
             self.get_primary_key(datatable)
             sql = "SELECT rid,%s INTO %s FROM %s WHERE rid = ANY('%s'::int[]);" \
                   % (', '.join(attributes), to_table, datatable, ridlist)
-        print sql
+        #print sql
         self.conn.cursor.execute(sql)
 
         sql = "SELECT %s,rid FROM %s;"%(', '.join(attributes),to_table)
@@ -183,7 +183,7 @@ class RelationManager(object):
 
     def create_relation(self,table_name):
       # Use CREATE SQL COMMAND
-      print "create_relation"
+      print "create_relation: Under Construction."
 
     # will drop existing table to create the new table 
     def create_relation_force(self, table_name, sample_table, sample_table_attributes=None):
@@ -227,7 +227,7 @@ class RelationManager(object):
         return new_rids
 
     def clean(self):
-      print "Clean"#????
+      print "Clean: Under Construction."#????
 
     @staticmethod
     def reserve_table_check(name):
@@ -242,7 +242,7 @@ class RelationManager(object):
 
     def select_records_of_version_list(self, vlist, indextable):
         targetv= ','.join(vlist)
-        print "get rids of version %s" % targetv
+        #print "get rids of version %s" % targetv
         # sql = "SELECT distinct rlist FROM %s WHERE vlist && (ARRAY[%s]);" % (indextable, targetv)
         sql = "SELECT distinct rlist FROM %s WHERE vid = ANY(ARRAY[%s]);" % (indextable, targetv)
         # print sql
@@ -258,8 +258,8 @@ class RelationManager(object):
             "WHERE  i.indrelid = '%s'::regclass " \
             "AND    i.indisprimary;"%tablename
         self.conn.cursor.execute(sql)
-        print tablename+'\'s primary key'
-        print self.conn.cursor.fetchall()
+        #print tablename+'\'s primary key'
+        #print self.conn.cursor.fetchall()
 
     def get_number_of_rows(self,tablename):
         sql = "SELECT COUNT (*) from %s" % tablename

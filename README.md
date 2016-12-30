@@ -124,7 +124,7 @@ SELECT vid FROM CVD dataset1 WHERE salary > 7400 GROUP BY vid HAVING COUNT(emplo
 ```
 (2). Find all versions in CVD `dataset1` whose commit time is later than December 1st, 2016.
 ```
-SELECT vid FROM CVD dataset1 WHERE commit_time >  '2016-12-01';
+SELECT vid FROM CVD dataset1 WHERE commit_time >  '2016-12-01' GROUP BY vid;
 ```
 
 ### Development Plan
