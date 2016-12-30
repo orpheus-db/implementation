@@ -230,5 +230,23 @@ class DatabaseManager():
         return
 
 
+    @classmethod
+    def database_exist(self, host,port,db,new_db):
+        # Create a new database
+        # Using corresponding SQL or prostegres commands
+        # Set one-time only connection to the database to create user
+        try:
+            conn_string = "host=" + host + " port=" + str(port) + " dbname=" +  db
+            connect = psycopg2.connect(conn_string)
+            cursor = connect.cursor()
+
+            sql = "select exists (select datname from pg_database where datname='%s');" % new_db
+            cursor.execute(sql)
+
+            return cursor.fetchall()[0][0]
+        except psycopg2.OperationalError:
+            raise ConnectionError("connot connect to %s at %s:%s" % (db, host, str(port)))
+        except Exception as e: # unknown error
+            raise e
 
 

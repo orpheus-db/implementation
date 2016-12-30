@@ -96,12 +96,16 @@ def create_user(ctx, user, password):
 @click.pass_context
 def db(ctx, database):
     try:
-        conn = DatabaseManager(ctx.obj)
-        print ctx.obj
         if database:
-            ctx.obj['database'] = database
-            UserManager.write_current_state(ctx.obj) # write to persisent store
-        click.echo('using: %s' % ctx.obj['database'])
+            if not DatabaseManager.database_exist(ctx.obj['host'], ctx.obj['port'],ctx.obj['database'] ,database):
+            #Check existence of the database
+                click.secho(str('Database %s does not exist.' % database), fg='red')
+            else:
+                ctx.obj['database'] = database
+                UserManager.write_current_state(ctx.obj) # write to persisent store
+                click.echo('Connecting to Database: %s' % ctx.obj['database'])
+        else:
+            click.echo('Connecting to Database: %s' % ctx.obj['database'])
     except Exception as e:
         click.secho(str(e), fg='red')
 
