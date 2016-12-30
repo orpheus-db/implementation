@@ -73,7 +73,7 @@ def config(ctx, user, password, database):
         from encryption import EncryptionTool
         newctx['passphrase'] = EncryptionTool.passphrase_hash(password)
         UserManager.write_current_state(newctx) # pass down to user manager
-        click.echo('Logged in as %s!' % user)
+        click.echo('Logged in database %s as: %s ' % (ctx.obj['database'],ctx.obj['user']))
     except Exception as e:
         click.secho(str(e), fg='red')
 
@@ -92,42 +92,25 @@ def create_user(ctx):
     user = click.prompt('Please enter user name')
     password = click.prompt('Please enter password', hide_input=True, confirmation_prompt=True)
 
-    click.echo("Creating user into %s" % ctx.obj['database'])
+    click.echo("Creating user into database %s" % ctx.obj['database'])
     try:
-        UserManager.create_user(user, password)
         DatabaseManager.create_user(user, password, ctx.obj['database']) #TODO: need revise
+        UserManager.create_user(user, password)
         click.echo('User created.')
     except Exception as e:
         click.secho(str(e), fg='red')
 
     # TODO: check permission?
-    
-@cli.command()
-@click.option('--database', '-d', help='Specify the database that you want to use without changing host and port')
-@click.pass_context
-def db(ctx, database):
-    try:
-        if database:
-            if not DatabaseManager.database_exist(ctx.obj['host'], ctx.obj['port'],ctx.obj['database'] ,database):
-            #Check existence of the database
-                click.secho(str('Database %s does not exist.' % database), fg='red')
-            else:
-                ctx.obj['database'] = database
-                UserManager.write_current_state(ctx.obj) # write to persisent store
-                click.echo('Connecting to Database: %s' % ctx.obj['database'])
-        else:
-            click.echo('Connecting to Database: %s' % ctx.obj['database'])
-    except Exception as e:
-        click.secho(str(e), fg='red')
 
 @cli.command()
 @click.pass_context
 def whoami(ctx):
-    try:
-        conn = DatabaseManager(ctx.obj)
-        click.echo('logged in as: %s' % ctx.obj['user'])
-    except Exception as e:
-        click.secho(str(e), fg='red')
+    if not ctx.obj['user'] or not ctx.obj['database']:
+        click.secho("No session in use, please call config first", fg='red')
+        return # stop the following commands
+    
+    click.echo('Logged in database %s as: %s ' % (ctx.obj['database'],ctx.obj['user']))
+    
 
 @cli.command()
 @click.argument('input', type=click.Path(exists=True))
