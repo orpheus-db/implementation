@@ -23,7 +23,7 @@ The fundamental unit of storage within OrpheusDB is a _collaborative versioned d
 representing a collection of versions of a single relational dataset, with a fixed schema. There is a many-to-many relationship between records in the relation and versions that is captured within the CVD: each record can belong to many versions, and each version can contain many records. <!--Each version of the CVDhas a unique version id integer, namely vid.-->
 <!-- Collaborative Version Dataset is the unit of operation in OrpheusDB. Each CVD stores dataset and its version information. Each version is represented with an unique version vid, _vid_. --> 
 
-Users can operate on CVDs much like they would with source code version control. The _checkout_ command allows users to materialize one or more specific versions of a CVD as a newly created regular table within a relational database or as a csv file; the _commit_ command allows users to add a new version to a CVD by making the local changes made by the user on their materialized table or on their exported csv file visible to others. Other git-style commands we support include _init_, _create\_user_, _config_, _whoami_, _ls_, _db_, _drop_, and _optimize_.
+Users can operate on CVDs much like they would with source code version control. The _checkout_ command allows users to materialize one or more specific versions of a CVD as a newly created regular table within a relational database or as a csv file; the _commit_ command allows users to add a new version to a CVD by making the local changes made by the user on their materialized table or on their exported csv file visible to others. Other git-style commands we support include _init_, _create\_user_, _config_, _whoami_, _ls_, _drop_, and _optimize_.
 
 Users can also execute SQL queries on one or more relational dataset versions within a CVD via the command line using the _run_ command, without requiring the corresponding dataset versions to be materialized. Beyond executing queries on a small number of versions, users can also apply aggregation grouped by version ids, or identify versions that satisfy some property. <!-- TODO: UPDATE/INSERT/REMOVE -->
 
@@ -62,15 +62,15 @@ dh --help
 -->
 
 ### Configuration
-OrpheusDB needs to know where the underlying relational database-based storage engine is located before execution. To specify the associated parameters, change the corresponding fields in `config.yaml`.
+OrpheusDB needs to know where the underlying relational database-based storage engine is located before execution. To specify the associated parameters, change the corresponding fields in `config.yaml`. Moreover, user needs to call `config` command to connect to an existing Postgres database via a valid user name.
 
 ### User Tutorials
-By default, OrpheusDB is connected to PostgresSQL via user `postgres` with no password. User can create an OrpheusDB username with a password via the `create_user` command. Upon finishing, it will be pushed to the underlying data storage with a SUPERUSER privilege. Command `config` is used to login through created user and `whoami` is used to list the current user name that is currently logged in. 
+User can then create an OrpheusDB username with a password via the `create_user` command. Upon finishing, it will be pushed to the underlying data storage with a SUPERUSER privilege. Command `config` is used to login through created user and `whoami` is used to list the current user name that is currently logged in. 
 
 Please note here that OrpheusDB provides the most basic implementation for user information, i.e. there is no password protection. However, this feature is subject to change in future versions.
 ```
+db config
 dh create_user
-dh config
 dh whoami
 ```
 
