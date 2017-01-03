@@ -73,8 +73,12 @@ class DatabaseManager():
     def execute_sql(self, sql):
         try:
             self.cursor.execute(sql)
+
+            colnames = [desc[0] for desc in self.cursor.description]
+            print ', '.join(colnames)
+            
             for row in self.cursor.fetchall():
-                print row
+                print ', '.join(str(e) for e in row)
         except psycopg2.ProgrammingError:
             raise SQLSyntaxError()
 

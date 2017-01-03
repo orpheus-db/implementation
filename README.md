@@ -62,7 +62,7 @@ dh --help
 -->
 
 ### Configuration
-Users need to install PostgresSQL successfully (A tutorial of installing PostgresSQL on Mac OSX can be found [here][postgres-installation].) After starting PostgresSQL(e.g., via pg_ctl), users can call `createdb` to set up a new database with a new username and password. 
+Users need to install PostgresSQL successfully (A tutorial of installing PostgresSQL on Mac OSX can be found [here][postgres-installation].) After starting PostgresSQL(e.g., via 'pg_ctl'), users can call `createdb` to create a new database with a new username and password. 
 
 OrpheusDB needs to know where the underlying relational database-based storage engine is located before execution. To specify the associated parameters, change the corresponding fields in `config.yaml`. Moreover, users have to connect OrpheusDB to an existing PostgresSQL database and a valid user name via command `dh config`. 
 
