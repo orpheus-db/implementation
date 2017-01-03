@@ -62,10 +62,12 @@ dh --help
 -->
 
 ### Configuration
-OrpheusDB needs to know where the underlying relational database-based storage engine is located before execution. To specify the associated parameters, change the corresponding fields in `config.yaml`. Moreover, user needs to call `config` command to connect to an existing Postgres database via a valid user name.
+Users need to install PostgresSQL successfully (A tutorial of installing PostgresSQL on Mac OSX can be found [here][postgres-installation].) After starting PostgresSQL, users can call `createdb` to setup a new database with a new username and password. 
+
+OrpheusDB needs to know where the underlying relational database-based storage engine is located before execution. To specify the associated parameters, change the corresponding fields in `config.yaml`. Moreover, users have to connect OrpheusDB to an existing PostgresSQL database and a valid user name via command `dh config`. 
 
 ### User Tutorials
-User can then create an OrpheusDB username with a password via the `create_user` command. Upon finishing, it will be pushed to the underlying data storage with a SUPERUSER privilege. Command `config` is used to login through created user and `whoami` is used to list the current user name that is currently logged in. 
+User can create a new OrpheusDB username with a password via the `create_user` command. Upon finishing, it will be pushed to the underlying data storage with a SUPERUSER privilege. Command `config` can also be used to login through created user and `whoami` is used to list the current user name that is currently logged in. 
 
 Please note here that OrpheusDB provides the most basic implementation for user information, i.e. there is no password protection. However, this feature is subject to change in future versions.
 ```
@@ -156,4 +158,5 @@ MIT
    [datahub]: https://arxiv.org/abs/1409.0798
    [postgressite]: https://www.postgresql.org/
    [papersite]:http://data-people.cs.illinois.edu/papers/orpheus.pdf
+   [postgres-installation]: https://chartio.com/resources/tutorials/how-to-start-postgresql-server-on-mac-os-x/
    <sup>1</sup>The partition optimization algorithms are not part of this release.
