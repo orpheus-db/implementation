@@ -62,12 +62,10 @@ dh --help
 -->
 
 ### Configuration
-To start with, users need to install PostgresSQL successfully (A tutorial of installing PostgresSQL on Mac OSX can be found [here][postgres-installation].) After starting PostgresSQL(e.g., via `pg_ctl`), users can call `createdb` to create a new database with a new username and password. 
-
-OrpheusDB needs to know where the underlying relational database-based storage engine is located before execution. To specify the associated parameters, change the corresponding fields in `config.yaml`. Moreover, users have to connect OrpheusDB to an existing PostgresSQL database and a valid user name via command `dh config`. 
+To start with, users need to install PostgresSQL successfully. (A tutorial of installing PostgresSQL on Mac OSX can be found [here][postgres-installation].) After installing, and then starting PostgresSQL (e.g., via `pg_ctl`), users can call `createdb` to create a new database with a new username and password, all under the current user login. Remember the username and password, the parameters of the new database, and other details of the PostgreSQL setup. Once the configuration is complete, edit the appropriate entries in the file `config.yaml`.
 
 ### User Tutorials
-User can create a new OrpheusDB username with a password via the `create_user` command. Upon finishing, it will be pushed to the underlying data storage with a SUPERUSER privilege. Command `config` can also be used to login through created user and `whoami` is used to list the current user name that is currently logged in. 
+To start working on versioned datasets, users need to run `dh config` to set up OrpheusDB for the given user. To start off, use ths same username that was used during the PostgreSQL configuration -- this will initialize a OrpheusDB user with the same username. Following that, users can create new OrpheusDB usernames via the `create_user` command. Upon finishing, this new username will be pushed to the underlying data storage with a SUPERUSER privilege. Command `config` can also be used to login through created username and `whoami` is used to list the current username that is currently logged in. 
 
 Please note here that OrpheusDB provides the most basic implementation for user information, i.e. there is no password protection. However, this feature is subject to change in future versions.
 ```
@@ -76,7 +74,7 @@ dh create_user
 dh whoami
 ```
 
-The `init` command provides ways to load a csv file into OrpheusDB as a CVD, with the all records as its first version (i.e., vid = 1). To let OrpheusDB know what is the schema for this dataset, user can provide a sample schema file through option `-s`. Each line in the schema file has the format `<attribute name>, <type of the attribute>`. In the following example, `data.csv` file contains 3 attributes, namely `age`, `employee_id` and `salary`. The command below loads the `data.csv` file under the same directory into OrpheusDB as a CVD named `dataset1`, whose schema is indicated in the file ``sample_schema.csv`. 
+The `init` command provides a mechanism to to load a csv file into OrpheusDB as a CVD, with the all records as its first version (i.e., vid = 1). To let OrpheusDB know what is the schema for this dataset, user can provide a sample schema file through option `-s`. Each line in the schema file has the format `<attribute name>, <type of the attribute>`. In the following example, `data.csv` file contains 3 attributes, namely `age`, `employee_id` and `salary`. The command below loads the `data.csv` file under the same directory into OrpheusDB as a CVD named `dataset1`, whose schema is indicated in the file ``sample_schema.csv`. 
 
 <!-- In the current release, only `csv` file format is supported in the `init`. -->
 
