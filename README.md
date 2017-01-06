@@ -130,7 +130,6 @@ SELECT vid FROM CVD dataset1 WHERE commit_time >  '2016-12-01' GROUP BY vid;
 ### Development Plan
 We plan to release versions of OrpheusDB in a regular manner, adding on further
 querying, partitioning, and query optimization capabilities, as well as regular bug-fixes.
-The known bugs are listed below.
 
 License
 ----
