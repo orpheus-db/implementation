@@ -20,7 +20,7 @@ The current version is 1.0.0 (Released January 1, 2017).
 
 ### Dataset Version Control in OrpheusDB
 The fundamental unit of storage within OrpheusDB is a _collaborative versioned dataset (CVD)_ to which one or more users can contribute, 
-representing a collection of versions of a single relational dataset, with a fixed schema. There is a many-to-many relationship between records in the relation and versions that is captured within the CVD: each record can belong to many versions, and each version can contain many records. <!--Each version of the CVDhas a unique version id integer, namely vid.-->
+representing a collection of versions of a single relational dataset, with a fixed schema. There is a many-to-many relationship between records in the relation and versions that are captured within the CVD: each record can belong to many versions, and each version can contain many records. <!--Each version of the CVDhas a unique version id integer, namely vid.-->
 <!-- Collaborative Version Dataset is the unit of operation in OrpheusDB. Each CVD stores dataset and its version information. Each version is represented with an unique version vid, _vid_. --> 
 
 Users can operate on CVDs much like they would with source code version control. The _checkout_ command allows users to materialize one or more specific versions of a CVD as a newly created regular table within a relational database or as a csv file; the _commit_ command allows users to add a new version to a CVD by making the local changes made by the user on their materialized table or on their exported csv file visible to others. Other git-style commands we support include _init_, _create\_user_, _config_, _whoami_, _ls_, _drop_, and _optimize_.
@@ -74,7 +74,7 @@ dh create_user
 dh whoami
 ```
 
-The `init` command provides a mechanism to to load a csv file into OrpheusDB as a CVD, with the all records as its first version (i.e., vid = 1). To let OrpheusDB know what is the schema for this dataset, user can provide a sample schema file through option `-s`. Each line in the schema file has the format `<attribute name>, <type of the attribute>`. In the following example, `data.csv` file contains 3 attributes, namely `age`, `employee_id` and `salary`. The command below loads the `data.csv` file under the same directory into OrpheusDB as a CVD named `dataset1`, whose schema is indicated in the file ``sample_schema.csv`. 
+The `init` command provides a mechanism to load a csv file into OrpheusDB as a CVD, with all the records as its first version (i.e., vid = 1). To let OrpheusDB know what is the schema for this dataset, user can provide a sample schema file through option `-s`. Each line in the schema file has the format `<attribute name>, <type of the attribute>`. In the following example, `data.csv` file contains 3 attributes, namely `age`, `employee_id` and `salary`. The command below loads the `data.csv` file into OrpheusDB as a CVD named `dataset1`, whose schema is indicated in the file ``sample_schema.csv`. 
 
 <!-- In the current release, only `csv` file format is supported in the `init`. -->
 
@@ -82,16 +82,16 @@ The `init` command provides a mechanism to to load a csv file into OrpheusDB as 
 dh init test/data.csv dataset1 -s test/sample_schema.csv
 ```
 
-User can checkout one or more desired versions through the `checkout` command, to either a csv file or a structured table in RDBMS. <!-- Again, only `csv` format is supported. --> In the following example, version 1 of CVD dataset1 is checked out as a csv file named checkout.csv. 
+User can checkout one or more desired versions through the `checkout` command, to either a csv file or a structured table in RDBMS. <!-- Again, only `csv` format is supported. --> In the following example, version 1 of CVD `dataset1` is checked out as a csv file named `checkout.csv`. 
 ```
 dh checkout dataset1 -v 1 -f checkout.csv
 ```
 
 After changes are made to the previous checkout versions, OrpheusDB can commit these changes to its corresponding CVD assuming that the schema is unchanged. 
 
-In the following example, we commit the modified checkout.csv back to CVD dataset1. Note here that since OrpheusDB internally logged the CVD that checkout.csv was checked out from, there is no need to specify the CVD name in the `commit` command. 
+In the following example, we commit the modified checkout.csv back to CVD `dataset1`. Note here that since OrpheusDB internally logged the CVD name that `checkout.csv` file was checked out from, there is no need to specify the CVD name in the `commit` command. 
 
-Any changed or new records from commit file will be appended to the corresponding CVD, labeled with a new version id. A special case is the committing of a subset of previously checked-out version. In such a setting, OrpheusDB will perform the commit as expected; the new version is added with the subset of the records.
+Any changed or new records from commit file will be appended to the corresponding CVD, labeled with a new version id. A special case is the committing of a subset of a previously checked-out version. In such a setting, OrpheusDB will perform the commit as expected; the new version is added with the subset of the records.
 
 ```
 dh commit -f checkout.csv -m 'first commit'
@@ -102,17 +102,17 @@ OrpheusDB also supports direct execution of queries on CVDs without materializat
 dh run
 ```
 
-OrpheusDB supports a rich syntax of SQL statements on versions and CVDs. During the execution of these steatements, OrpheusDB will detect keywords like `CVD` so it knows the query is against one or more CVDs. There are mainly the following two types of queries supported.
+OrpheusDB supports a rich syntax of SQL statements on versions and CVDs. During the execution of these steatements, OrpheusDB will detect keywords like `CVD` so it knows the query is against one or more CVDs. There are mainly the following two types of queries supported:
 
 1. Query against known version(s) of a particular dataset
 2. Query against unknown version(s) of a particular dataset
 
-To query against known version(s), the version number needs to be specified. In the following example, OrpheusDB will select the `employee_id` and  `age` columns from CVD dataset1 whose version id is equal to either `1` or `2`.
+To query against known version(s), the version number needs to be specified. In the following example, OrpheusDB will select the `employee_id` and  `age` columns from CVD `dataset1` whose version id is equal to either `1` or `2`.
 ```
 SELECT employee_id, age FROM VERSION 1,2 OF CVD dataset1;
 ```
 
-If version number is unknown, OrpheusDB supports queries where the desired version number is also identified. In the following examples, OrpheusDB will select all the version ids that have one or more records whose age is less than 25. It is worth noting that the `GROUP BY` clause is required to aggregate on version number.
+If version number is unknown, OrpheusDB supports queries where the desired version numbers are also identified. In the following examples, OrpheusDB will select all the version ids that have one or more records whose age is less than 25. It is worth noting that the `GROUP BY` clause is required to aggregate on version numbers.
 ```
 SELECT vid FROM CVD dataset1 WHERE age < 25 GROUP BY vid;
 ```
@@ -132,17 +132,6 @@ We plan to release versions of OrpheusDB in a regular manner, adding on further
 querying, partitioning, and query optimization capabilities, as well as regular bug-fixes.
 The known bugs are listed below.
 
-### Todos
- - ~~db run~~
- - ~~change user password settings~~
- - tracker overwrite, get rid of the old mapping
- - ~~change cvd to public schema~~ Not work for INFORMATION_SCHEMA.COLUMNS 
- - update meta after dropping dataset
- - update load current state path from .meta/config
- - $ORPHEUS_HOME$ in bashrc
- - verbose mode
- - mock testing
- 
 License
 ----
 
