@@ -9,4 +9,7 @@
  - Security of user information
  - Compact index table 
  - Grant access 
+ - Eliminate rid in the SQL output.
 
+### BUGs
+- SQL VERSION Syntax: semi column problem. E.g., select * from dataset1_datatable where age > 30; and rid = ...
