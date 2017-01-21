@@ -16,12 +16,12 @@ The current version is 1.0.0 (Released January 1, 2017).
 ### Key Design Innovations
 * OrpheusDB is built on top of a traditional relational database, thus it inherits all of the standard benefits of relational database systems "for free"
 * OrpheusDB supports advanced querying and versioning capabilities, via both SQL queries and git-style version control commands.
-* OrpheusDB uses a sophisticated data model, coupled with partition optimization algorithms<sup>1</sup>, to provide efficient version control performance over large-scale datasets. 
+* OrpheusDB uses a sophisticated data model, coupled with partition optimization algorithms<sup>1</sup>, to provide efficient version control performance over large-scale datasets.
 
 ### Dataset Version Control in OrpheusDB
-The fundamental unit of storage within OrpheusDB is a _collaborative versioned dataset (CVD)_ to which one or more users can contribute, 
+The fundamental unit of storage within OrpheusDB is a _collaborative versioned dataset (CVD)_ to which one or more users can contribute,
 representing a collection of versions of a single relational dataset, with a fixed schema. There is a many-to-many relationship between records in the relation and versions that are captured within the CVD: each record can belong to many versions, and each version can contain many records. <!--Each version of the CVDhas a unique version id integer, namely vid.-->
-<!-- Collaborative Version Dataset is the unit of operation in OrpheusDB. Each CVD stores dataset and its version information. Each version is represented with an unique version vid, _vid_. --> 
+<!-- Collaborative Version Dataset is the unit of operation in OrpheusDB. Each CVD stores dataset and its version information. Each version is represented with an unique version vid, _vid_. -->
 
 Users can operate on CVDs much like they would with source code version control. The _checkout_ command allows users to materialize one or more specific versions of a CVD as a newly created regular table within a relational database or as a csv file; the _commit_ command allows users to add a new version to a CVD by making the local changes made by the user on their materialized table or on their exported csv file visible to others. Other git-style commands we support include _init_, _create\_user_, _config_, _whoami_, _ls_, _drop_, and _optimize_.
 
@@ -37,7 +37,7 @@ Each CVD in OrpheusDB corresponds to three underlying relational tables: the _da
 Our experimental evaluation demonstrates that, compared to other alternative data models, our data model, coupled with the partition optimizer results in **10x** less storage consumption, **1000x** less time for _commit_ and comparable query performance for the _checkout_ command. In other words, OrpheusDB acheives an efficient balance between storage consumption and query latencies.
 
 ### System Requirement
-OrpheusDB requires the following software to be installed successfully prior to setup: 
+OrpheusDB requires the following software to be installed successfully prior to setup:
 * Python 2.7.x
 * PostgreSQL >= 9.5
 
@@ -52,7 +52,7 @@ OrpheusDB comes with a standard `setup.py` script for installation. The required
 
 Users are able to install any of missing dependencies themselves via `pip`. Alternatively, an easier way to install all the requisite dependencies is via `pip install .` (If you encounter permission errors, install via `sudo -H pip install .`)
 
-After installation, users can use `dh --help` to list all the available commands in OrpheusDB. By default, `dh` is the alias for OrpheusDB user interface.
+After installation, users can use `orpheus --help` to list all the available commands in OrpheusDB. By default, `orpheus` is the alias for OrpheusDB user interface.
 
 <!--
 ```
@@ -65,41 +65,41 @@ dh --help
 To start with, users need to install PostgresSQL successfully. (A tutorial of installing PostgresSQL on Mac OSX can be found [here][postgres-installation].) After installing, and then starting PostgresSQL (e.g., via `pg_ctl`), users can call `createdb` to create a new database with a new username and password, all under the current user login. Remember the username and password, the parameters of the new database, and other details of the PostgreSQL setup. Once the configuration is complete, edit the appropriate entries in the file `config.yaml`.
 
 ### User Tutorials
-To start working on versioned datasets, users need to run `dh config` to set up OrpheusDB for the given user. To start off, use ths same username that was used during the PostgreSQL configuration -- this will initialize a OrpheusDB user with the same username. Following that, users can create new OrpheusDB usernames via the `create_user` command. Upon finishing, this new username will be pushed to the underlying data storage with a SUPERUSER privilege. Command `config` can also be used to login through created username and `whoami` is used to list the current username that is currently logged in. 
+To start working on versioned datasets, users need to run `orpheus config` to set up OrpheusDB for the given user. To start off, use ths same username that was used during the PostgreSQL configuration -- this will initialize a OrpheusDB user with the same username. Following that, users can create new OrpheusDB usernames via the `create_user` command. Upon finishing, this new username will be pushed to the underlying data storage with a SUPERUSER privilege. Command `config` can also be used to login through created username and `whoami` is used to list the current username that is currently logged in.
 
 Please note here that OrpheusDB provides the most basic implementation for user information, i.e. there is no password protection. However, this feature is subject to change in future versions.
 ```
-db config
-dh create_user
-dh whoami
+orpheus config
+orpheus create_user
+orpheus whoami
 ```
 
-The `init` command provides a mechanism to load a csv file into OrpheusDB as a CVD, with all the records as its first version (i.e., vid = 1). To let OrpheusDB know what is the schema for this dataset, user can provide a sample schema file through option `-s`. Each line in the schema file has the format `<attribute name>, <type of the attribute>`. In the following example, `data.csv` file contains 3 attributes, namely `age`, `employee_id` and `salary`. The command below loads the `data.csv` file into OrpheusDB as a CVD named `dataset1`, whose schema is indicated in the file ``sample_schema.csv`. 
+The `init` command provides a mechanism to load a csv file into OrpheusDB as a CVD, with all the records as its first version (i.e., vid = 1). To let OrpheusDB know what is the schema for this dataset, user can provide a sample schema file through option `-s`. Each line in the schema file has the format `<attribute name>, <type of the attribute>`. In the following example, `data.csv` file contains 3 attributes, namely `age`, `employee_id` and `salary`. The command below loads the `data.csv` file into OrpheusDB as a CVD named `dataset1`, whose schema is indicated in the file ``sample_schema.csv`.
 
 <!-- In the current release, only `csv` file format is supported in the `init`. -->
 
 ```
-dh init test/data.csv dataset1 -s test/sample_schema.csv
+orpheus init test/data.csv dataset1 -s test/sample_schema.csv
 ```
 
-User can checkout one or more desired versions through the `checkout` command, to either a csv file or a structured table in RDBMS. <!-- Again, only `csv` format is supported. --> In the following example, version 1 of CVD `dataset1` is checked out as a csv file named `checkout.csv`. 
+User can checkout one or more desired versions through the `checkout` command, to either a csv file or a structured table in RDBMS. <!-- Again, only `csv` format is supported. --> In the following example, version 1 of CVD `dataset1` is checked out as a csv file named `checkout.csv`.
 ```
-dh checkout dataset1 -v 1 -f checkout.csv
+orpheus checkout dataset1 -v 1 -f checkout.csv
 ```
 
-After changes are made to the previous checkout versions, OrpheusDB can commit these changes to its corresponding CVD assuming that the schema is unchanged. 
+After changes are made to the previous checkout versions, OrpheusDB can commit these changes to its corresponding CVD assuming that the schema is unchanged.
 
-In the following example, we commit the modified checkout.csv back to CVD `dataset1`. Note here that since OrpheusDB internally logged the CVD name that `checkout.csv` file was checked out from, there is no need to specify the CVD name in the `commit` command. 
+In the following example, we commit the modified checkout.csv back to CVD `dataset1`. Note here that since OrpheusDB internally logged the CVD name that `checkout.csv` file was checked out from, there is no need to specify the CVD name in the `commit` command.
 
 Any changed or new records from commit file will be appended to the corresponding CVD, labeled with a new version id. A special case is the committing of a subset of a previously checked-out version. In such a setting, OrpheusDB will perform the commit as expected; the new version is added with the subset of the records.
 
 ```
-dh commit -f checkout.csv -m 'first commit'
+orpheus commit -f checkout.csv -m 'first commit'
 ```
 
-OrpheusDB also supports direct execution of queries on CVDs without materialization. This is done via the run command. The run command will prompt the user to provide the SQL command to be executed directly. If `-f` is specified, it will execute the SQL file specified.  
+OrpheusDB also supports direct execution of queries on CVDs without materialization. This is done via the run command. The run command will prompt the user to provide the SQL command to be executed directly. If `-f` is specified, it will execute the SQL file specified.
 ```
-dh run
+orpheus run
 ```
 
 OrpheusDB supports a rich syntax of SQL statements on versions and CVDs. During the execution of these steatements, OrpheusDB will detect keywords like `CVD` so it knows the query is against one or more CVDs. There are mainly the following two types of queries supported:
