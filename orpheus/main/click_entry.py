@@ -329,7 +329,7 @@ def commit(ctx, msg, table_name, file_name, delimiters, header):
         abs_path = ctx.obj['orpheus_home'] + file_name if file_name else ctx.obj['orpheus_home']
         parent_vid_list = metadata.load_parent_id(table_name) if table_name else metadata.load_parent_id(abs_path, mapping='file_map')
         click.echo("Parent dataset is %s " % parent_vid_list[0])
-        click.echo("Parent versions are %s " % parent_vid_list[1])
+        click.echo("Parent versions are %s " % ",".join(parent_vid_list[1]))
     except Exception as e:
         click.secho(str(e), fg='red')
         return
@@ -396,7 +396,7 @@ def commit(ctx, msg, table_name, file_name, delimiters, header):
         relation.drop_table('tmp_table')
 
 
-    click.echo("Committed")
+    click.echo("Version %s has been committed!" % curt_vid)
 
 
 
