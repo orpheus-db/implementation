@@ -39,7 +39,7 @@ class Context():
             raise BadStateError("config.yaml file not found or data not clean, abort")
             return
         except: # unknown error
-            raise BadStateError("Unknown error during loding config file, abort")
+            raise BadStateError("Unknown error during loading the config file, abort")
             return
 
 
@@ -116,7 +116,7 @@ def whoami(ctx):
 @cli.command()
 @click.argument('input', type=click.Path(exists=True))
 @click.argument('dataset')
-@click.option('--table', '-t', help='Create the dataset with exisiting table schema')
+@click.option('--table', '-t', help='Create the dataset with existing table schema')
 @click.option('--schema', '-s', help='Create the dataset with schema file', type=click.Path(exists=True))
 @click.pass_context
 def init(ctx, input, dataset, table, schema):
@@ -247,11 +247,11 @@ def run(ctx, sql):
 @click.option('--vlist', '-v', multiple=True, required=True, help='Specify version you want to checkout, use multiple -v for multiple version checkout')
 @click.option('--to_table', '-t', help='Specify the table name to checkout to.')
 @click.option('--to_file', '-f', help='Specify the location of file')
-@click.option('--delimeters', '-d', default=',', help='Specify the delimeter used for checkout file')
+@click.option('--delimiters', '-d', default=',', help='Specify the delimiter used for checkout file')
 @click.option('--header', '-h', is_flag=True, help="If set, the first line of checkout file will be the header")
 @click.option('--ignore', '-i', is_flag=False, help='If set, checkout versions into table will ignore duplicated key')
 @click.pass_context
-def checkout(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore):
+def checkout(ctx, dataset, vlist, to_table, to_file, delimiters, header, ignore):
     # check ctx.obj has permission or not
     if not to_table and not to_file:
         click.secho(str(BadParametersError("Need a destination, either a table (-t) or a file (-f)")), fg='red')
@@ -271,8 +271,8 @@ def checkout(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore)
         meta_obj = metadata.load_meta()
         datatable = dataset + DATATABLE_SUFFIX
         indextable = dataset + INDEXTABLE_SUFFIX
+        relation.checkout(vlist, datatable, indextable, to_table=to_table, to_file=abs_path, delimiters=delimiters, header=header, ignore=ignore)
 
-        relation.checkout(vlist, datatable, indextable, to_table=to_table, to_file=abs_path, delimeters=delimeters, header=header, ignore=ignore)
         # update meta info
         AccessManager.grant_access(to_table, conn.user)
         metadata.update(to_table, abs_path, dataset, vlist, meta_obj)
@@ -294,10 +294,10 @@ def checkout(ctx, dataset, vlist, to_table, to_file, delimeters, header, ignore)
 @click.option('--msg','-m', help='Commit message', required = True)
 @click.option('--table_name','-t', help='The table to be committed') # changed to optional later
 @click.option('--file_name', '-f', help='The file to be committed', type=click.Path(exists=True))
-@click.option('--delimeters', '-d', default=',', help='Specify the delimeter used for checkout file')
+@click.option('--delimiters', '-d', default=',', help='Specify the delimiters used for checkout file')
 @click.option('--header', '-h', is_flag=True, help="If set, the first line of checkout file will be the header")
 @click.pass_context
-def commit(ctx, msg, table_name, file_name, delimeters, header):
+def commit(ctx, msg, table_name, file_name, delimiters, header):
 
     # sanity check
     if not table_name and not file_name:
@@ -347,7 +347,7 @@ def commit(ctx, msg, table_name, file_name, delimeters, header):
             _attributes, _attributes_type = relation.get_datatable_attribute(datatable_name)
 
             relation.create_relation_force('tmp_table', datatable_name, sample_table_attributes=_attributes) # create a tmp table
-            relation.convert_csv_to_table(abs_path, 'tmp_table', _attributes , delimeters=delimeters, header=header) # push everything from csv to tmp_table
+            relation.convert_csv_to_table(abs_path, 'tmp_table', _attributes , delimiters=delimiters, header=header) # push everything from csv to tmp_table
             table_name = 'tmp_table'
     except Exception as e:
         click.secho(str(e), fg='red')
@@ -374,7 +374,7 @@ def commit(ctx, msg, table_name, file_name, delimeters, header):
             new_rids = relation.update_datatable(datatable_name, lis_of_newrecords)
             
             print "Found %s new records" % len(new_rids)
-            print "Found %s exisiting records" % len(existing_rids)
+            print "Found %s existing records" % len(existing_rids)
 
             current_version_rid = existing_rids + new_rids
             
@@ -396,7 +396,7 @@ def commit(ctx, msg, table_name, file_name, delimeters, header):
         relation.drop_table('tmp_table')
 
 
-    click.echo("Commited")
+    click.echo("Committed")
 
 
 

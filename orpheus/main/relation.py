@@ -85,7 +85,7 @@ class RelationManager(object):
       return _attributes, self.conn.cursor.fetchall()
 
     # to_file needs an absolute path
-    def checkout(self, vlist, datatable, indextable, to_table=None, to_file=None, delimeters=',', header=False, ignore=False):
+    def checkout(self, vlist, datatable, indextable, to_table=None, to_file=None, delimiters=',', header=False, ignore=False):
         # sanity check
         if to_table:
           if RelationManager.reserve_table_check(to_table):
@@ -104,17 +104,17 @@ class RelationManager(object):
         if to_table:
           self.checkout_table(_attributes, recordlist, datatable, to_table, ignore)
         if to_file:
-          self.checkout_file(_attributes, recordlist, datatable, to_file, delimeters, header)
+          self.checkout_file(_attributes, recordlist, datatable, to_file, delimiters, header)
 
         self.conn.connect.commit()
 
-    def checkout_file(self, attributes, ridlist, datatable, to_file, delimeters, header):
+    def checkout_file(self, attributes, ridlist, datatable, to_file, delimiters, header):
         # COPY products_273 TO '/tmp/products_199.csv' DELIMITER ',' CSV HEADER;
         # convert to a tmp_table first
         self.drop_table_force('tmp_table')
         self.checkout_table(attributes, ridlist, datatable, 'tmp_table', None)
         sql = "COPY %s (%s) TO '%s' DELIMITER '%s' CSV HEADER;" if header else "COPY %s (%s) TO '%s' DELIMITER '%s' CSV;" 
-        sql = sql % ('tmp_table', ','.join(attributes), to_file, delimeters)
+        sql = sql % ('tmp_table', ','.join(attributes), to_file, delimiters)
         self.conn.cursor.execute(sql)
 
     # Select the records into a new table
@@ -175,9 +175,9 @@ class RelationManager(object):
       self.conn.cursor.execute(sql)
       return self.conn.cursor.fetchall()
 
-    def convert_csv_to_table(self, file_path, destination_table, attributes, delimeters=',', header=False):
-      sql = "COPY %s (%s) FROM '%s' DELIMITER '%s' CSV HEADER;" % (destination_table, ",".join(attributes), file_path, delimeters) if header \
-          else "COPY %s (%s) FROM '%s' DELIMITER '%s' CSV;" % (destination_table, ",".join(attributes), file_path, delimeters)
+    def convert_csv_to_table(self, file_path, destination_table, attributes, delimiters=',', header=False):
+      sql = "COPY %s (%s) FROM '%s' DELIMITER '%s' CSV HEADER;" % (destination_table, ",".join(attributes), file_path, delimiters) if header \
+          else "COPY %s (%s) FROM '%s' DELIMITER '%s' CSV;" % (destination_table, ",".join(attributes), file_path, delimiters)
       self.conn.cursor.execute(sql)
       self.conn.connect.commit()
 
