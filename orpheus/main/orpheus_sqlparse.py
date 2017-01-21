@@ -31,11 +31,11 @@ class SQLParser(object):
 		for attribute in attributes:
 			fields_mapping[attribute] = 'd'
 
-		versiontable_attributes = ["author", "num_records", "parent", "children", "create_time", "commit_time", "commit_msg"] 
+		versiontable_attributes = ["author", "num_records", "parent", "children", "create_time", "commit_time", "commit_msg"]
 		# take in version table attributes
 		for version_attribute in versiontable_attributes:
 			fields_mapping[version_attribute] = 'v'
-		
+
 		return fields_mapping
 
 	def get_touched_table(self, touched_columns, fields_mapping):
@@ -157,7 +157,9 @@ class SQLParser(object):
 			parent.insert_before(new_idex, self.construct_identifier(" where " + constraint))
 		else:
 			where_token = parent.tokens[where_indx]
-			where_token.tokens.extend(self.construct_identifier(" and " + constraint))
+			where_token = parent.tokens[where_indx]
+			new_idex = self.find_where_insert(where_token)
+			where_token.insert_before(new_idex, self.construct_identifier(" and " + constraint))
 
 
 	def replace_unknown_version(self, parent, cvd_idx, dataset_name, fields_mapping, touched_column_names):
@@ -204,8 +206,8 @@ class SQLParser(object):
 			while 1:
 				# two cases
 				# 1. version is specified, version 1,2 from cvd ds1
-				# 2. version is not specified, from CVD 
-				# TODO: add more cases? 
+				# 2. version is not specified, from CVD
+				# TODO: add more cases?
 				version_specified_re = re.compile('.*?from\sversion\s(\d+|\d+(,\d+)+)\sof\scvd\s(\w+);?')
 				version_matched = version_specified_re.match(line)
 				if version_matched: # found case 1

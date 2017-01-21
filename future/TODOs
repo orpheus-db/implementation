@@ -1,15 +1,15 @@
 ### Todos
  - tracker overwrite, get rid of the old mapping
- - ~~change cvd to public schema~~ Not work for INFORMATION_SCHEMA.COLUMNS 
+ - ~~change cvd to public schema~~ Not work for INFORMATION_SCHEMA.COLUMNS
  - Update meta after dropping dataset
  - Update load current state path from .meta/config
  - $ORPHEUS_HOME$ in bashrc
  - Verbose mode
  - Mock testing
  - Security of user information
- - Compact index table 
- - Grant access 
+ - Compact index table
+ - Grant access
  - Eliminate rid in the SQL output.
 
 ### BUGs
-- SQL VERSION Syntax: semi column problem. E.g., select * from dataset1_datatable where age > 30; and rid = ...
+-
