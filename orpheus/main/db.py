@@ -74,11 +74,17 @@ class DatabaseManager():
         try:
             self.cursor.execute(sql)
 
-            colnames = [desc[0] for desc in self.cursor.description]
-            print ', '.join(colnames)
-            
-            for row in self.cursor.fetchall():
-                print ', '.join(str(e) for e in row)
+            if not (self.cursor.description is None): # print out selection tuples
+                colnames = [desc[0] for desc in self.cursor.description]
+                print ', '.join(colnames)
+                for row in self.cursor.fetchall():
+                    print ', '.join(str(e) for e in row)
+            else:
+                self.connect.commit() # commit UPDATE/INSERT messages
+                print self.cursor.statusmessage 
+              
+
+
         except psycopg2.ProgrammingError:
             raise SQLSyntaxError()
 

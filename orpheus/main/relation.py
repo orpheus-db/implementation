@@ -117,22 +117,23 @@ class RelationManager(object):
         sql = sql % ('tmp_table', ','.join(attributes), to_file, delimiters)
         self.conn.cursor.execute(sql)
 
+
     # Select the records into a new table
     def checkout_table(self, attributes, ridlist, datatable, to_table, ignore):
         if not ignore:
-            sql = "SELECT rid,%s INTO %s FROM %s WHERE rid = ANY('%s'::int[]);" \
+            sql = "SELECT %s INTO %s FROM %s WHERE rid = ANY('%s'::int[]);" \
               % (', '.join(attributes), to_table, datatable, ridlist)
         else:
             # TODO
             self.get_primary_key(datatable)
-            sql = "SELECT rid,%s INTO %s FROM %s WHERE rid = ANY('%s'::int[]);" \
+            sql = "SELECT %s INTO %s FROM %s WHERE rid = ANY('%s'::int[]);" \
                   % (', '.join(attributes), to_table, datatable, ridlist)
         #print sql
         self.conn.cursor.execute(sql)
 
-        sql = "SELECT %s,rid FROM %s;"%(', '.join(attributes),to_table)
+        #sql = "SELECT %s,rid FROM %s;"%(', '.join(attributes),to_table)
         # print sql
-        self.conn.cursor.execute(sql)
+        #self.conn.cursor.execute(sql)
         
 
     def drop_table(self, table_name):
