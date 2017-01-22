@@ -2,6 +2,7 @@
 
 import sqlparse, re
 from sqlparse.sql import Identifier, Token, Where
+from sqlparse.tokens import DML
 
 import orpheus_const as const
 from relation import RelationManager
@@ -121,6 +122,16 @@ class SQLParser(object):
 				cvd_index = parent.token_index(token)
 				break
 		return dataset_name, parent, cvd_index
+
+	@classmethod
+	def is_select(cls, raw_sql):
+		parsed = sqlparse.parse(raw_sql)[0]
+		item = parsed.tokens[0]
+		if item.ttype is DML and item.value.upper() == 'SELECT':
+			return True
+		return False
+	
+
 
 	# find the Where clause index under parent.tokens
 	def find_where_index(self, parent):

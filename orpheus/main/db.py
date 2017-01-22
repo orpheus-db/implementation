@@ -5,6 +5,7 @@ import psycopg2
 import sys
 import json
 
+from orpheus_sqlparse import SQLParser
 from orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
 from orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX, PUBLIC_SCHEMA
 
@@ -73,18 +74,15 @@ class DatabaseManager():
     def execute_sql(self, sql):
         try:
             self.cursor.execute(sql)
-
-            if not (self.cursor.description is None): # print out selection tuples
+            if SQLParser.is_select(sql): #return records
                 colnames = [desc[0] for desc in self.cursor.description]
                 print ', '.join(colnames)
                 for row in self.cursor.fetchall():
                     print ', '.join(str(e) for e in row)
             else:
-                self.connect.commit() # commit UPDATE/INSERT messages
                 print self.cursor.statusmessage 
-              
-
-
+            self.connect.commit() # commit UPDATE/INSERT messages
+            
         except psycopg2.ProgrammingError:
             raise SQLSyntaxError()
 
