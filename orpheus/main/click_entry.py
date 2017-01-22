@@ -10,7 +10,7 @@ import pandas as pd
 
 from db import DatabaseManager, DatasetExistsError
 from access import AccessManager
-from relation import RelationManager, RelationNotExistError
+from relation import RelationManager, RelationNotExistError, RelationOverwriteError, ReservedRelationError
 from version import VersionManager
 from metadata import MetadataManager
 from user_control import UserManager
@@ -284,7 +284,7 @@ def checkout(ctx, dataset, vlist, to_table, to_file, delimiters, header, ignore)
         if to_file:
             click.echo("File %s has been cloned from version %s" % (to_file, ",".join(vlist)))
     except Exception as e:
-        if to_table:
+        if to_table and not (RelationOverwriteError or ReservedRelationError):
             relation.drop_table(to_table)
         if to_file:
             pass # delete the file

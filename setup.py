@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
 	name='orpheus',
-	version='1.0',
+	version='1.0.1',
 	description='OrpheusDB command line tool',
 	packages=['orpheus', 'orpheus.main'],
 	url='http://orpheus-db.github.io/',
