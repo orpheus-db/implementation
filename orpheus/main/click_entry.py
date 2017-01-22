@@ -73,10 +73,12 @@ def config(ctx, user, password, database):
 
     try:
         UserManager.create_user(user, password) 
-        from encryption import EncryptionTool
-        newctx['passphrase'] = EncryptionTool.passphrase_hash(password)
-        UserManager.write_current_state(newctx) # pass down to user manager
-        click.echo('Logged to database %s as: %s ' % (ctx.obj['database'],ctx.obj['user']))
+        if UserManager.verify_credential(user, password):
+            UserManager.create_user(user, password) 
+            from encryption import EncryptionTool
+            newctx['passphrase'] = EncryptionTool.passphrase_hash(password)
+            UserManager.write_current_state(newctx) # pass down to user manager
+            click.echo('Logged to database %s as: %s ' % (ctx.obj['database'],ctx.obj['user']))
     except Exception as e:
         click.secho(str(e), fg='red')
 

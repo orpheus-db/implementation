@@ -36,9 +36,10 @@ class UserManager(object):
 		user_obj = {
 				'user' : user
 		}
-		if password:
-			passphrase = EncryptionTool.passphrase_hash(password)
-			user_obj['passphrase'] = passphrase	
+		#if password:
+		passphrase = EncryptionTool.passphrase_hash(password)
+		user_obj['passphrase'] = passphrase	
+
 		user_directory = '/'.join([cls.user_path(),user])
 		makedirs(user_directory) # make the directory, need to check if have permission
 		with open('/'.join([user_directory, 'config']), 'w+') as f:
