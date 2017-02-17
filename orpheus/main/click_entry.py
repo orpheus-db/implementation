@@ -30,6 +30,8 @@ class Context():
             with open(self.config_path, 'r') as f:
                 self.config = yaml.load(f)
 
+            assert(self.config['orpheus_home'] != None)
+            
             if not self.config['orpheus_home'].endswith("/"):
                 self.config['orpheus_home'] += "/" 
             # if user overwrite the ORPHEUS_HOME, rewrite the enviormental parameters
@@ -37,6 +39,9 @@ class Context():
                 os.environ['ORPHEUS_HOME'] = self.config['orpheus_home']
         except (IOError, KeyError) as e:
             raise BadStateError("config.yaml file not found or data not clean, abort")
+            return
+        except AssertionError as e:
+            raise BadStateError("orpheus_home not specified in config.yaml")
             return
         except: # unknown error
             raise BadStateError("Unknown error during loading the config file, abort")
