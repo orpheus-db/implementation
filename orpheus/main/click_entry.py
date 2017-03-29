@@ -14,6 +14,7 @@ from relation import RelationManager, RelationNotExistError, RelationOverwriteEr
 from version import VersionManager
 from metadata import MetadataManager
 from user_control import UserManager
+from partition import PartitionOptimizer
 from orpheus_schema_parser import Parser as SimpleSchemaParser
 
 from orpheus_sqlparse import SQLParser
@@ -25,15 +26,15 @@ class Context():
         self.config_file = 'config.yaml'
         if 'ORPHEUS_HOME' not in os.environ:
             os.environ['ORPHEUS_HOME'] = os.getcwd()
-        self.config_path = os.environ['ORPHEUS_HOME'] + '/' + self.config_file            
+        self.config_path = os.environ['ORPHEUS_HOME'] + '/' + self.config_file
         try:
             with open(self.config_path, 'r') as f:
                 self.config = yaml.load(f)
 
             assert(self.config['orpheus_home'] != None)
-            
+
             if not self.config['orpheus_home'].endswith("/"):
-                self.config['orpheus_home'] += "/" 
+                self.config['orpheus_home'] += "/"
             # if user overwrite the ORPHEUS_HOME, rewrite the enviormental parameters
             if 'orpheus_home' in self.config:
                 os.environ['ORPHEUS_HOME'] = self.config['orpheus_home']
@@ -59,6 +60,17 @@ def cli(ctx):
     except Exception as e:
         click.secho(str(e), fg='red')
 
+
+@cli.command()
+@click.pass_context
+@click.option('--vid', '-v's)
+def partition(ctx, vid):
+    # unit test for the partition function
+    conn = DatabaseManager(ctx.obj)
+    partition = PartitionOptimizer(conn)
+    print partition.unitTest()
+
+
 @cli.command()
 @click.option('--database', prompt='Enter database name', help='Specify the database name that you want to configure to.')
 @click.option('--user', prompt='Enter user name', help='Specify the user name that you want to configure to.')
@@ -77,9 +89,9 @@ def config(ctx, user, password, database):
         return
 
     try:
-        UserManager.create_user(user, password) 
+        UserManager.create_user(user, password)
         if UserManager.verify_credential(user, password):
-            UserManager.create_user(user, password) 
+            UserManager.create_user(user, password)
             from encryption import EncryptionTool
             newctx['passphrase'] = EncryptionTool.passphrase_hash(password)
             UserManager.write_current_state(newctx) # pass down to user manager
@@ -116,9 +128,9 @@ def whoami(ctx):
     if not ctx.obj['user'] or not ctx.obj['database']:
         click.secho("No session in use, please call config first", fg='red')
         return # stop the following commands
-    
+
     click.echo('Logged in database %s as: %s ' % (ctx.obj['database'],ctx.obj['user']))
-    
+
 
 @cli.command()
 @click.argument('input', type=click.Path(exists=True))
@@ -170,7 +182,7 @@ def init(ctx, input, dataset, table, schema):
 
         # init version info
         version = VersionManager(conn)
-        
+
         version.init_version_graph_dataset(dataset, lis_rid, ctx.obj['user'])
         version.init_index_table_dataset(dataset, lis_rid)
 
@@ -295,7 +307,7 @@ def checkout(ctx, dataset, vlist, to_table, to_file, delimiters, header, ignore)
             pass # delete the file
         click.secho(str(e), fg='red')
 
-    
+
 
 @cli.command()
 @click.option('--msg','-m', help='Commit message', required = True)
@@ -379,12 +391,12 @@ def commit(ctx, msg, table_name, file_name, delimiters, header):
 
             # insert them into datatable
             new_rids = relation.update_datatable(datatable_name, lis_of_newrecords)
-            
+
             print "Found %s new records" % len(new_rids)
             print "Found %s existing records" % len(existing_rids)
 
             current_version_rid = existing_rids + new_rids
-            
+
             # it can happen that there are duplicate in here
             # num_of_records = relation.get_number_of_rows(table_name)
             table_create_time = metadata.load_table_create_time(table_name) if table_name != 'tmp_table' else None
@@ -421,3 +433,5 @@ def clean(ctx):
     f.write('{}')
     f.close()
     click.echo("modifiedID cleaned")
+
+

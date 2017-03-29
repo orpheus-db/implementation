@@ -64,7 +64,7 @@ class RelationManager(object):
 
       #Subject to change in later version
       #need to change the where clause to match the corresponding type
-      #for example, text -> 'text' 
+      #for example, text -> 'text'
       version_type_map = {}
       for (a,b) in zip(_attributes, _attributes_type):
         version_type_map[a] = b
@@ -113,7 +113,7 @@ class RelationManager(object):
         # convert to a tmp_table first
         self.drop_table_force('tmp_table')
         self.checkout_table(attributes, ridlist, datatable, 'tmp_table', None)
-        sql = "COPY %s (%s) TO '%s' DELIMITER '%s' CSV HEADER;" if header else "COPY %s (%s) TO '%s' DELIMITER '%s' CSV;" 
+        sql = "COPY %s (%s) TO '%s' DELIMITER '%s' CSV HEADER;" if header else "COPY %s (%s) TO '%s' DELIMITER '%s' CSV;"
         sql = sql % ('tmp_table', ','.join(attributes), to_file, delimiters)
         self.conn.cursor.execute(sql)
 
@@ -134,7 +134,7 @@ class RelationManager(object):
         #sql = "SELECT %s,rid FROM %s;"%(', '.join(attributes),to_table)
         # print sql
         #self.conn.cursor.execute(sql)
-        
+
 
     def drop_table(self, table_name):
         if not self.check_table_exists(table_name):
@@ -172,7 +172,7 @@ class RelationManager(object):
     def select_intersection_table(self, table1, table2, join_attributes, projection='rid'):
       # SELECT rid FROM tmp_table INNER JOIN dataset1_datatable ON tmp_table.employee_id=dataset1_datatable.employee_id;
       join_clause = " AND ".join(["%s.%s=%s.%s" % (table1, attr, table2, attr) for attr in join_attributes])
-      sql = "SELECT %s.%s FROM %s INNER JOIN %s on %s;" % (table2, projection, table1, table2, join_clause)  
+      sql = "SELECT %s.%s FROM %s INNER JOIN %s on %s;" % (table2, projection, table1, table2, join_clause)
       self.conn.cursor.execute(sql)
       return self.conn.cursor.fetchall()
 
@@ -186,15 +186,15 @@ class RelationManager(object):
       # Use CREATE SQL COMMAND
       print "create_relation: Under Construction."
 
-    # will drop existing table to create the new table 
+    # will drop existing table to create the new table
     def create_relation_force(self, table_name, sample_table, sample_table_attributes=None):
       if self.check_table_exists(table_name):
         self.drop_table(table_name)
       if not sample_table_attributes:
         sample_table_attributes,_ = self.get_datatable_attribute(sample_table)
       # sql = "CREATE TABLE %s ( like %s including all);" % (table_name, sample_table)
-      
-      # an easier approach to create empty table 
+
+      # an easier approach to create empty table
       sql = "CREATE TABLE %s AS SELECT %s FROM %s WHERE 1=2;" % (table_name, ",".join(sample_table_attributes), sample_table)
       self.conn.cursor.execute(sql)
       self.conn.connect.commit()

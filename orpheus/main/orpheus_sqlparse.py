@@ -130,7 +130,7 @@ class SQLParser(object):
 		if item.ttype is DML and item.value.upper() == 'SELECT':
 			return True
 		return False
-	
+
 
 
 	# find the Where clause index under parent.tokens
