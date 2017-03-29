@@ -1,23 +1,32 @@
-from utility import Node
+from utility import Node, BiPartiteGraph
 
 class PartitionOptimizer(object):
 		def __init__(self, conn):
 			self.conn = conn
 			self.d = __load_index_table(self)
-			self.tree = list(Node)
-			# parameters
-			# tolerance rate \mu
-			# storage overhead \gamma
-			# the current checkout cost: curCheckoutCost
+			self.version_tree = []
+			self.partition = {} # a 2D array, each of which is a vlist of partitions
+			self.tolerance = 0
+			self.storage_threshold = 0
+			self.cur_checkout_cost = 0
 
 		# return the delta value of the given interval
 		def __nextDelta(left, right):
 			return 0.5 * (left + right)
 
+		# find the subtree with the root node equals vid
+		def __find_subTree(self, vid):
+			subTree = []
+			for i in versionTree:
+
 		# the fundamental approximate algorithm
-		# return the storage cost
-		def __approx(versionT, rCnt, vCnt, eCnt, delta):
-			return None
+		def __approx(versionT, bipartiteGraph, delta):
+			if bipartiteGraph.calc_threshold() > delta:
+				return sth...
+
+			split_vid = __pick_edge()
+			__find_subTree()
+
 
 		# read index table into a dictionary of format (vid: {rlist})
 		def __load_index_table():
@@ -30,12 +39,29 @@ class PartitionOptimizer(object):
 		# Convert from the version graph to the version tree
 		def __construct_version_tree():
 			table_name = "dataset1_versiontable"
-			sql = "SELECT vid, parent, children FROM %s;" % table_name
-			return None
+			sql = "SELECT vid, parent, children, commonRCnt" % table_name
+			self.conn.cursor.execute(sql)
+			for x in self.conn.cursor.fetchall():
+				vid, parent, children, commonRCnt = x[0], x[1], x[2], x[3]
+				if (len(parent) > 1):
+					max_idx = commonRCnt.index(max(commonRCnt))
+				else:
+					max_idx = 0
+				node = Node(vid, children, parent[max_idx], commonRCnt[max_idx])
+				self.versionTree.append(node)
 
-		#pick the edge to cut
-		def __pick_edge(table_name):
+		def __is_valid_edge(self, commonRCnt):
+			return commonRCnt <= self.delta * self.bipartiteGraph.getRCnt()
 
+		# pick the edge to cut
+		def __pick_edge(self):
+			vid, maxCommonRCnt = 0
+			for node in self.versionTree:
+				commonRCnt = getCommonRCnt()
+				if (__is_valid_edge(commonRCnt) and commonRCnt > maxCommonRCnt):
+					vid = node.getVid()
+					node.getCommonRCnt() = maxCommonRCnt
+			return vid
 
 		# check if current average checkout cost > \mu * optimal one (opt_partition())
 		def exceeds_tolarated_checkout_cost():
@@ -61,19 +87,20 @@ class PartitionOptimizer(object):
 
 		def opt_partition():
 			#initial interval of delta
-			edgeCnt = sum([len(i) for i in self.d.values()])
+			eCnt = sum([len(i) for i in self.d.values()])
 			vCnt = len(self.d)
 			s = set()
 			for i in self.d.values():
 				s |= set(i)
 			rCnt = len(s)
 
-			left = float(edgeCnt)/(rCnt * vCnt); right = 1
+			bipartiteGraph = BipartiteGraph(rCnt, vCnt, eCnt)
+
+			left = float(eCnt)/(rCnt * vCnt); right = 1
 			delta = __nextDelta(left, right)
 
-			versionT = __construct_version_tree()
 			while left < right:
-				__approx(versionT, rCnt, vCnt, eCnt, delta)
+				__approx(versionT, bipartiteGraph, delta)
 
 			return None
 			# return optimal checkout cost
