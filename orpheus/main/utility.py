@@ -1,43 +1,47 @@
+# Each node corresponds a version in a tree (not a graph)
 class Node(object):
-
-    def __init__(self, vid, rCnt, children, parent, commonRCnt):
+    def __init__(self, vid=-1, rCnt=-1, childrenVlist=None, parentVid=-1, commonRCnt=-1):
       self.vid = vid
       self.rCnt = rCnt
-      self.children = children
-      if len(parents) == 1 and parents[0] == -1:
-        self.parent = None
-      else:
-        self.parent = parent
+      self.childrenVlist = childrenVlist
+      self.parentVid = parentVid
       self.commonRCnt = commonRCnt
 
-    def getVid(self):
+    def getVID(self):
       return self.vid
 
     def getRCnt(self):
       return self.rCnt
 
-    def getChildren(self):
-      return self.children
+    def getChildrenVList(self):
+      return self.childrenVlist
 
-    def getParent(self):
-      return self.parent
+    def getParentVID(self):
+      return self.parentVid
 
     def getCommonRCnt(self):
       return self.commonRCnt
 
-    def setParent(self, parent):
-      self.parent = parent 
-      
-    def setChildren(self, children):
-      self.children = children
+    def setAsRoot(self):
+      self.parentVid = -1
+      self.commonRCnt = 0
 
-# Each BipartiteGraph corresponding to a partition
+    def setAsLeaf(self):
+      self.childrenVlist = []
+
+    def isRoot(self):
+      return self.parentVid == -1
+
+# Each partition can be represented as a bipratiteGraph
 class BipartiteGraph(object):
-
-  def __init__(self, vlist=set(), rCnt, eCnt):
+  def __init__(self, pid=-1, vlist=None, rCnt=-1, eCnt=-1):
+      self.pid = pid
       self.vlist = vlist
       self.rCnt = rCnt
       self.eCnt = eCnt
+
+  def getPID(self):
+    return self.pid
 
   def getVList(self):
     return self.vlist
@@ -58,5 +62,11 @@ class BipartiteGraph(object):
 
   def calc_threshold(self):
     return float(self.eCnt) / (self.rCnt + len(self.vlist))
+
+  def print(self):
+    return "%s, %s, %s, %s" % (self.pid, self.vlist, self.rCnt, self.eCnt)
+
+
+
 
 
