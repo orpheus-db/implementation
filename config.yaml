@@ -3,9 +3,11 @@ host: localhost
 port: 5432
 
 # Orpheus Home dir
-orpheus_home: #Please specify the Orpheus home directory
-
-# Meta dir 
+orpheus_home:
+#Please specify the Orpheus home directory
+storage_threshold: 2
+tolerance: 2
+# Meta dir
 # TODO: hide them under orpheus_home
 log_path: .meta/logs/log.out
 user_log: .meta/user_log

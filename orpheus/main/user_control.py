@@ -4,14 +4,14 @@ import orpheus_exceptions as sys_exception
 import json
 
 class LocalUserExistError(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return self.value
+	def __init__(self, value):
+		self.value = value
+	def __str__(self):
+		return self.value
 
 class InvalidCredentialError(Exception):
-    def __str__(self):
-        return "credentials does not match records"
+	def __str__(self):
+		return "credentials does not match records"
 
 class UserManager(object):
 	@classmethod
@@ -38,7 +38,7 @@ class UserManager(object):
 		}
 		#if password:
 		passphrase = EncryptionTool.passphrase_hash(password)
-		user_obj['passphrase'] = passphrase	
+		user_obj['passphrase'] = passphrase
 
 		user_directory = '/'.join([cls.user_path(),user])
 		makedirs(user_directory) # make the directory, need to check if have permission
@@ -50,7 +50,7 @@ class UserManager(object):
 	# this method is very dangrous! use caution
 	@classmethod
 	def delete_user(cls, user, password):
-		pass 
+		pass
 
 
 	@classmethod

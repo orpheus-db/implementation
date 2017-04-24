@@ -4,9 +4,10 @@ import sqlparse, re
 from sqlparse.sql import Identifier, Token, Where
 from sqlparse.tokens import DML
 
-import orpheus_const as const
+from orpheus_const import Constants as const
 from relation import RelationManager
 from collections import defaultdict
+from partition import Partitioner
 
 class InvalidSyntaxError(Exception):
   def __init__(self, statement):
@@ -32,7 +33,7 @@ class SQLParser(object):
 		for attribute in attributes:
 			fields_mapping[attribute] = 'd'
 
-		versiontable_attributes = ["author", "num_records", "parent", "children", "create_time", "commit_time", "commit_msg"]
+		versiontable_attributes = ["author", "num_records", "commonRCnt", "parent", "children", "create_time", "commit_time", "commit_msg"]
 		# take in version table attributes
 		for version_attribute in versiontable_attributes:
 			fields_mapping[version_attribute] = 'v'
@@ -65,9 +66,9 @@ class SQLParser(object):
 	# return replaced from clause
 	def get_from_clause(self, dataset_name, touched_table):
 		# rule based !
-		datatable = dataset_name + const.DATATABLE_SUFFIX
-		indextable = dataset_name + const.INDEXTABLE_SUFFIX
-		versiontable = dataset_name + const.VERSIONTABLE_SUFFIX
+		datatable = const.getDatatableName(dataset_name, 1) #TODO PID!!
+		indextable = const.getIndextableName(dataset_name)
+		versiontable = const.getVersionTable(dataset_name)
 		if 'd' in touched_table and 'i' in touched_table:
 			return "%s, %s" % (datatable + ' d', indextable + ' i')
 		elif 'v' in touched_table and 'i' in touched_table:
@@ -153,8 +154,9 @@ class SQLParser(object):
 	# version known, replace the tokens
 	def replace_known_version(self, dataset_name, vlist, parent, version_idx):
 		# if parent has where, append a new where
-		datatable = dataset_name + const.DATATABLE_SUFFIX
-		indextable = dataset_name + const.INDEXTABLE_SUFFIX
+		pid = Partitioner.plist_lookup(vlist, self.conn, dataset_name)[0]
+		datatable = const.getDatatableName(dataset_name, pid)
+		indextable = const.getIndextableName(dataset_name)
 		rlist = self.relation.select_records_of_version_list(vlist.split(','), indextable)
 		constraint = "rid = ANY('%s'::int[])" % rlist
 
@@ -235,7 +237,7 @@ class SQLParser(object):
 					parsed_statement = sqlparse.parse(line)[0]
 					dataset_name, parent, cvd_idx = self.find_cvd_handle(parsed_statement)
 
-					datatable_attributes, _ = self.relation.get_datatable_attribute(dataset_name + const.DATATABLE_SUFFIX)
+					datatable_attributes, _ = self.relation.get_datatable_attribute(const.getDatatablename(dataset_name, 1)) #TODO!! PID
 
 					# get the mapping from each field to alias
 					fields_mapping = self.get_fields_mapping(datatable_attributes)
