@@ -256,7 +256,7 @@ def run(ctx, sql):
 @click.option('--to_file', '-f', help='Specify the location of file')
 @click.option('--delimiters', '-d', default=',', help='Specify the delimiter used for checkout file')
 @click.option('--header', '-h', is_flag=True, help="If set, the first line of checkout file will be the header")
-@click.option('--ignore', '-i', is_flag=False, help='If set, checkout versions into table will ignore duplicated key')
+@click.option('--ignore/--no-ignore', default=False, help='If set, checkout versions into table will ignore duplicated key')
 @click.pass_context
 def checkout(ctx, dataset, vlist, to_table, to_file, delimiters, header, ignore):
     # check ctx.obj has permission or not
