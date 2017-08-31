@@ -1,1 +1,1 @@
-{"file_map": {}, "table_map": {}, "table_created_time": {}, "merged_tables": [], "delta": {}}
+{"file_map": {"/Users/sixpluszero/work/implementation/checkout.csv": ["dataset1", ["1"]], "/Users/sixpluszero/work/implementation/demo.csv": ["dataset1", ["1"]]}, "table_created_time": {}, "merged_tables": [], "table_map": {"tmp_table": ["dataset1", ["2"]]}, "delta": {}}
