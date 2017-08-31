@@ -68,7 +68,7 @@ def config(ctx, user, password, database):
         UserManager.create_user(user, password)
         if UserManager.verify_credential(user, password):
             UserManager.create_user(user, password)
-            from encryption import EncryptionTool
+            from orpheus.core.encryption import EncryptionTool
             newctx['passphrase'] = EncryptionTool.passphrase_hash(password)
             UserManager.write_current_state(newctx) # pass down to user manager
             click.echo('Logged to database %s as: %s ' % (ctx.obj['database'],ctx.obj['user']))

@@ -188,7 +188,7 @@ class DatabaseManager():
             with open('config.yaml', 'r') as f:
                 obj = yaml.load(f)
         except IOError:
-            raise sys_exception.BadStateError("config.yaml file not found or data not clean, abort")
+            raise BadStateError("config.yaml file not found or data not clean, abort")
             return None
         return obj
 

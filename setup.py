@@ -2,9 +2,9 @@ from setuptools import setup
 
 setup(
 	name='orpheus',
-	version='1.0.1',
+	version='1.0.2',
 	description='OrpheusDB command line tool',
-	packages=['orpheus', 'orpheus.main'],
+	packages=['orpheus', 'orpheus.clt', 'orpheus.core'],
 	url='http://orpheus-db.github.io/',
     # py_modules=['db',
 	 		# 	'encryption',
@@ -26,6 +26,6 @@ setup(
 	license='MIT',
 	entry_points='''
 		[console_scripts]
-		orpheus=orpheus.main.click_entry:cli
+		orpheus=orpheus.clt.click_entry:cli
 	'''
 )

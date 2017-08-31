@@ -6,9 +6,10 @@ import json
 
 from django.db import connection
 from django.db.utils import ProgrammingError, IntegrityError, OperationalError
-from orpheus_sqlparse import SQLParser
-from orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
-from orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX, PUBLIC_SCHEMA
+from orpheus.core.orpheus_sqlparse import SQLParser
+from orpheus.core.orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
+from orpheus.core.db import UserNotSetError, ConnectionError, OperationError, DatasetExistsError,SQLSyntaxError
+from orpheus.core.orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX, PUBLIC_SCHEMA
 
 from django.contrib import messages
 
@@ -164,7 +165,7 @@ class DatabaseManager():
             with open('config.yaml', 'r') as f:
                 obj = yaml.load(f)
         except IOError:
-            raise sys_exception.BadStateError("config.yaml file not found or data not clean, abort")
+            raise BadStateError("config.yaml file not found or data not clean, abort")
             return None
         return obj
 

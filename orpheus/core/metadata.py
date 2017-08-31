@@ -82,7 +82,7 @@ class MetadataManager(object):
             # print type(parent_vid_lis[1])
             # parent_vid = "\'{%s}\'" % ",".join(str(x) for x in parent_vid_lis)
             return parent_vid_lis
-        except KeyError:
+        except KeyError as e:
             raise sys_exception.BadStateError("Metadata information missing field %s, abort" % e.args[0])
             return None
 
@@ -98,7 +98,7 @@ class MetadataManager(object):
             # print type(parent_vid_lis[1])
             # parent_vid = "\'{%s}\'" % ",".join(str(x) for x in parent_vid_lis)
             self.commit_meta(_meta)
-        except KeyError:
+        except KeyError as e:
             raise sys_exception.BadStateError("Metadata information missing field %s, abort" % e.args[0])
             return
 
