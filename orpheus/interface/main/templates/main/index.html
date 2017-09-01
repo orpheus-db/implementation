@@ -64,7 +64,7 @@
             <li><a href="#"><strong>Collaborative Versioned Datasets (CVDs)</strong></a></li>
             {% if cvds %}
               {% for cvd in cvds %}
-                <li><a href="#"> {{cvd.name}} </a></li>
+                <li><a href="#"> {{cvd}} </a></li>
               {% endfor %}
             {% endif %}
 <!--             <li><a href="#"> - Interaction</a></li>
@@ -186,7 +186,7 @@
                   {% if cvds %}
                     {% for cvd in cvds %}
                       <!-- <option value = "">{{cvd.name}}</option> -->
-                      <option {% if cvd.name == selected_cvd %} selected="selected" {% endif %}> {{cvd.name}} </option>
+                      <option {% if cvd == selected_cvd %} selected="selected" {% endif %}> {{cvd}} </option>
                     {% endfor %}
                   {% endif %}
                 </select>

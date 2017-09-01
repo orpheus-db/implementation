@@ -5,21 +5,28 @@ from django.http import HttpResponse
 from django.template import loader,  RequestContext
 from django.shortcuts import render
 from django.contrib import messages
-
 from src.cmd_parser import Parser
 # Create your views here.
 from django.shortcuts import render
 
-from .models import CVDs, PrivateFiles, PrivateTables
 import json
 import os.path, os
+
+from config import CONFIG, DatabaseManager
+
+class tModel:
+	def __init__(self, name):
+		self.name = name
 
 def index(request):
 
 	context = {}
-	context['cvds'] = CVDs.objects.all()
-	context['files'] = PrivateFiles.objects.all()
-	context['tables'] = PrivateTables.objects.all()
+	conn = DatabaseManager(CONFIG)
+
+	cvd_sql = "SELECT * FROM %s.datasets" % (CONFIG["user"])
+	context['cvds'] =  [r[0] for r in conn.sql_records(cvd_sql)]
+	context['files'] = []
+	context['tables'] = []
 
 	table_list, cmd_string = None, ""
 
