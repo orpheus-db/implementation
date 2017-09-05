@@ -24,9 +24,9 @@ class DatabaseManager():
 
     def execute_sql(self, sql):
         try:
+            print sql
             self.cursor.execute(sql)
             colnames = [desc[0] for desc in self.cursor.description]
-
             transactions = []
             for row in self.cursor.fetchall():
                 transactions.append([str(e) for e in row])
@@ -42,7 +42,6 @@ class DatabaseManager():
         connection.close()
         self.connect = connection
         self.cursor = self.connect.cursor()
-
 
     # schema is a list of tuple of (attribute_name, attribute_type) as string
     def create_dataset(self, inputfile, dataset, schema, header=False, attributes=None):
