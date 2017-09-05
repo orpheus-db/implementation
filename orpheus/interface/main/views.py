@@ -21,15 +21,9 @@ class tModel:
 def index(request):
 
 	context = {}
-	conn = DatabaseManager(CONFIG)
 
-	cvd_sql = "SELECT * FROM %s.datasets" % (CONFIG["user"])
-	context['cvds'] =  [r[0] for r in conn.sql_records(cvd_sql)]
-	context['files'] = []
-	context['tables'] = []
 
 	table_list, cmd_string = None, ""
-
 
 	# If command button is clicked
 	cmd_btn = request.POST.get('command')
@@ -107,5 +101,11 @@ def index(request):
 		except Exception as e:
 			messages.error(request, str(e))
 
+	print "Reach Here"
+	conn = DatabaseManager(CONFIG)
+	cvd_sql = "SELECT * FROM %s.datasets" % (CONFIG["user"])
+	context['cvds'] =  [r[0] for r in conn.sql_records(cvd_sql)]
+	context['files'] = []
+	context['tables'] = []
 
 	return render(request, 'main/index.html', context)
