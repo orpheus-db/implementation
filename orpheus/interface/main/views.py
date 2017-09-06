@@ -8,15 +8,17 @@ from django.contrib import messages
 from src.cmd_parser import Parser
 # Create your views here.
 from django.shortcuts import render
+from django.conf import settings
+
+from src.db import DatabaseManager
 
 import json
 import os.path, os
 
-from config import CONFIG, DatabaseManager
-
-class tModel:
-	def __init__(self, name):
-		self.name = name
+class Priv_file:
+	def __init__(self, x, y):
+		self.name = x
+		self.link = y
 
 def index(request):
 
@@ -95,17 +97,27 @@ def index(request):
 			p = Parser(request)
 			fpath = p.config['orpheus_home'] + priv_file_btn
 			if os.path.exists(fpath):
-				os.system('subl %s' % fpath) #TODO: Change to open with default editor after demo
+				os.system('open %s' % fpath) #TODO: Change to open with default editor after demo
 			else:
 				messages.error(request, "Unable to open file %s with the path %s" % (priv_file_btn, fpath))
 		except Exception as e:
 			messages.error(request, str(e))
 
-	print "Reach Here"
-	conn = DatabaseManager(CONFIG)
-	cvd_sql = "SELECT * FROM %s.datasets" % (CONFIG["user"])
+	config = settings.DATABASES['default']
+	config['database'] = config['NAME']
+	config['user'] = config['USER']
+	#print config
+	conn = DatabaseManager(config, request)
+	cvd_sql = "SELECT * FROM %s.datasets" % (config["user"])
+	
+	track_str = ''
+	with open(".meta/tracker", "r") as fp:
+		track_str = fp.readline().strip("\n")
+	ds = json.loads(track_str)
+	#print ds['file_map']
+
 	context['cvds'] =  [r[0] for r in conn.sql_records(cvd_sql)]
-	context['files'] = []
-	context['tables'] = []
+	context['files'] = [Priv_file(k[(k.rfind("/")+1):], k) for k in ds['file_map']]
+	context['tables'] = [k for k in ds['table_map']]
 
 	return render(request, 'main/index.html', context)

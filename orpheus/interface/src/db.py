@@ -157,7 +157,6 @@ class DatabaseManager():
         raise NotImplementedError("Show a specified dataset not implemented!")
         return
 
-
     @classmethod
     def load_config(cls):
         try:
@@ -167,5 +166,10 @@ class DatabaseManager():
             raise BadStateError("config.yaml file not found or data not clean, abort")
             return None
         return obj
+
+    def sql_records(self, sql):
+        # better for small result
+        self.cursor.execute(sql)
+        return [[str(e) for e in row] for row in self.cursor.fetchall()]
 
 
