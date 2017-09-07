@@ -9,9 +9,6 @@ class VersionManager(object):
 
     def init_version_graph_dataset(self, dataset, list_of_rid, user):
         # using CREATE SQL command
-        # table name = graph_name = dataset_name + "version_graph" (or any nicer name..)
-
-        #messages.info(self.request, "Initializing version graph")
         self.p.pmessage("Initializing the version table ...")
         self.conn.refresh_cursor()
         init_version_sql = "INSERT INTO %s VALUES \
@@ -22,9 +19,9 @@ class VersionManager(object):
 
     def init_index_table_dataset(self, dataset, list_of_rid):
         self.p.pmessage("Initializing the index table ...")
-        #messages.info(self.request, "Initializing indextable")
+
         self.conn.refresh_cursor()
-        # insert into indexTbl values ('{1,3,5}', '{1}')
+
         init_indextbl_sql = "INSERT INTO %s \
                              VALUES \
                              (1, '{%s}');" % (const.PUBLIC_SCHEMA + dataset + const.INDEXTABLE_SUFFIX, str(",".join(map(str, list_of_rid))))
@@ -32,7 +29,6 @@ class VersionManager(object):
         self.conn.connect.commit()
 
     def update_version_graph(self, version_graph_name, user, num_of_records, parent_list, table_create_time, msg):
-        # print "update_version_graph"
         # create new version
         parent_list_string='\'{' + ', '.join(parent_list) + '}\''
         commit_time = str(datetime.datetime.now())

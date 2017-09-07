@@ -181,12 +181,13 @@ def execute_sql_file(ctx, param, value):
 @click.option('--sql', prompt="Input sql statement")
 @click.pass_context
 def run(ctx, sql):
+    # TODO: add finer grained try-catch for SQLParser
     try:
         # execute_sql_line(ctx, sql)
         conn = DatabaseManager(ctx.obj)
         parser = SQLParser(conn)
         executable_sql = parser.parse(sql)
-        #print executable_sql
+        # print executable_sql
         conn.execute_sql(executable_sql)
 
     except Exception as e:

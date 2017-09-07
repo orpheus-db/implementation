@@ -8,7 +8,7 @@ import json
 from orpheus.core.orpheus_sqlparse import SQLParser
 from orpheus.core.orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
 import orpheus.core.orpheus_const as const
-from orpheus.core.db import UserNotSetError, ConnectionError, OperationError, DatasetExistsError,SQLSyntaxError
+from orpheus.core.db import UserNotSetError, ConnectionError, OperationError, DatasetExistsError, SQLSyntaxError
 
 class DatabaseManager():
     def __init__(self, config):
