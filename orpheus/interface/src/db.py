@@ -9,7 +9,7 @@ from django.db.utils import ProgrammingError, IntegrityError, OperationalError
 from orpheus.core.orpheus_sqlparse import SQLParser
 from orpheus.core.orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
 from orpheus.core.db import UserNotSetError, ConnectionError, OperationError, DatasetExistsError,SQLSyntaxError
-from orpheus.core.orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX, PUBLIC_SCHEMA
+import orpheus.core.orpheus_const as const
 
 from django.contrib import messages
 
@@ -24,7 +24,7 @@ class DatabaseManager():
 
     def execute_sql(self, sql):
         try:
-            print sql
+            #print sql
             self.cursor.execute(sql)
             colnames = [desc[0] for desc in self.cursor.description]
             transactions = []
@@ -83,7 +83,7 @@ class DatabaseManager():
             messages.info(self.request, "Creating datatable using the schema provided")
             # create datatable
             self.cursor.execute("CREATE TABLE %s (rid serial primary key, \
-                                                  %s);" % (PUBLIC_SCHEMA + dataset + DATATABLE_SUFFIX, ",".join(map(lambda (attribute_name, attribute_type) : attribute_name + " " + attribute_type, schema))))
+                                                  %s);" % (const.PUBLIC_SCHEMA + dataset + const.DATATABLE_SUFFIX, ",".join(map(lambda (attribute_name, attribute_type) : attribute_name + " " + attribute_type, schema))))
 
             messages.info(self.request, "Creating version table")
             # create version table
@@ -94,7 +94,7 @@ class DatabaseManager():
                                                  children integer[], \
                                                  create_time timestamp, \
                                                  commit_time timestamp, \
-                                                 commit_msg text);" % (PUBLIC_SCHEMA + dataset + VERSIONTABLE_SUFFIX))
+                                                 commit_msg text);" % (const.PUBLIC_SCHEMA + dataset + const.VERSIONTABLE_SUFFIX))
             messages.info(self.request,   "Creating version table")
 
             # create indexTbl table
@@ -105,9 +105,9 @@ class DatabaseManager():
             file_path = self.config['orpheus_home'] + inputfile
 
             if header:
-                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV HEADER;" % (PUBLIC_SCHEMA + dataset + DATATABLE_SUFFIX, ",".join(attributes), file_path))
+                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV HEADER;" % (const.PUBLIC_SCHEMA + dataset + const.DATATABLE_SUFFIX, ",".join(attributes), file_path))
             else:
-                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV;" % (PUBLIC_SCHEMA + dataset + DATATABLE_SUFFIX, ",".join(attributes), file_path))
+                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV;" % (const.PUBLIC_SCHEMA + dataset + const.DATATABLE_SUFFIX, ",".join(attributes), file_path))
 
             self.connect.commit()
         except Exception as e:

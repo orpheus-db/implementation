@@ -19,10 +19,6 @@ from orpheus_schema_parser import Parser as SimpleSchemaParser
 from helper import Print
 import orpheus_const as const
 
-def test_import():
-    print "import successfully"
-
-
 class Executor(object):
     def __init__(self, config, request = False):
         self.config = config

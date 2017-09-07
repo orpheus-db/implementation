@@ -84,32 +84,13 @@ class Parser(object):
 
                 conn = DatabaseManager(self.config, self.request)
                 executor.exec_init(input_file, dataset, table_name, schema, conn)
-                '''
-                try:
-                    obj = CVDs.objects.get(name = dataset)
-                except CVDs.DoesNotExist:
-                    obj = CVDs(name = dataset)
-                    obj.save()
-                '''
+
 
             elif action == "checkout":
                 dataset, vlist, to_table, to_file, delimiters, header, ignore = self.__parse_checkout(cmd)
                 conn = DatabaseManager(self.config, self.request)
                 executor.exec_checkout(dataset, vlist, to_table, to_file, delimiters, header, ignore, conn)
-                '''
-                if to_table:
-                    try:
-                        obj = PrivateTables.objects.get(name = to_table)
-                    except PrivateTables.DoesNotExist:
-                        obj = PrivateTables(name = to_table)
-                        obj.save()
-                if to_file:
-                    try:
-                        obj = PrivateFiles.objects.get(name = to_file)
-                    except PrivateFiles.DoesNotExist:
-                        obj = PrivateFiles(name = to_file)
-                        obj.save()
-                '''
+          
             elif action == "commit":
                 message, table_name, file_name, delimiters, header = self.__parse_commit(cmd)
                 conn = DatabaseManager(self.config, self.request)
@@ -131,9 +112,7 @@ class Parser(object):
                 dataset = self.__parse_drop(cmd)
                 conn = DatabaseManager(self.config, self.request)
                 executor.exec_drop(dataset, conn)
-                '''
-                CVDs.objects.filter(name=dataset).delete()
-                '''
+ 
             elif action == "show":
                 dataset = self.__parse_show(cmd)
                 conn = DatabaseManager(self.config, self.request)

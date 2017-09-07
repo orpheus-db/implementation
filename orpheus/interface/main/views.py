@@ -5,26 +5,24 @@ from django.http import HttpResponse
 from django.template import loader,  RequestContext
 from django.shortcuts import render
 from django.contrib import messages
-from src.cmd_parser import Parser
 # Create your views here.
 from django.shortcuts import render
 from django.conf import settings
 
 from src.db import DatabaseManager
+from src.cmd_parser import Parser
 
 import json
 import os.path, os
 
-class Priv_file:
+class PrivateFile:
 	def __init__(self, x, y):
 		self.name = x
 		self.link = y
 
 def index(request):
-
+	# TODO: add try-catch to catch exceptions
 	context = {}
-
-
 	table_list, cmd_string = None, ""
 
 	# If command button is clicked
@@ -103,21 +101,21 @@ def index(request):
 		except Exception as e:
 			messages.error(request, str(e))
 
+	# Refresh table and file list
 	config = settings.DATABASES['default']
 	config['database'] = config['NAME']
 	config['user'] = config['USER']
-	#print config
 	conn = DatabaseManager(config, request)
+
 	cvd_sql = "SELECT * FROM %s.datasets" % (config["user"])
 	
 	track_str = ''
 	with open(".meta/tracker", "r") as fp:
 		track_str = fp.readline().strip("\n")
-	ds = json.loads(track_str)
-	#print ds['file_map']
+	metadata = json.loads(track_str)
 
 	context['cvds'] =  [r[0] for r in conn.sql_records(cvd_sql)]
-	context['files'] = [Priv_file(k[(k.rfind("/")+1):], k) for k in ds['file_map']]
-	context['tables'] = [k for k in ds['table_map']]
+	context['files'] = [PrivateFile(k[(k.rfind("/")+1):], k) for k in metadata['file_map']]
+	context['tables'] = [k for k in metadata['table_map']]
 
 	return render(request, 'main/index.html', context)

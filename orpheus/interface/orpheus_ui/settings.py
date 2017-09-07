@@ -77,8 +77,8 @@ WSGI_APPLICATION = 'orpheus_ui.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'sixpluszero',
-        'USER': 'sixpluszero',
+        'NAME': '', #Please specify
+        'USER': '', #Please specify
         'PASSWORD': '',
         'HOST': 'localhost',
         'PORT': '5432',

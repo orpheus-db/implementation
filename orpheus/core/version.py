@@ -1,6 +1,5 @@
 import datetime
-from orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX, PUBLIC_SCHEMA
-
+import orpheus_const as const
 from helper import Print
 
 class VersionManager(object):
@@ -17,7 +16,7 @@ class VersionManager(object):
         self.conn.refresh_cursor()
         init_version_sql = "INSERT INTO %s VALUES \
                             (1, '%s', %s, '{-1}', '{}', '%s', '%s', 'init commit');" % \
-                            (PUBLIC_SCHEMA + dataset + VERSIONTABLE_SUFFIX, user, str(len(list_of_rid)), str(datetime.datetime.now()), str(datetime.datetime.now()))
+                            (const.PUBLIC_SCHEMA + dataset + const.VERSIONTABLE_SUFFIX, user, str(len(list_of_rid)), str(datetime.datetime.now()), str(datetime.datetime.now()))
         self.conn.cursor.execute(init_version_sql)
         self.conn.connect.commit()
 
@@ -29,7 +28,7 @@ class VersionManager(object):
 
         init_indextbl_sql = "INSERT INTO %s \
                              VALUES \
-                             (1, '{%s}');" % (PUBLIC_SCHEMA + dataset + INDEXTABLE_SUFFIX, str(",".join(map(str, list_of_rid))))
+                             (1, '{%s}');" % (const.PUBLIC_SCHEMA + dataset + const.INDEXTABLE_SUFFIX, str(",".join(map(str, list_of_rid))))
         self.conn.cursor.execute(init_indextbl_sql)
         self.conn.connect.commit()
 
