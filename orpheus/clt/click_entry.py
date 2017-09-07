@@ -71,7 +71,7 @@ def config(ctx, user, password, database):
             from orpheus.core.encryption import EncryptionTool
             newctx['passphrase'] = EncryptionTool.passphrase_hash(password)
             UserManager.write_current_state(newctx) # pass down to user manager
-            click.echo('Logged to database %s as: %s ' % (ctx.obj['database'],ctx.obj['user']))
+            click.echo('Logged to the database [%s] as [%s] ' % (ctx.obj['database'],ctx.obj['user']))
     except Exception as e:
         click.secho(str(e), fg='red')
 
@@ -88,7 +88,7 @@ def create_user(ctx):
     user = click.prompt('Please enter user name')
     password = click.prompt('Please enter password', hide_input=True, confirmation_prompt=True)
 
-    click.echo("Creating user into database %s" % ctx.obj['database'])
+    click.echo("Creating user into database [%s]" % ctx.obj['database'])
     try:
         DatabaseManager.create_user(user, password, ctx.obj['database']) #TODO: need revise
         UserManager.create_user(user, password)
@@ -105,7 +105,7 @@ def whoami(ctx):
         click.secho("No session in use, please call config first", fg='red')
         return # stop the following commands
 
-    click.echo('Logged in database %s as: %s ' % (ctx.obj['database'],ctx.obj['user']))
+    click.echo('Logged to the database [%s] as [%s] ' % (ctx.obj['database'],ctx.obj['user']))
 
 
 @cli.command()
@@ -134,7 +134,7 @@ def drop(ctx, dataset):
     if click.confirm('Are you sure you want to drop %s?' % dataset):
         try:
             conn = DatabaseManager(ctx.obj)
-            click.echo("Dropping dataset %s" % dataset)
+            click.echo("Dropping dataset [%s] ..." % dataset)
             executor = Executor(ctx.obj)
             executor.exec_drop(dataset, conn)
         except Exception as e:

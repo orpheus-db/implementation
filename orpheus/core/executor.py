@@ -75,7 +75,7 @@ class Executor(object):
             graph.delete_vGraph_json(dataset)
             raise Exception
             return 
-        self.p.pmessage("Dataset %s has been created successful" % dataset)
+        self.p.pmessage("Dataset [%s] has been created successful" % dataset)
 
     def exec_drop(self, dataset, conn):
         # TODO: add a popup window to confirm
@@ -83,7 +83,7 @@ class Executor(object):
         try:
             
             conn.drop_dataset(dataset)
-            self.p.pmessage("Dataset %s has been dropped" % dataset)
+            self.p.pmessage("Dataset [%s] has been dropped." % dataset)
         except Exception as e:
             self.p.perror(str(e))
             raise Exception
@@ -285,14 +285,14 @@ class Executor(object):
             # Drop all CVDs
             cvd_list = CVDs.objects.values('name')
             for cvd in cvd_list:
-                messages.info(self.request, "Dropping CVD %s" % cvd['name'])
+                messages.info(self.request, "Dropping the CVD [%s] ..." % cvd['name'])
                 self.exec_drop(cvd['name'])
                 
 
             # Drop all private tables
             private_tables = PrivateTables.objects.values('name')
             for table in private_tables:
-                messages.info(self.request, "Dropping private table %s" % table['name'])
+                messages.info(self.request, "Dropping the private table [%s] ..." % table['name'])
                 sql = "DROP TABLE IF EXISTS \"%s\";" % table['name']
                 conn.refresh_cursor()
                 conn.execute_sql(sql)
@@ -300,7 +300,7 @@ class Executor(object):
             # delete all local files
             private_files = PrivateFiles.objects.values('name')
             for file_name in private_files:
-                messages.info(self.request, "Dropping private file %s" % file_name['name'])
+                messages.info(self.request, "Dropping the private file [%s]" % file_name['name'])
                 fpath = self.config['orpheus_home'] + file_name['name']
                 try:
                     os.remove(fpath)

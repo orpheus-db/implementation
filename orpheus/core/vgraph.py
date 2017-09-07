@@ -23,6 +23,7 @@ class VersionGraph(object):
     def init_vGraph_json(self, dataset, vid):
         fpath = self.vGraph_json + dataset
         data = self.__gen_json_object(vid,True)
+        print "data: %s \n path:%s \n" % (data, fpath)
         f = open(fpath, 'w')
         f.write(json.dumps(data))
         f.close()

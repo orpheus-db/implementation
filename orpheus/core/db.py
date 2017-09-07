@@ -20,7 +20,7 @@ class DatasetExistsError(Exception):
         self.value = value
         self.user = user
     def __str__(self):
-        return 'Dataset %s exists under user %s' % (self.value, self.user)
+        return 'Dataset [%s] exists under user [%s]' % (self.value, self.user)
 
 class SQLSyntaxError(Exception):
     def __str__(self):
