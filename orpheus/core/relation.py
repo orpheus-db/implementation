@@ -26,7 +26,6 @@ class RelationManager(object):
     def __init__(self, conn):
       self.conn = conn;
 
-
     def get_datatable_attribute(self, from_table):
       selectTemplate = "SELECT column_name, data_type from INFORMATION_SCHEMA.COLUMNS where table_name = '%s' and column_name NOT IN ('rid');" % (from_table)
       self.conn.cursor.execute(selectTemplate)
@@ -62,9 +61,8 @@ class RelationManager(object):
           return
       _attributes,_attributes_type = self.get_datatable_attribute(versiontable)
 
-      #Subject to change in later version
-      #need to change the where clause to match the corresponding type
-      #for example, text -> 'text' 
+      # TODO: need to change the where clause to match the corresponding type
+      # for example, text -> 'text'
       version_type_map = {}
       for (a,b) in zip(_attributes, _attributes_type):
         version_type_map[a] = b
@@ -92,8 +90,12 @@ class RelationManager(object):
             raise ReservedRelationError(to_table)
             return
           if self.check_table_exists(to_table): # ask if user want to overwrite
-              raise RelationOverwriteError(to_table)
-              return
+              if ignore:
+                self.drop_table_force(to_table)
+              else:
+                raise RelationOverwriteError(to_table)
+                return
+
         if not self.check_table_exists(datatable):
             raise RelationNotExistError(datatable)
             return
@@ -109,11 +111,10 @@ class RelationManager(object):
         self.conn.connect.commit()
 
     def checkout_file(self, attributes, ridlist, datatable, to_file, delimiters, header):
-        # COPY products_273 TO '/tmp/products_199.csv' DELIMITER ',' CSV HEADER;
         # convert to a tmp_table first
         self.drop_table_force('tmp_table')
         self.checkout_table(attributes, ridlist, datatable, 'tmp_table', None)
-        sql = "COPY %s (%s) TO '%s' DELIMITER '%s' CSV HEADER;" if header else "COPY %s (%s) TO '%s' DELIMITER '%s' CSV;" 
+        sql = "COPY %s (%s) TO '%s' DELIMITER '%s' CSV HEADER;" if header else "COPY %s (%s) TO '%s' DELIMITER '%s' CSV;"
         sql = sql % ('tmp_table', ','.join(attributes), to_file, delimiters)
         self.conn.cursor.execute(sql)
 
@@ -131,10 +132,6 @@ class RelationManager(object):
         #print sql
         self.conn.cursor.execute(sql)
 
-        #sql = "SELECT %s,rid FROM %s;"%(', '.join(attributes),to_table)
-        # print sql
-        #self.conn.cursor.execute(sql)
-        
 
     def drop_table(self, table_name):
         if not self.check_table_exists(table_name):
@@ -157,22 +154,28 @@ class RelationManager(object):
       self.conn.cursor.execute(select_sql)
       return [x[0] for x in self.conn.cursor.fetchall()]
 
-    # return all records that is in table1 not in table2, with the attributes
-    def select_complement_table(self, table1, table2, attributes=None):
+    def generate_complement_sql(self, table1, view_name, attributes=None):
       if not attributes:
-        sql = "TABLE %s EXCEPT TABLE %s;" % (table1, table2)
+        sql = "TABLE %s EXCEPT TABLE %s" % (table1, view_name)
       else:
-        sql = "(SELECT %s from %s) EXCEPT (SELECT %s from %s);" % (','.join(attributes), table1, ','.join(attributes), table2)
-      self.conn.cursor.execute(sql)
-      return self.conn.cursor.fetchall()
+        sql = "(SELECT %s from %s) EXCEPT (SELECT %s from %s)" % (','.join(attributes), table1, ','.join(attributes), view_name)
+      return sql
 
-    # since the rid is hidden from the user, we need to select only the user visible attributes
-    # perform by using inner join and select the rid, join_attributes is the attributes inner join will be joined on
-    # table2 should be the dataset datatable
-    def select_intersection_table(self, table1, table2, join_attributes, projection='rid'):
+    def create_parent_view(self, datatable, indextable, parent_vlist, view_name):
+      plist = ",".join(parent_vlist)
+      sql = "CREATE VIEW %s AS \
+            SELECT * FROM %s INNER JOIN %s ON rid = ANY(rlist) \
+          WHERE vid = ANY(ARRAY[%s]);" % (view_name, datatable, indextable, plist)
+      self.conn.cursor.execute(sql)
+
+    def drop_view(self, view_name):
+      sql = "DROP VIEW IF EXISTS %s;" % view_name
+      self.conn.cursor.execute(sql)
+
+    def select_intersection_table(self, table1, view_name, join_attributes, projection='rid'):
       # SELECT rid FROM tmp_table INNER JOIN dataset1_datatable ON tmp_table.employee_id=dataset1_datatable.employee_id;
-      join_clause = " AND ".join(["%s.%s=%s.%s" % (table1, attr, table2, attr) for attr in join_attributes])
-      sql = "SELECT %s.%s FROM %s INNER JOIN %s on %s;" % (table2, projection, table1, table2, join_clause)  
+      join_clause = " AND ".join(["%s.%s=%s.%s" % (table1, attr, view_name, attr) for attr in join_attributes])
+      sql = "SELECT %s.%s FROM %s INNER JOIN %s on %s;" % (view_name, projection, table1, view_name, join_clause)
       self.conn.cursor.execute(sql)
       return self.conn.cursor.fetchall()
 
@@ -186,15 +189,15 @@ class RelationManager(object):
       # Use CREATE SQL COMMAND
       print "create_relation: Under Construction."
 
-    # will drop existing table to create the new table 
+    # will drop existing table to create the new table
     def create_relation_force(self, table_name, sample_table, sample_table_attributes=None):
       if self.check_table_exists(table_name):
         self.drop_table(table_name)
       if not sample_table_attributes:
         sample_table_attributes,_ = self.get_datatable_attribute(sample_table)
       # sql = "CREATE TABLE %s ( like %s including all);" % (table_name, sample_table)
-      
-      # an easier approach to create empty table 
+
+      # an easier approach to create empty table
       sql = "CREATE TABLE %s AS SELECT %s FROM %s WHERE 1=2;" % (table_name, ",".join(sample_table_attributes), sample_table)
       self.conn.cursor.execute(sql)
       self.conn.connect.commit()
@@ -213,19 +216,14 @@ class RelationManager(object):
       # print result[0][0]
       return result[0][0]
 
-    def update_datatable(self, datatable_name, records):
-        if not records:
-          return []
-        # print "update_datatable"
-        # modified_id_string = '{' + ', '.join(modified_pk) + '}'
-        _attributes, _attributes_type = self.get_datatable_attribute(datatable_name)
-
-        sql = "INSERT INTO %s (%s) VALUES %s RETURNING rid;" % (datatable_name, ', '.join(_attributes), ','.join(records))
-        self.conn.cursor.execute(sql)
-        new_rids=[t[0] for t in self.conn.cursor.fetchall()]
-        self.conn.connect.commit()
-        # print new_rids
-        return new_rids
+    def update_datatable(self, datatable_name, sql):
+      _attributes, _attributes_type = self.get_datatable_attribute(datatable_name)
+      sql = "INSERT INTO %s (%s) %s RETURNING rid;" % (datatable_name, ', '.join(_attributes), sql)
+      self.conn.cursor.execute(sql)
+      new_rids=[t[0] for t in self.conn.cursor.fetchall()]
+      self.conn.connect.commit()
+      # print new_rids
+      return new_rids
 
     def clean(self):
       print "Clean: Under Construction."#????
@@ -243,10 +241,8 @@ class RelationManager(object):
 
     def select_records_of_version_list(self, vlist, indextable):
         targetv= ','.join(vlist)
-        #print "get rids of version %s" % targetv
         # sql = "SELECT distinct rlist FROM %s WHERE vlist && (ARRAY[%s]);" % (indextable, targetv)
         sql = "SELECT distinct rlist FROM %s WHERE vid = ANY(ARRAY[%s]);" % (indextable, targetv)
-        # print sql
         self.conn.cursor.execute(sql)
         data = [','.join(map(str,x[0])) for x in self.conn.cursor.fetchall()]
         # data

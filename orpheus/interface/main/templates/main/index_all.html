@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+  {% load static %}
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <!-- <link rel="icon" href="../../favicon.ico"> -->
+
+    <title>OrpheusDB Demonstration</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{% static "/dist/css/bootstrap.min.css" %}" rel="stylesheet">
+
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <link href="{% static "/assets/css/ie10-viewport-bug-workaround.css" %}" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="{% static "dashboard.css" %}" rel="stylesheet">
+
+    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    <!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+    <script src="{% static "/assets/js/ie-emulation-modes-warning.js" %}"></script>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+  </head>
+
+  <body>
+     <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="#">OrpheusDB</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="#">Dashboard</a></li>
+            <li><a href="#">Settings</a></li>
+            <li><a href="#">Profile</a></li>
+            <li><a href="#">Help</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+        <div class="col-sm-2 col-md-2 sidebar">
+          <ul class="nav nav-sidebar">
+            <li><a href="#"><strong>Collaborative Versioned Datasets (CVDs)</strong></a></li>
+            <li><a href="#"> - Interaction</a></li>
+            <li><a href="#"> - </a></li>
+            <li><a href="#"> - </a></li>
+          </ul>
+          <ul class="nav nav-sidebar">
+            <li><a href=""> </a></li>
+            <li><a href=""><b>Private Files</b></a></li>
+            <li><a href=""> - Interaction_v1.csv</a></li>
+            <li><a href=""> - Interaction_v4.csv</a></li>
+          </ul>
+          <ul class="nav nav-sidebar">
+            <li><a href=""><b>Private Tables</b></a></li>
+            <li><a href=""> - Interaction_tmp</a></li>
+            <li><a href=""> - </a></li>
+          </ul>
+        </div>
+        <div class="col-sm-5 col-sm-offset-3 col-md-5 col-md-offset-2">
+          <h2 class="sub-header">Command Input</h2>
+            <div class="form-group">
+              <label for="exampleTextarea"></label>
+                <p>Please enter either the SQL or the version control command below:</p>
+                <textarea class="form-control" id="exampleTextarea" rows="5"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <button type="submit" class="btn btn-primary">Explain</button>
+                  
+          <h2 class="sub-header" style="margin-top:50px" >Output Results</h2>
+          <div class="table-responsive">
+            <table class="table table-striped">
+              <thead>
+                <tr>
+                  <th>protein1</th>
+                  <th>protein2</th>
+                  <th>neighbor hood</th>
+                  <th>cooccu rrence</th>
+                  <th>coexpre ssion</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>ENSP273047</td>
+                  <td>ENSP261890</td>
+                  <td>0</td>
+                  <td>53</td>
+                  <td>83</td>
+                </tr>
+                <tr>
+                  <td>ENSP273047</td>
+                  <td>ENSP261890</td>
+                  <td>0</td>
+                  <td>53</td>
+                  <td>83</td>
+                </tr>
+                <tr>
+                  <td>ENSP300413</td>
+                  <td>ENSP274242</td>
+                  <td>426</td>
+                  <td>0</td>
+                  <td>164</td>
+                </tr>
+                <tr>
+                  <td>ENSP300413</td>
+                  <td>ENSP274242</td>
+                  <td>426</td>
+                  <td>0</td>
+                  <td>164</td>
+                </tr>
+                <tr>
+                  <td>ENSP300413</td>
+                  <td>ENSP274242</td>
+                  <td>426</td>
+                  <td>0</td>
+                  <td>164</td>
+                </tr>
+                <tr>
+                  <td>ENSP300413</td>
+                  <td>ENSP274242</td>
+                  <td>426</td>
+                  <td>0</td>
+                  <td>164</td>
+                </tr>
+                <tr>
+                  <td>ENSP309334</td>
+                  <td>ENSP346022</td>
+                  <td>0</td>
+                  <td>227</td>
+                  <td>975</td>
+                </tr>
+                <tr>
+                  <td>ENSP309334</td>
+                  <td>ENSP346022</td>
+                  <td>0</td>
+                  <td>227</td>
+                  <td>975</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="col-sm-5 col-md-5" id = "viz">
+          <h2 class="sub-header">Version Visualization</h2>
+          <script src="http://d3js.org/d3.v3.min.js"></script>
+          <script src="{% static "tree.js" %}"></script>
+
+          <!-- <div class="col-sm-5 col-md-5"> -->
+          
+          <!-- <div class="form-group" style="margin-top:50px"> -->
+          <div class="form-group">
+            <label class="col-sm-offset-1 col-sm-5 col-md-offset-1 col-md-5 control-label">Version Graph of CVD: </label>
+            <div class="col-sm-5 col-md-5 selectContainer">
+              <select class="form-control">
+                <option value="">Interaction</option>
+                <option value="">CVD 2</option>
+                <option value="">CVD 3</option>
+              </select>
+            </div>
+          </div>
+          <div style="margin-top:100px" class="col-sm-offset-2 col-md-offset-2" >
+          <button type="submit" class="btn btn-primary">Checkout</button>
+          <button type="submit" class="btn btn-primary">Query</button>
+          <button type="submit" class="btn btn-primary">Explore</button>
+          <button type="submit" class="btn btn-primary">View</button>
+          <button type="submit" class="btn btn-primary">Diff</button>
+          <button type="submit" class="btn btn-primary">Info</button>
+          </div>
+        </div>
+
+
+
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script>window.jQuery || document.write('<script src="{% static "/assets/js/vendor/jquery.min.js" %}"><\/script>')</script>
+    <script src="{% static "/dist/js/bootstrap.min.js" %}"></script>
+    <!-- Just to make our placeholder images work. Don't actually copy the next line! -->
+    <script src="{% static "/assets/js/vendor/holder.min.js" %}"></script>
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <script src="{% static "/assets/js/ie10-viewport-bug-workaround.js" %}"></script>
+    <script src="http://d3js.org/d3.v3.min.js"></script>
+    
+    
+  </body>
+</html>

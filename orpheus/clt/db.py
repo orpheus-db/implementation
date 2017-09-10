@@ -5,37 +5,10 @@ import psycopg2
 import sys
 import json
 
-from orpheus_sqlparse import SQLParser
-from orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
-from orpheus_const import DATATABLE_SUFFIX, INDEXTABLE_SUFFIX, VERSIONTABLE_SUFFIX, PUBLIC_SCHEMA
-
-# Database Manager exceptions
-class UserNotSetError(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return self.value
-
-class ConnectionError(Exception):
-    def __init__(self, value):
-        self.value = value
-    def __str__(self):
-        return self.value
-
-class OperationError(Exception):
-    def __str__(self):
-        return 'Operation failure, check system parameters'
-
-class DatasetExistsError(Exception):
-    def __init__(self, value, user):
-        self.value = value
-        self.user = user
-    def __str__(self):
-        return 'Dataset %s exists under user %s' % (self.value, self.user)
-
-class SQLSyntaxError(Exception):
-    def __str__(self):
-        return 'Error during executing sql, please revise!'
+from orpheus.core.orpheus_sqlparse import SQLParser
+from orpheus.core.orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
+import orpheus.core.orpheus_const as const
+from orpheus.core.db import UserNotSetError, ConnectionError, OperationError, DatasetExistsError, SQLSyntaxError
 
 class DatabaseManager():
     def __init__(self, config):
@@ -58,7 +31,7 @@ class DatabaseManager():
 
 
     def connect_db(self):
-        print "Connecting to DB %s" % self.currentDB
+        print "Connecting to the database [%s] ..." % self.currentDB
         try:
             if self.verbose:
                 click.echo('Trying to connect to %s' % (self.currentDB))
@@ -68,7 +41,7 @@ class DatabaseManager():
         except psycopg2.OperationalError as e:
             logging.error('%s is not open' % (self.currentDB))
             # click.echo(e, file=sys.stderr)
-            raise ConnectionError("Cannot connect to Database %s @ %s:%s. Check connection, username, password and database name." % (self.currentDB, self.config['host'], self.config['port']))
+            raise ConnectionError("Cannot connect to the database [%s] @ [%s]:[%s]. Check connection, username, password and database name." % (self.currentDB, self.config['host'], self.config['port']))
         return self
 
     def execute_sql(self, sql):
@@ -80,9 +53,9 @@ class DatabaseManager():
                 for row in self.cursor.fetchall():
                     print ', '.join(str(e) for e in row)
             else:
-                print self.cursor.statusmessage 
+                print self.cursor.statusmessage
             self.connect.commit() # commit UPDATE/INSERT messages
-            
+
         except psycopg2.ProgrammingError:
             raise SQLSyntaxError()
 
@@ -92,13 +65,13 @@ class DatabaseManager():
 
 
     # schema is a list of tuple of (attribute_name, attribute_type) as string
-    def create_dataset(self, inputfile, dataset, schema, header=False, attributes=None): 
+    def create_dataset(self, inputfile, dataset, schema, header=False, attributes=None):
         self.refresh_cursor()
-        print "Creating dataset %s to %s" % (dataset, self.currentDB)
+        print "Creating the dataset [%s] to the database [%s] ..." % (dataset, self.currentDB)
         # create a schema (in postgres) to store user specific information
         try:
-            self.cursor.execute("CREATE SCHEMA %s;" % self.user)
-            self.cursor.execute("CREATE TABLE %s (dataset_name text primary key);" % (self.user + '.datasets'))
+            self.cursor.execute("CREATE SCHEMA IF NOT EXISTS %s ;" % self.user)
+            self.cursor.execute("CREATE TABLE IF NOT EXISTS %s (dataset_name text primary key);" % (self.user + '.datasets'))
         except psycopg2.ProgrammingError:
             # this is ok since table has been created before
             self.refresh_cursor()
@@ -117,7 +90,7 @@ class DatabaseManager():
             # dataset_version, which keep track of all version information, like version
             # dataset_indexTbl, which includes all the vid and rid mapping, like indexTbl
 
-            
+
             if '.csv' not in inputfile:
                 # TODO: finish other input later
                 raise NotImplementedError("Loading other than CSV file not implemented!")
@@ -130,12 +103,12 @@ class DatabaseManager():
             # create cvd into public schema
             #TODO: change to private schema in later version
 
-            print "Creating datatable using the schema provided"
+            print "Creating the data table using the schema provided ..."
             # create datatable
             self.cursor.execute("CREATE TABLE %s (rid serial primary key, \
-                                                  %s);" % (PUBLIC_SCHEMA + dataset + DATATABLE_SUFFIX, ",".join(map(lambda (attribute_name, attribute_type) : attribute_name + " " + attribute_type, schema))))
+                                                  %s);" % (const.PUBLIC_SCHEMA + dataset + const.DATATABLE_SUFFIX, ",".join(map(lambda (attribute_name, attribute_type) : attribute_name + " " + attribute_type, schema))))
 
-            print "Creating version table"
+            print "Creating the version table ..."
             # create version table
             self.cursor.execute("CREATE TABLE %s(vid int primary key, \
                                                  author text, \
@@ -144,20 +117,19 @@ class DatabaseManager():
                                                  children integer[], \
                                                  create_time timestamp, \
                                                  commit_time timestamp, \
-                                                 commit_msg text);" % (PUBLIC_SCHEMA + dataset + VERSIONTABLE_SUFFIX))
+                                                 commit_msg text);" % (const.PUBLIC_SCHEMA + dataset + const.VERSIONTABLE_SUFFIX))
 
-            print "Creating index table"
+            print "Creating the index table ..."
             # create indexTbl table
-            self.cursor.execute("CREATE TABLE %s (vid int, \
-                                                  rlist integer[]);" % (PUBLIC_SCHEMA + dataset + INDEXTABLE_SUFFIX))
+            self.cursor.execute("CREATE TABLE %s (vid int primary key, \
+                                                  rlist integer[]);" % (const.PUBLIC_SCHEMA + dataset + const.INDEXTABLE_SUFFIX))
 
             # dump data into this dataset
             file_path = self.config['orpheus_home'] + inputfile
-
             if header:
-                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV HEADER;" % (PUBLIC_SCHEMA + dataset + DATATABLE_SUFFIX, ",".join(attributes), file_path))
+                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV HEADER;" % (const.PUBLIC_SCHEMA + dataset + const.DATATABLE_SUFFIX, ",".join(attributes), file_path))
             else:
-                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV;" % (PUBLIC_SCHEMA + dataset + DATATABLE_SUFFIX, ",".join(attributes), file_path))
+                self.cursor.execute("COPY %s (%s) FROM '%s' DELIMITER ',' CSV;" % (const.PUBLIC_SCHEMA + dataset + const.DATATABLE_SUFFIX, ",".join(attributes), file_path))
 
 
             self.connect.commit()
@@ -169,19 +141,19 @@ class DatabaseManager():
         self.refresh_cursor()
         # TODO: refactor for better approach?
         try:
-            self.cursor.execute("DROP table %s;" % (PUBLIC_SCHEMA + dataset + DATATABLE_SUFFIX))
-            self.connect.commit()
-        except:
-            self.refresh_cursor()
-            
-        try:
-            self.cursor.execute("DROP table %s;" % (PUBLIC_SCHEMA + dataset + VERSIONTABLE_SUFFIX))
+            self.cursor.execute("DROP table %s;" % (const.PUBLIC_SCHEMA + dataset + const.DATATABLE_SUFFIX))
             self.connect.commit()
         except:
             self.refresh_cursor()
 
         try:
-            self.cursor.execute("DROP table %s;" % (PUBLIC_SCHEMA + dataset + INDEXTABLE_SUFFIX))
+            self.cursor.execute("DROP table %s;" % (const.PUBLIC_SCHEMA + dataset + const.VERSIONTABLE_SUFFIX))
+            self.connect.commit()
+        except:
+            self.refresh_cursor()
+
+        try:
+            self.cursor.execute("DROP table %s;" % (const.PUBLIC_SCHEMA + dataset + const.INDEXTABLE_SUFFIX))
             self.connect.commit()
         except:
             self.refresh_cursor()
@@ -200,7 +172,7 @@ class DatabaseManager():
             self.cursor.execute("SELECT * from %s;" % (self.user + '.datasets'))
             return [x[0] for x in self.cursor.fetchall()]
         except psycopg2.ProgrammingError:
-            raise BadStateError("No dataset has been initalized before, try init first")
+            raise BadStateError("No dataset has been initialized before, try init first")
         return
 
     def show_dataset(self, dataset):
@@ -215,7 +187,7 @@ class DatabaseManager():
             with open('config.yaml', 'r') as f:
                 obj = yaml.load(f)
         except IOError:
-            raise sys_exception.BadStateError("config.yaml file not found or data not clean, abort")
+            raise BadStateError("config.yaml file not found or data not clean, abort")
             return None
         return obj
 

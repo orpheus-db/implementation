@@ -88,7 +88,7 @@ class SQLParser(object):
 			return None
 
 
-	# return the first occurence of verions (1,2), OF cvd (ds1)
+	# return the first occurrence of versions (1,2), OF cvd (ds1)
 	def get_dataset_name_and_versions(self, parent):
 		tokens = list(parent.flatten())
 		parent, dataset_name, version_idx, vlist = None, None, None, None
@@ -106,7 +106,7 @@ class SQLParser(object):
 		dataset_name = parent.tokens[version_idx + 6].value.split()[-1]
 		return vlist, dataset_name, parent, version_idx
 
-	# find the first occurence of CVD, return the name of CVD, its handle and index
+	# find the first occurrence of CVD, return the name of CVD, its handle and index
 	def find_cvd_handle(self, parent):
 		tokens = list(parent.flatten())
 		parent, dataset_name, cvd_index = None, None, None
@@ -130,7 +130,7 @@ class SQLParser(object):
 		if item.ttype is DML and item.value.upper() == 'SELECT':
 			return True
 		return False
-	
+
 
 
 	# find the Where clause index under parent.tokens
@@ -145,7 +145,7 @@ class SQLParser(object):
 	def find_where_insert(self, parent):
 		lis = parent.tokens
 		for i,token in enumerate(lis):
-			if token.value == 'group' or token.value == 'order':
+			if token.value == 'group' or token.value == 'order' or token.value == 'limit':
 				return i - 1 # anything that before group by or order by, -1 for the space
 		return len(lis) if lis[-1].value != ')' and lis[-1].value != ';' else len(lis) - 1
 

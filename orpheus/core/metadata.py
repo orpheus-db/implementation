@@ -2,9 +2,11 @@ import json
 import datetime
 import orpheus_exceptions as sys_exception
 
+from helper import Print
+
 class MetadataManager(object):
     #TODO: refactor this class to static class for performance issue
-    def __init__(self, config):
+    def __init__(self, config,request = None):
     # def __init__(self,user):
         # file path is in some format of 'user'.
         # The simpliest is "~/user/"
@@ -12,6 +14,7 @@ class MetadataManager(object):
             self.file_path = ".."
             self.meta_info = config['meta_info']
             self.meta_modifiedIds = config['meta_modifiedIds']
+            self.p = Print(request)
         except KeyError as e:
             raise sys_exception.BadStateError("Context missing field %s, abort" % e.args[0])
 
@@ -28,7 +31,7 @@ class MetadataManager(object):
         f = open(self.meta_info, 'w')
         f.write(json.dumps(new_meta))
         f.close()
-        print "Metadata committed"
+        self.p.pmessage("Metadata committed")
 
     # can change to static method
     def update(self, to_table, to_file, dataset, vlist, old_meta):
@@ -39,7 +42,8 @@ class MetadataManager(object):
         # return old_meta
 
     def update_tablemap(self, to_table, dataset, vlist, old_meta):
-        print "Update metadata."
+        self.p.pmessage("Update metadata.")
+
         old_meta['table_map'][to_table] = dataset, vlist
         old_meta['table_created_time'][to_table] = str(datetime.datetime.now())
         # self.commit_meta(_meta)
@@ -78,9 +82,25 @@ class MetadataManager(object):
             # print type(parent_vid_lis[1])
             # parent_vid = "\'{%s}\'" % ",".join(str(x) for x in parent_vid_lis)
             return parent_vid_lis
-        except KeyError:
+        except KeyError as e:
             raise sys_exception.BadStateError("Metadata information missing field %s, abort" % e.args[0])
             return None
+
+
+    def update_parent_id(self,table_name, dataset, pvid, mapping='table_map'):
+        plist = [str(pvid)]
+        try:
+            _meta = self.load_meta()
+            #print "mapping %s " % mapping
+            _meta[mapping][table_name] = dataset, plist
+            #print _meta
+            # print type(parent_vid_lis)
+            # print type(parent_vid_lis[1])
+            # parent_vid = "\'{%s}\'" % ",".join(str(x) for x in parent_vid_lis)
+            self.commit_meta(_meta)
+        except KeyError as e:
+            raise sys_exception.BadStateError("Metadata information missing field %s, abort" % e.args[0])
+            return
 
     def load_table_create_time(self,table_name):
         # load the table creat time

@@ -38,7 +38,7 @@ class UserManager(object):
 		}
 		#if password:
 		passphrase = EncryptionTool.passphrase_hash(password)
-		user_obj['passphrase'] = passphrase	
+		user_obj['passphrase'] = passphrase
 
 		user_directory = '/'.join([cls.user_path(),user])
 		makedirs(user_directory) # make the directory, need to check if have permission
@@ -50,7 +50,7 @@ class UserManager(object):
 	# this method is very dangrous! use caution
 	@classmethod
 	def delete_user(cls, user, password):
-		pass 
+		pass
 
 
 	@classmethod
