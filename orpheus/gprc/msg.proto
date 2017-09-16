@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+service Orpheus {
+    rpc Init(InitRequest) returns (BasicReply) {}
+    rpc List(Empty) returns (BasicReply) {}
+    rpc Drop(DropRequest) returns (BasicReply) {}
+}
+
+message Empty {
+}
+
+message Record {
+    repeated string vals = 1;
+}
+
+message InitRequest {
+    string datafile = 1;
+    string cvd = 2;
+    string schema = 3;
+}
+
+message DropRequest {
+    string cvd = 1;
+}
+
+message BasicReply{
+    string msg = 1;
+}

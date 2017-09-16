@@ -1,0 +1,3 @@
+employee_id,int
+age,int
+salary,int
