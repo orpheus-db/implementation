@@ -38,5 +38,5 @@ ehthumbs.db
 Thumbs.db
 
 # Orpheus related files #
-.meta/*
+.meta/users
 .meta/logs/log.out
