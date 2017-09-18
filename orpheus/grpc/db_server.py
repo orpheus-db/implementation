@@ -85,7 +85,7 @@ class Orpheus(msg_pb2_grpc.OrpheusServicer):
             info = str(e)
         ret = msg_pb2.BasicReply(msg="%s" % (info))
         return ret
-    
+
     def run(self, request, context):
         conf = self.config(context)
         conn = self.connect_db(conf)
@@ -116,11 +116,11 @@ class Orpheus(msg_pb2_grpc.OrpheusServicer):
         conn = self.connect_db(conf)
         executor = Executor(conf)
         cvd = request.cvd
-        
+
         vlist = ()
         for v in request.version.vals:
             vlist = vlist + (str(v),)
-        
+
         to_table = request.table
         to_file = request.file
         delimiters = request.delimiters
@@ -129,7 +129,7 @@ class Orpheus(msg_pb2_grpc.OrpheusServicer):
         if to_table == '':
             to_table = None
         if to_file == '':
-            to_file = None    
+            to_file = None
         if delimiters == '':
             delimiters = ','
 
@@ -156,7 +156,7 @@ class Orpheus(msg_pb2_grpc.OrpheusServicer):
         executor.exec_commit(msg, table_name, file_name, delimiters, header, conn)
 
         return msg_pb2.BasicReply(msg='Commit successfully.')
-        
+
 def serve():
     server_credentials = grpc.ssl_server_credentials(((private_key, certificate_chain,),))
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
