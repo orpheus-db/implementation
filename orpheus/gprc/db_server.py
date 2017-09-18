@@ -4,6 +4,7 @@ import grpc
 import msg_pb2
 import msg_pb2_grpc
 from db_manager import DatabaseManager
+from orpheus.core.orpheus_sqlparse import SQLParser
 from orpheus.core.executor import Executor
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
@@ -22,19 +23,19 @@ class Orpheus(msg_pb2_grpc.OrpheusServicer):
         conf['host'] = 'localhost'
         conf['port'] = 5432
         conf['orpheus_home'] = '/Users/sixpluszero/work/implementation/'
-        conf['log_path'] = '.meta/logs/log.out'
-        conf['user_log'] = '.meta/user_log'
-        conf['commit_path'] = '.meta/commit_tables'
-        conf['meta_info'] = '.meta/tracker'
-        conf['meta_modifiedIds'] = '.meta/modified'
-        conf['vGraph_json'] = '.meta/vGraph_json'
+        conf['log_path'] = conf['orpheus_home'] + '.meta/logs/log.out'
+        conf['user_log'] = conf['orpheus_home'] + '.meta/user_log'
+        conf['commit_path'] = conf['orpheus_home'] + '.meta/commit_tables'
+        conf['meta_info'] = conf['orpheus_home'] + '.meta/tracker'
+        conf['meta_modifiedIds'] = conf['orpheus_home'] + '.meta/modified'
+        conf['vGraph_json'] = conf['orpheus_home'] + '.meta/vGraph_json'
         return conf
 
     def connect_db(self, conf):
         conn = DatabaseManager(conf)
         return conn
 
-    def Init(self, request, context):
+    def init(self, request, context):
         conf = self.config(context)
         conn = self.connect_db(conf)
         executor = Executor(conf)
@@ -48,14 +49,14 @@ class Orpheus(msg_pb2_grpc.OrpheusServicer):
         ret = msg_pb2.BasicReply(msg=err_info)
         return ret
 
-    def List(self, request, context):
+    def list(self, request, context):
         conf = self.config(context)
         conn = self.connect_db(conf)
         res = conn.list_dataset()
         ret = msg_pb2.BasicReply(msg="%s" % (res))
         return ret
 
-    def Drop(self, request, context):
+    def drop(self, request, context):
         conf = self.config(context)
         conn = self.connect_db(conf)
         executor = Executor(conf)
@@ -66,7 +67,78 @@ class Orpheus(msg_pb2_grpc.OrpheusServicer):
             info = str(e)
         ret = msg_pb2.BasicReply(msg="%s" % (info))
         return ret
+    
+    def run(self, request, context):
+        conf = self.config(context)
+        conn = self.connect_db(conf)
+        parser = SQLParser(conn)
+        #executor = Executor(conf)
+        executable_sql = parser.parse(request.query)
+        print executable_sql
+        ret = msg_pb2.RunReply()
+        try:
+            result = conn.execute_sql(executable_sql)
+            if parser.is_select(executable_sql):
+                for row in result:
+                    row_msg = msg_pb2.Record()
+                    for col in row:
+                        row_msg.columns.append(col)
+                    ret.data.rows.extend([row_msg])
+                ret.msg = "Query processed successfully."
+            else:
+                ret.msg = result
+        except Exception as e:
+            #import traceback
+            ret.msg = "Error in execution, please revise.\n"
+            #traceback.print_exc()
+        return ret
 
+    def checkout(self, request, context):
+        conf = self.config(context)
+        conn = self.connect_db(conf)
+        executor = Executor(conf)
+        cvd = request.cvd
+        
+        vlist = ()
+        for v in request.version.vals:
+            vlist = vlist + (str(v),)
+        
+        to_table = request.table
+        to_file = request.file
+        delimiters = request.delimiters
+        header = request.header
+        ignore = request.ignore
+        if to_table == '':
+            to_table = None
+        if to_file == '':
+            to_file = None    
+        if delimiters == '':
+            delimiters = ','
+
+        executor.exec_checkout(cvd, vlist, to_table, to_file, delimiters, header, ignore, conn)
+
+        return msg_pb2.BasicReply(msg='Checkout successfully.')
+
+    def commit(self, request, context):
+        conf = self.config(context)
+        conn = self.connect_db(conf)
+        executor = Executor(conf)
+        msg = request.message
+        table_name = request.table
+        file_name = request.file
+        delimiters = request.delimiters
+        header = request.header
+        if table_name == '':
+            table_name = None
+        if file_name == '':
+            file_name = None
+        if delimiters == '':
+            delimiters = ','
+
+        executor.exec_commit(msg, table_name, file_name, delimiters, header, conn)
+
+        return msg_pb2.BasicReply(msg='Commit successfully.')
+        
 def serve():
     server_credentials = grpc.ssl_server_credentials(((private_key, certificate_chain,),))
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))

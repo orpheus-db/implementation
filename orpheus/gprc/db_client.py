@@ -15,17 +15,36 @@ def run():
     channel = grpc.secure_channel('localhost:50051', creds)
     stub = msg_pb2_grpc.OrpheusStub(channel)
     metadata = [(b'db', b'sixpluszero'), (b'user', b'sixpluszero'), (b'password', b'')]
-    '''
-    response = stub.Init(request=msg_pb2.InitRequest(datafile = "test/data.csv", cvd = "dataset6", schema = "test/sample_schema.csv"), metadata=metadata)
+    
+    response = stub.list(request=msg_pb2.Empty(), metadata=metadata)
     print(response.msg)
-    response = stub.List(request=msg_pb2.Empty(), metadata=metadata)
+
+    response = stub.drop(request=msg_pb2.DropRequest(cvd="dataset7"), metadata=metadata)
     print(response.msg)
-    '''
-    '''
-    response = stub.Drop(request=msg_pb2.DropRequest(cvd="dataset6"), metadata=metadata)
+
+    response = stub.list(request=msg_pb2.Empty(), metadata=metadata)
     print(response.msg)
-    '''
-    response = stub.List(request=msg_pb2.Empty(), metadata=metadata)
+
+    response = stub.init(request=msg_pb2.InitRequest(datafile = "test/data.csv", cvd = "dataset7", schema = "test/sample_schema.csv"), metadata=metadata)
+    print(response.msg)
+
+
+    versions = msg_pb2.Versions()
+    versions.vals.append(1)
+    response = stub.checkout(request = msg_pb2.CheckoutRequest(cvd = 'dataset7', version = versions, file = 'checkout6.csv'), metadata=metadata)
+    print(response.msg)
+
+    
+    response = stub.commit(request = msg_pb2.CommitRequest(file = 'checkout6.csv', message = 'this is my checkout'), metadata=metadata)
+    
+    query = "SELECT employee_id, age FROM VERSION 1,2 OF CVD dataset1"
+    response = stub.run(request = msg_pb2.RunRequest(query = query), metadata=metadata)
+
+    for row in response.data.rows:
+        row_str = [(col) for col in row.columns]
+        print(row_str)
+
+    response = stub.drop(request=msg_pb2.DropRequest(cvd="dataset7"), metadata=metadata)
     print(response.msg)
 
 if __name__ == '__main__':

@@ -32,12 +32,17 @@ class DatabaseManager():
         try:
             self.cursor.execute(sql)
             if SQLParser.is_select(sql): #return records
+                '''
                 colnames = [desc[0] for desc in self.cursor.description]
                 print ', '.join(colnames)
                 for row in self.cursor.fetchall():
                     print ', '.join(str(e) for e in row)
+                '''
+                return [[str(e) for e in row] for row in self.cursor.fetchall()]
+                    
             else:
-                print self.cursor.statusmessage
+                return self.cursor.statusmessage
+                #print self.cursor.statusmessage
             self.connect.commit() # commit UPDATE/INSERT messages
 
         except psycopg2.ProgrammingError:

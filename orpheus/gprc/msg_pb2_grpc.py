@@ -14,20 +14,35 @@ class OrpheusStub(object):
     Args:
       channel: A grpc.Channel.
     """
-    self.Init = channel.unary_unary(
-        '/Orpheus/Init',
+    self.init = channel.unary_unary(
+        '/Orpheus/init',
         request_serializer=msg__pb2.InitRequest.SerializeToString,
         response_deserializer=msg__pb2.BasicReply.FromString,
         )
-    self.List = channel.unary_unary(
-        '/Orpheus/List',
+    self.list = channel.unary_unary(
+        '/Orpheus/list',
         request_serializer=msg__pb2.Empty.SerializeToString,
         response_deserializer=msg__pb2.BasicReply.FromString,
         )
-    self.Drop = channel.unary_unary(
-        '/Orpheus/Drop',
+    self.drop = channel.unary_unary(
+        '/Orpheus/drop',
         request_serializer=msg__pb2.DropRequest.SerializeToString,
         response_deserializer=msg__pb2.BasicReply.FromString,
+        )
+    self.checkout = channel.unary_unary(
+        '/Orpheus/checkout',
+        request_serializer=msg__pb2.CheckoutRequest.SerializeToString,
+        response_deserializer=msg__pb2.BasicReply.FromString,
+        )
+    self.commit = channel.unary_unary(
+        '/Orpheus/commit',
+        request_serializer=msg__pb2.CommitRequest.SerializeToString,
+        response_deserializer=msg__pb2.BasicReply.FromString,
+        )
+    self.run = channel.unary_unary(
+        '/Orpheus/run',
+        request_serializer=msg__pb2.RunRequest.SerializeToString,
+        response_deserializer=msg__pb2.RunReply.FromString,
         )
 
 
@@ -35,21 +50,42 @@ class OrpheusServicer(object):
   # missing associated documentation comment in .proto file
   pass
 
-  def Init(self, request, context):
+  def init(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def List(self, request, context):
+  def list(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
-  def Drop(self, request, context):
+  def drop(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def checkout(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def commit(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
+  def run(self, request, context):
     # missing associated documentation comment in .proto file
     pass
     context.set_code(grpc.StatusCode.UNIMPLEMENTED)
@@ -59,20 +95,35 @@ class OrpheusServicer(object):
 
 def add_OrpheusServicer_to_server(servicer, server):
   rpc_method_handlers = {
-      'Init': grpc.unary_unary_rpc_method_handler(
-          servicer.Init,
+      'init': grpc.unary_unary_rpc_method_handler(
+          servicer.init,
           request_deserializer=msg__pb2.InitRequest.FromString,
           response_serializer=msg__pb2.BasicReply.SerializeToString,
       ),
-      'List': grpc.unary_unary_rpc_method_handler(
-          servicer.List,
+      'list': grpc.unary_unary_rpc_method_handler(
+          servicer.list,
           request_deserializer=msg__pb2.Empty.FromString,
           response_serializer=msg__pb2.BasicReply.SerializeToString,
       ),
-      'Drop': grpc.unary_unary_rpc_method_handler(
-          servicer.Drop,
+      'drop': grpc.unary_unary_rpc_method_handler(
+          servicer.drop,
           request_deserializer=msg__pb2.DropRequest.FromString,
           response_serializer=msg__pb2.BasicReply.SerializeToString,
+      ),
+      'checkout': grpc.unary_unary_rpc_method_handler(
+          servicer.checkout,
+          request_deserializer=msg__pb2.CheckoutRequest.FromString,
+          response_serializer=msg__pb2.BasicReply.SerializeToString,
+      ),
+      'commit': grpc.unary_unary_rpc_method_handler(
+          servicer.commit,
+          request_deserializer=msg__pb2.CommitRequest.FromString,
+          response_serializer=msg__pb2.BasicReply.SerializeToString,
+      ),
+      'run': grpc.unary_unary_rpc_method_handler(
+          servicer.run,
+          request_deserializer=msg__pb2.RunRequest.FromString,
+          response_serializer=msg__pb2.RunReply.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

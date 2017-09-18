@@ -1,16 +1,37 @@
 syntax = "proto3";
 
 service Orpheus {
-    rpc Init(InitRequest) returns (BasicReply) {}
-    rpc List(Empty) returns (BasicReply) {}
-    rpc Drop(DropRequest) returns (BasicReply) {}
+    rpc init(InitRequest) returns (BasicReply) {}
+    rpc list(Empty) returns (BasicReply) {}
+    rpc drop(DropRequest) returns (BasicReply) {}
+    rpc checkout(CheckoutRequest) returns (BasicReply) {}
+    rpc commit(CommitRequest) returns (BasicReply) {}
+    rpc run(RunRequest) returns (RunReply) {}
+    
 }
 
 message Empty {
 }
 
+message BasicReply{
+    string msg = 1;
+}
+
 message Record {
-    repeated string vals = 1;
+    repeated string columns = 1;
+}
+
+message Records {
+    repeated Record rows = 1;
+}
+
+message RunRequest {
+    string query = 1;
+}
+
+message RunReply {
+    string msg = 1;
+    Records data = 2;
 }
 
 message InitRequest {
@@ -23,6 +44,24 @@ message DropRequest {
     string cvd = 1;
 }
 
-message BasicReply{
-    string msg = 1;
+message Versions {
+    repeated int32 vals = 1;
+}
+
+message CheckoutRequest {
+    string cvd = 1;
+    Versions version = 2;
+    string file = 3;
+    string table = 4;
+    string delimiters = 5;
+    bool header = 6;
+    bool ignore = 7;
+}
+
+message CommitRequest {
+    string file = 1;
+    string table = 2;
+    string message = 3;
+    string delimiters = 5;
+    bool header = 6;
 }
