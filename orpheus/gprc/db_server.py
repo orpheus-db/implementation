@@ -44,20 +44,10 @@ class Orpheus(msg_pb2_grpc.OrpheusServicer):
         except: # unknown error
             raise BadStateError("Unknown error during loading the config file, abort")
             return
-        conf_arr = context.invocation_metadata()
-        conf = {}
-        for i in conf_arr:
-            conf[i[0]] = i[1]
-        conf['host'] = 'localhost'
-        conf['port'] = 5432
-        conf['orpheus_home'] = self.config_yaml['orpheus_home']
-        conf['log_path'] = conf['orpheus_home'] + self.config_yaml['log_path']
-        conf['user_log'] = conf['orpheus_home'] + self.config_yaml['user_log']
-        conf['commit_path'] = conf['orpheus_home'] + self.config_yaml['commit_path']
-        conf['meta_info'] = conf['orpheus_home'] + self.config_yaml['meta_info']
-        conf['meta_modifiedIds'] = conf['orpheus_home'] + self.config_yaml['meta_modifiedIds']
-        conf['vGraph_json'] = conf['orpheus_home'] + self.config_yaml['vGraph_json']
-        return conf
+
+        for info in context.invocation_metadata():
+            self.config_yaml[info[0]] = info[1]
+        return self.config_yaml
 
     def connect_db(self, conf):
         conn = DatabaseManager(conf)
