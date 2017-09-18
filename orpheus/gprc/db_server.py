@@ -3,9 +3,13 @@ import time
 import grpc
 import msg_pb2
 import msg_pb2_grpc
+import os
+import yaml
 from db_manager import DatabaseManager
 from orpheus.core.orpheus_sqlparse import SQLParser
 from orpheus.core.executor import Executor
+from orpheus.core.orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
+
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
@@ -14,21 +18,45 @@ with open('server.key') as f:
 with open('server.crt') as f:
     certificate_chain = f.read()
 
-class Orpheus(msg_pb2_grpc.OrpheusServicer):    
+class Orpheus(msg_pb2_grpc.OrpheusServicer):
     def config(self, context):
+        self.config_file = 'config.yaml'
+        if 'ORPHEUS_HOME' not in os.environ:
+            os.environ['ORPHEUS_HOME'] = os.getcwd()
+        self.config_path = os.environ['ORPHEUS_HOME'] + '/' + self.config_file
+        try:
+            with open(self.config_path, 'r') as f:
+                self.config_yaml = yaml.load(f)
+
+            assert(self.config_yaml['orpheus_home'] != None)
+
+            if not self.config_yaml['orpheus_home'].endswith("/"):
+                self.config_yaml['orpheus_home'] += "/"
+            # if user overwrite the ORPHEUS_HOME, rewrite the enviormental parameters
+            if 'orpheus_home' in self.config_yaml:
+                os.environ['ORPHEUS_HOME'] = self.config_yaml['orpheus_home']
+        except (IOError, KeyError) as e:
+            raise BadStateError("config.yaml file not found or data not clean, abort")
+            return
+        except AssertionError as e:
+            raise BadStateError("orpheus_home not specified in config.yaml")
+            return
+        except: # unknown error
+            raise BadStateError("Unknown error during loading the config file, abort")
+            return
         conf_arr = context.invocation_metadata()
         conf = {}
         for i in conf_arr:
             conf[i[0]] = i[1]
         conf['host'] = 'localhost'
         conf['port'] = 5432
-        conf['orpheus_home'] = '/Users/sixpluszero/work/implementation/'
-        conf['log_path'] = conf['orpheus_home'] + '.meta/logs/log.out'
-        conf['user_log'] = conf['orpheus_home'] + '.meta/user_log'
-        conf['commit_path'] = conf['orpheus_home'] + '.meta/commit_tables'
-        conf['meta_info'] = conf['orpheus_home'] + '.meta/tracker'
-        conf['meta_modifiedIds'] = conf['orpheus_home'] + '.meta/modified'
-        conf['vGraph_json'] = conf['orpheus_home'] + '.meta/vGraph_json'
+        conf['orpheus_home'] = self.config_yaml['orpheus_home']
+        conf['log_path'] = conf['orpheus_home'] + self.config_yaml['log_path']
+        conf['user_log'] = conf['orpheus_home'] + self.config_yaml['user_log']
+        conf['commit_path'] = conf['orpheus_home'] + self.config_yaml['commit_path']
+        conf['meta_info'] = conf['orpheus_home'] + self.config_yaml['meta_info']
+        conf['meta_modifiedIds'] = conf['orpheus_home'] + self.config_yaml['meta_modifiedIds']
+        conf['vGraph_json'] = conf['orpheus_home'] + self.config_yaml['vGraph_json']
         return conf
 
     def connect_db(self, conf):
