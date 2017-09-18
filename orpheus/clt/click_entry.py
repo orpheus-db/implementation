@@ -149,7 +149,7 @@ def ls(ctx, dataset, table_name):
     # if no dataset specified, show the list of dataset the current user owns
     try:
         conn = DatabaseManager(ctx.obj)
-        print "The current database contains the following CVDs:\n"
+        print "The current database contains the following CVDs:"
         if not dataset:
             click.echo("\n".join(conn.list_dataset()))
         else:
