@@ -93,6 +93,7 @@ class Executor(object):
         graph.delete_vGraph_json(dataset)
 
     def exec_checkout(self, dataset, vlist, to_table, to_file, delimiters, header, ignore, conn):
+        
         if not to_table and not to_file:
             self.p.perror(str(BadParametersError("Need a destination, either a table (-t) or a file (-f)")))
             return
@@ -127,6 +128,7 @@ class Executor(object):
             return
 
     def exec_commit(self, message, table_name, file_name, delimiters, header, conn):
+
         # sanity check
         if not table_name and not file_name:
             self.p.perror(str(BadParametersError("Need a source, either a table (-t) or a file (-f)")))

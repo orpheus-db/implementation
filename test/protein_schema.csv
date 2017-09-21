@@ -1,0 +1,10 @@
+protein1,text
+protein2,text
+neighborhood,int
+fusion,int
+cooccurence,int
+coexpression,int
+experimental,int
+database ,int
+textmining,int
+combined_score,int

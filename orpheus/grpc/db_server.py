@@ -63,7 +63,7 @@ class Orpheus(msg_pb2_grpc.OrpheusServicer):
         except Exception as e:
             err_info = str(e)
         if err_info == "":
-            err_info = "%s created successfully" % (request.datafile)
+            err_info = "%s is created successfully" % (request.cvd)
         ret = msg_pb2.BasicReply(msg=err_info)
         return ret
 
@@ -78,7 +78,7 @@ class Orpheus(msg_pb2_grpc.OrpheusServicer):
         conf = self.config(context)
         conn = self.connect_db(conf)
         executor = Executor(conf)
-        info = "%s dropped successfully" % (request.cvd)
+        info = "%s is dropped successfully" % (request.cvd)
         try:
             executor.exec_drop(request.cvd, conn)
         except Exception as e:
@@ -92,7 +92,7 @@ class Orpheus(msg_pb2_grpc.OrpheusServicer):
         parser = SQLParser(conn)
         #executor = Executor(conf)
         executable_sql = parser.parse(request.query)
-        print executable_sql
+        #print executable_sql
         ret = msg_pb2.RunReply()
         try:
             result = conn.execute_sql(executable_sql)
@@ -102,12 +102,12 @@ class Orpheus(msg_pb2_grpc.OrpheusServicer):
                     for col in row:
                         row_msg.columns.append(col)
                     ret.data.rows.extend([row_msg])
-                ret.msg = "Query processed successfully."
+                ret.msg = "The query is processed successfully."
             else:
                 ret.msg = result
         except Exception as e:
             #import traceback
-            ret.msg = "Error in execution, please revise.\n"
+            ret.msg = "There are errors in the query execution, please revise.\n"
             #traceback.print_exc()
         return ret
 
@@ -123,19 +123,13 @@ class Orpheus(msg_pb2_grpc.OrpheusServicer):
 
         to_table = request.table
         to_file = request.file
-        delimiters = request.delimiters
+        delimiters = request.delimiters or ","
         header = request.header
         ignore = request.ignore
-        if to_table == '':
-            to_table = None
-        if to_file == '':
-            to_file = None
-        if delimiters == '':
-            delimiters = ','
 
         executor.exec_checkout(cvd, vlist, to_table, to_file, delimiters, header, ignore, conn)
 
-        return msg_pb2.BasicReply(msg='Checkout successfully.')
+        return msg_pb2.BasicReply(msg='%s is checked out successfully.' % (to_table or to_file))
 
     def commit(self, request, context):
         conf = self.config(context)
@@ -144,18 +138,13 @@ class Orpheus(msg_pb2_grpc.OrpheusServicer):
         msg = request.message
         table_name = request.table
         file_name = request.file
-        delimiters = request.delimiters
+        delimiters = request.delimiters or ","
         header = request.header
-        if table_name == '':
-            table_name = None
-        if file_name == '':
-            file_name = None
-        if delimiters == '':
-            delimiters = ','
+
 
         executor.exec_commit(msg, table_name, file_name, delimiters, header, conn)
 
-        return msg_pb2.BasicReply(msg='Commit successfully.')
+        return msg_pb2.BasicReply(msg='%s is committed successfully.' % (table_name or file_name))
 
 def serve():
     server_credentials = grpc.ssl_server_credentials(((private_key, certificate_chain,),))

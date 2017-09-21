@@ -6,7 +6,7 @@ import msg_pb2
 import msg_pb2_grpc
 import random
 
-
+# This method aims to test the gRPC server APIs
 def run():
 
     with open('server.crt') as f:
@@ -14,38 +14,41 @@ def run():
     creds = grpc.ssl_channel_credentials(root_certificates=trusted_certs)
     channel = grpc.secure_channel('localhost:50051', creds)
     stub = msg_pb2_grpc.OrpheusStub(channel)
+
+    # Postgres login information 
     metadata = [(b'db', b'demo'), (b'user', b'liqi'), (b'password', b'')]
-
+    
+    print ("========")
     response = stub.list(request=msg_pb2.Empty(), metadata=metadata)
-    print(response.msg)
+    print("List the CVDs in OrpheusDB: %s" % response.msg)
 
-    response = stub.drop(request=msg_pb2.DropRequest(cvd="dataset7"), metadata=metadata)
-    print(response.msg)
+    print ("========")
+    response = stub.init(request=msg_pb2.InitRequest(datafile = "test/protein_10k.csv", cvd = "protein", schema = "test/protein_schema.csv"), metadata=metadata)
+    print("Initialize a dataset in OrpheusDB as CVD protein... \n%s" % response.msg)
 
-    response = stub.list(request=msg_pb2.Empty(), metadata=metadata)
-    print(response.msg)
-
-    response = stub.init(request=msg_pb2.InitRequest(datafile = "test/data.csv", cvd = "dataset7", schema = "test/sample_schema.csv"), metadata=metadata)
-    print(response.msg)
-
-
+    print ("========")
     versions = msg_pb2.Versions()
     versions.vals.append(1)
-    response = stub.checkout(request = msg_pb2.CheckoutRequest(cvd = 'dataset7', version = versions, file = 'checkout6.csv'), metadata=metadata)
+    response = stub.checkout(request = msg_pb2.CheckoutRequest(cvd = 'protein', version = versions, file = 'protein_tmp.csv'), metadata=metadata)
     print(response.msg)
 
+    print ("========")
+    response = stub.commit(request = msg_pb2.CommitRequest(file = 'protein_tmp.csv', message = 'this is my checkout'), metadata=metadata)
+    print(response.msg)
 
-    response = stub.commit(request = msg_pb2.CommitRequest(file = 'checkout6.csv', message = 'this is my checkout'), metadata=metadata)
+    print ("========")
+    query = "SELECT protein1, protein2, neighborhood FROM VERSION 1,2 OF CVD protein WHERE neighborhood > 300"
 
-    query = "SELECT employee_id, age FROM VERSION 1,2 OF CVD dataset1"
+    print ("Executing the following query: %s" % query)
     response = stub.run(request = msg_pb2.RunRequest(query = query), metadata=metadata)
 
     for row in response.data.rows:
         row_str = [(col) for col in row.columns]
         print(row_str)
 
-    response = stub.drop(request=msg_pb2.DropRequest(cvd="dataset7"), metadata=metadata)
-    print(response.msg)
+    print ("========")
+    response = stub.drop(request=msg_pb2.DropRequest(cvd="protein"), metadata=metadata)
+    print("Dropping the protein.. \n%s" % response.msg)
 
 if __name__ == '__main__':
   run()
