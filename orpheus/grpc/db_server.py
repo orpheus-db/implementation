@@ -10,9 +10,10 @@ from orpheus.core.orpheus_sqlparse import SQLParser
 from orpheus.core.executor import Executor
 from orpheus.core.orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
 
-
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
+hostname = "0.0.0.0"
+port = 8888
 with open('server.key') as f:
     private_key = f.read()
 with open('server.crt') as f:
@@ -150,7 +151,8 @@ def serve():
     server_credentials = grpc.ssl_server_credentials(((private_key, certificate_chain,),))
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     msg_pb2_grpc.add_OrpheusServicer_to_server(Orpheus(), server)
-    server.add_secure_port('[::]:50051', server_credentials)
+    #server.add_secure_port('%s:%d' % (hostname, port), server_credentials)
+    server.add_insecure_port('%s:%d' % (hostname, port))
     server.start()
     try:
         while True:

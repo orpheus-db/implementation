@@ -6,17 +6,21 @@ import msg_pb2
 import msg_pb2_grpc
 import random
 
+hostname = "hilda.cs.illinois.edu"
+port = 8888
+
 # This method aims to test the gRPC server APIs
 def run():
 
     with open('server.crt') as f:
         trusted_certs = f.read()
     creds = grpc.ssl_channel_credentials(root_certificates=trusted_certs)
-    channel = grpc.secure_channel('localhost:50051', creds)
+    #channel = grpc.secure_channel('%s:%d' % (hostname, port), creds)
+    channel = grpc.insecure_channel('%s:%d' % (hostname, port))
     stub = msg_pb2_grpc.OrpheusStub(channel)
 
     # Postgres login information 
-    metadata = [(b'db', b'demo'), (b'user', b'liqi'), (b'password', b'')]
+    metadata = [(b'db', b'postgres'), (b'user', b'postgres'), (b'password', b'postgres')]
     
     print ("========")
     response = stub.list(request=msg_pb2.Empty(), metadata=metadata)

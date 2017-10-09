@@ -74,7 +74,6 @@ class DatabaseManager():
             # this is ok since table has been created before
             self.refresh_cursor()
 
-
         try:
             # add current dataset name into user.datasets
             self.cursor.execute("INSERT INTO %s values('%s');" % (self.user + '.datasets', dataset))
