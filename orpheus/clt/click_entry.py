@@ -29,7 +29,7 @@ class Context():
             raise BadStateError("config.yaml file not found or data not clean, abort")
             return
         except AssertionError as e:
-            raise BadStateError("orpheus_home not specified in config.yaml")
+            raise BadStateError("Please specify the ORPHEUS_HOME parameter in the config.yaml file")
             return
         except: # unknown error
             raise BadStateError("Unknown error during loading the config file, abort")
@@ -101,6 +101,8 @@ def create_user(ctx):
 @cli.command()
 @click.pass_context
 def whoami(ctx):
+    if ctx.obj == None:
+        return
     if not ctx.obj['user'] or not ctx.obj['database']:
         click.secho("No session in use, please call config first", fg='red')
         return # stop the following commands
