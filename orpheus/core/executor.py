@@ -73,6 +73,7 @@ class Executor(object):
             graph.init_vGraph_json(dataset, 1) # init vid = 1
         except Exception as e:
             graph.delete_vGraph_json(dataset)
+            conn.drop_dataset(dataset)
             raise Exception
             return 
         self.p.pmessage("Dataset [%s] has been created successful" % dataset)
