@@ -162,3 +162,20 @@ class DatabaseManager():
         self.connect.commit()
         return
 
+    def create_user(self, user, password, conf):
+		# Create user in the database
+		# Using corresponding SQL or prostegres commands
+        # Set one-time only connection to the database to create user
+        try:
+            server_config = conf
+            conn_string = "host=" + server_config['host'] + " port=" + str(server_config['port']) + " dbname=" + server_config['db']
+            connect = psycopg2.connect(conn_string)
+            cursor = connect.cursor()
+            # passphrase = EncryptionTool.passphrase_hash(password)
+            cursor.execute("CREATE USER %s SUPERUSER;" % user) # TODO: add password detection later
+            connect.commit()
+        except psycopg2.OperationalError:
+            raise ConnectionError("Cannot connect to %s at %s:%s" % (db, server_config['host'], str(server_config['port'])))
+        except Exception as e: # unknown error
+            raise e
+        return

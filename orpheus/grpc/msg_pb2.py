@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='msg.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\tmsg.proto\"\x07\n\x05\x45mpty\"\x19\n\nBasicReply\x12\x0b\n\x03msg\x18\x01 \x01(\t\"\x19\n\x06Record\x12\x0f\n\x07\x63olumns\x18\x01 \x03(\t\" \n\x07Records\x12\x15\n\x04rows\x18\x01 \x03(\x0b\x32\x07.Record\"\x1b\n\nRunRequest\x12\r\n\x05query\x18\x01 \x01(\t\"/\n\x08RunReply\x12\x0b\n\x03msg\x18\x01 \x01(\t\x12\x16\n\x04\x64\x61ta\x18\x02 \x01(\x0b\x32\x08.Records\"<\n\x0bInitRequest\x12\x10\n\x08\x64\x61tafile\x18\x01 \x01(\t\x12\x0b\n\x03\x63vd\x18\x02 \x01(\t\x12\x0e\n\x06schema\x18\x03 \x01(\t\"\x1a\n\x0b\x44ropRequest\x12\x0b\n\x03\x63vd\x18\x01 \x01(\t\"\x18\n\x08Versions\x12\x0c\n\x04vals\x18\x01 \x03(\x05\"\x8b\x01\n\x0f\x43heckoutRequest\x12\x0b\n\x03\x63vd\x18\x01 \x01(\t\x12\x1a\n\x07version\x18\x02 \x01(\x0b\x32\t.Versions\x12\x0c\n\x04\x66ile\x18\x03 \x01(\t\x12\r\n\x05table\x18\x04 \x01(\t\x12\x12\n\ndelimiters\x18\x05 \x01(\t\x12\x0e\n\x06header\x18\x06 \x01(\x08\x12\x0e\n\x06ignore\x18\x07 \x01(\x08\"a\n\rCommitRequest\x12\x0c\n\x04\x66ile\x18\x01 \x01(\t\x12\r\n\x05table\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\x12\x12\n\ndelimiters\x18\x05 \x01(\t\x12\x0e\n\x06header\x18\x06 \x01(\x08\x32\xe9\x01\n\x07Orpheus\x12#\n\x04init\x12\x0c.InitRequest\x1a\x0b.BasicReply\"\x00\x12\x1d\n\x04list\x12\x06.Empty\x1a\x0b.BasicReply\"\x00\x12#\n\x04\x64rop\x12\x0c.DropRequest\x1a\x0b.BasicReply\"\x00\x12+\n\x08\x63heckout\x12\x10.CheckoutRequest\x1a\x0b.BasicReply\"\x00\x12\'\n\x06\x63ommit\x12\x0e.CommitRequest\x1a\x0b.BasicReply\"\x00\x12\x1f\n\x03run\x12\x0b.RunRequest\x1a\t.RunReply\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\tmsg.proto\"\x07\n\x05\x45mpty\"\x19\n\nBasicReply\x12\x0b\n\x03msg\x18\x01 \x01(\t\"\x19\n\x06Record\x12\x0f\n\x07\x63olumns\x18\x01 \x03(\t\" \n\x07Records\x12\x15\n\x04rows\x18\x01 \x03(\x0b\x32\x07.Record\"\x1b\n\nRunRequest\x12\r\n\x05query\x18\x01 \x01(\t\"/\n\x08RunReply\x12\x0b\n\x03msg\x18\x01 \x01(\t\x12\x16\n\x04\x64\x61ta\x18\x02 \x01(\x0b\x32\x08.Records\"<\n\x0bInitRequest\x12\x10\n\x08\x64\x61tafile\x18\x01 \x01(\t\x12\x0b\n\x03\x63vd\x18\x02 \x01(\t\x12\x0e\n\x06schema\x18\x03 \x01(\t\"\x1a\n\x0b\x44ropRequest\x12\x0b\n\x03\x63vd\x18\x01 \x01(\t\"\x18\n\x08Versions\x12\x0c\n\x04vals\x18\x01 \x03(\x05\"\x8b\x01\n\x0f\x43heckoutRequest\x12\x0b\n\x03\x63vd\x18\x01 \x01(\t\x12\x1a\n\x07version\x18\x02 \x01(\x0b\x32\t.Versions\x12\x0c\n\x04\x66ile\x18\x03 \x01(\t\x12\r\n\x05table\x18\x04 \x01(\t\x12\x12\n\ndelimiters\x18\x05 \x01(\t\x12\x0e\n\x06header\x18\x06 \x01(\x08\x12\x0e\n\x06ignore\x18\x07 \x01(\x08\"a\n\rCommitRequest\x12\x0c\n\x04\x66ile\x18\x01 \x01(\t\x12\r\n\x05table\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\x12\x12\n\ndelimiters\x18\x05 \x01(\t\x12\x0e\n\x06header\x18\x06 \x01(\x08\"3\n\x11\x43reateUserRequest\x12\x0c\n\x04user\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t2\x9b\x02\n\x07Orpheus\x12#\n\x04init\x12\x0c.InitRequest\x1a\x0b.BasicReply\"\x00\x12\x1d\n\x04list\x12\x06.Empty\x1a\x0b.BasicReply\"\x00\x12#\n\x04\x64rop\x12\x0c.DropRequest\x1a\x0b.BasicReply\"\x00\x12+\n\x08\x63heckout\x12\x10.CheckoutRequest\x1a\x0b.BasicReply\"\x00\x12\'\n\x06\x63ommit\x12\x0e.CommitRequest\x1a\x0b.BasicReply\"\x00\x12\x1f\n\x03run\x12\x0b.RunRequest\x1a\t.RunReply\"\x00\x12\x30\n\x0b\x63reate_user\x12\x12.CreateUserRequest\x1a\x0b.BasicReply\"\x00\x62\x06proto3')
 )
 
 
@@ -449,6 +449,44 @@ _COMMITREQUEST = _descriptor.Descriptor(
   serialized_end=543,
 )
 
+
+_CREATEUSERREQUEST = _descriptor.Descriptor(
+  name='CreateUserRequest',
+  full_name='CreateUserRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='user', full_name='CreateUserRequest.user', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+    _descriptor.FieldDescriptor(
+      name='password', full_name='CreateUserRequest.password', index=1,
+      number=2, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=545,
+  serialized_end=596,
+)
+
 _RECORDS.fields_by_name['rows'].message_type = _RECORD
 _RUNREPLY.fields_by_name['data'].message_type = _RECORDS
 _CHECKOUTREQUEST.fields_by_name['version'].message_type = _VERSIONS
@@ -463,6 +501,7 @@ DESCRIPTOR.message_types_by_name['DropRequest'] = _DROPREQUEST
 DESCRIPTOR.message_types_by_name['Versions'] = _VERSIONS
 DESCRIPTOR.message_types_by_name['CheckoutRequest'] = _CHECKOUTREQUEST
 DESCRIPTOR.message_types_by_name['CommitRequest'] = _COMMITREQUEST
+DESCRIPTOR.message_types_by_name['CreateUserRequest'] = _CREATEUSERREQUEST
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
 Empty = _reflection.GeneratedProtocolMessageType('Empty', (_message.Message,), dict(
@@ -542,6 +581,13 @@ CommitRequest = _reflection.GeneratedProtocolMessageType('CommitRequest', (_mess
   ))
 _sym_db.RegisterMessage(CommitRequest)
 
+CreateUserRequest = _reflection.GeneratedProtocolMessageType('CreateUserRequest', (_message.Message,), dict(
+  DESCRIPTOR = _CREATEUSERREQUEST,
+  __module__ = 'msg_pb2'
+  # @@protoc_insertion_point(class_scope:CreateUserRequest)
+  ))
+_sym_db.RegisterMessage(CreateUserRequest)
+
 
 
 _ORPHEUS = _descriptor.ServiceDescriptor(
@@ -550,8 +596,8 @@ _ORPHEUS = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=546,
-  serialized_end=779,
+  serialized_start=599,
+  serialized_end=882,
   methods=[
   _descriptor.MethodDescriptor(
     name='init',
@@ -605,6 +651,15 @@ _ORPHEUS = _descriptor.ServiceDescriptor(
     containing_service=None,
     input_type=_RUNREQUEST,
     output_type=_RUNREPLY,
+    options=None,
+  ),
+  _descriptor.MethodDescriptor(
+    name='create_user',
+    full_name='Orpheus.create_user',
+    index=6,
+    containing_service=None,
+    input_type=_CREATEUSERREQUEST,
+    output_type=_BASICREPLY,
     options=None,
   ),
 ])
@@ -662,6 +717,11 @@ try:
           request_serializer=RunRequest.SerializeToString,
           response_deserializer=RunReply.FromString,
           )
+      self.create_user = channel.unary_unary(
+          '/Orpheus/create_user',
+          request_serializer=CreateUserRequest.SerializeToString,
+          response_deserializer=BasicReply.FromString,
+          )
 
 
   class OrpheusServicer(object):
@@ -710,6 +770,13 @@ try:
       context.set_details('Method not implemented!')
       raise NotImplementedError('Method not implemented!')
 
+    def create_user(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
+      context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+      context.set_details('Method not implemented!')
+      raise NotImplementedError('Method not implemented!')
+
 
   def add_OrpheusServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -742,6 +809,11 @@ try:
             servicer.run,
             request_deserializer=RunRequest.FromString,
             response_serializer=RunReply.SerializeToString,
+        ),
+        'create_user': grpc.unary_unary_rpc_method_handler(
+            servicer.create_user,
+            request_deserializer=CreateUserRequest.FromString,
+            response_serializer=BasicReply.SerializeToString,
         ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -778,6 +850,10 @@ try:
       pass
       context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
     def run(self, request, context):
+      # missing associated documentation comment in .proto file
+      pass
+      context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
+    def create_user(self, request, context):
       # missing associated documentation comment in .proto file
       pass
       context.code(beta_interfaces.StatusCode.UNIMPLEMENTED)
@@ -821,6 +897,11 @@ try:
       pass
       raise NotImplementedError()
     run.future = None
+    def create_user(self, request, timeout, metadata=None, with_call=False, protocol_options=None):
+      # missing associated documentation comment in .proto file
+      pass
+      raise NotImplementedError()
+    create_user.future = None
 
 
   def beta_create_Orpheus_server(servicer, pool=None, pool_size=None, default_timeout=None, maximum_timeout=None):
@@ -832,6 +913,7 @@ try:
     request_deserializers = {
       ('Orpheus', 'checkout'): CheckoutRequest.FromString,
       ('Orpheus', 'commit'): CommitRequest.FromString,
+      ('Orpheus', 'create_user'): CreateUserRequest.FromString,
       ('Orpheus', 'drop'): DropRequest.FromString,
       ('Orpheus', 'init'): InitRequest.FromString,
       ('Orpheus', 'list'): Empty.FromString,
@@ -840,6 +922,7 @@ try:
     response_serializers = {
       ('Orpheus', 'checkout'): BasicReply.SerializeToString,
       ('Orpheus', 'commit'): BasicReply.SerializeToString,
+      ('Orpheus', 'create_user'): BasicReply.SerializeToString,
       ('Orpheus', 'drop'): BasicReply.SerializeToString,
       ('Orpheus', 'init'): BasicReply.SerializeToString,
       ('Orpheus', 'list'): BasicReply.SerializeToString,
@@ -848,6 +931,7 @@ try:
     method_implementations = {
       ('Orpheus', 'checkout'): face_utilities.unary_unary_inline(servicer.checkout),
       ('Orpheus', 'commit'): face_utilities.unary_unary_inline(servicer.commit),
+      ('Orpheus', 'create_user'): face_utilities.unary_unary_inline(servicer.create_user),
       ('Orpheus', 'drop'): face_utilities.unary_unary_inline(servicer.drop),
       ('Orpheus', 'init'): face_utilities.unary_unary_inline(servicer.init),
       ('Orpheus', 'list'): face_utilities.unary_unary_inline(servicer.list),
@@ -866,6 +950,7 @@ try:
     request_serializers = {
       ('Orpheus', 'checkout'): CheckoutRequest.SerializeToString,
       ('Orpheus', 'commit'): CommitRequest.SerializeToString,
+      ('Orpheus', 'create_user'): CreateUserRequest.SerializeToString,
       ('Orpheus', 'drop'): DropRequest.SerializeToString,
       ('Orpheus', 'init'): InitRequest.SerializeToString,
       ('Orpheus', 'list'): Empty.SerializeToString,
@@ -874,6 +959,7 @@ try:
     response_deserializers = {
       ('Orpheus', 'checkout'): BasicReply.FromString,
       ('Orpheus', 'commit'): BasicReply.FromString,
+      ('Orpheus', 'create_user'): BasicReply.FromString,
       ('Orpheus', 'drop'): BasicReply.FromString,
       ('Orpheus', 'init'): BasicReply.FromString,
       ('Orpheus', 'list'): BasicReply.FromString,
@@ -882,6 +968,7 @@ try:
     cardinalities = {
       'checkout': cardinality.Cardinality.UNARY_UNARY,
       'commit': cardinality.Cardinality.UNARY_UNARY,
+      'create_user': cardinality.Cardinality.UNARY_UNARY,
       'drop': cardinality.Cardinality.UNARY_UNARY,
       'init': cardinality.Cardinality.UNARY_UNARY,
       'list': cardinality.Cardinality.UNARY_UNARY,

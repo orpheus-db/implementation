@@ -6,7 +6,8 @@ import msg_pb2
 import msg_pb2_grpc
 import random
 
-hostname = "hilda.cs.illinois.edu"
+#hostname = "hilda.cs.illinois.edu"
+hostname = "localhost"
 port = 8888
 
 # This method aims to test the gRPC server APIs
@@ -27,7 +28,7 @@ def run():
     print("List the CVDs in OrpheusDB: %s" % response.msg)
 
     print ("========")
-    response = stub.init(request=msg_pb2.InitRequest(datafile = "test/protein_10k.csv", cvd = "protein", schema = "test/protein_schema.csv"), metadata=metadata)
+    response = stub.init(request=msg_pb2.InitRequest(datafile = "test/protein.csv", cvd = "protein", schema = "test/protein_schema.csv"), metadata=metadata)
     print("Initialize a dataset in OrpheusDB as CVD protein... \n%s" % response.msg)
 
     print ("========")
@@ -54,5 +55,7 @@ def run():
     response = stub.drop(request=msg_pb2.DropRequest(cvd="protein"), metadata=metadata)
     print("Dropping the protein.. \n%s" % response.msg)
 
+    response = stub.create_user(request=msg_pb2.CreateUserRequest(user="abc", password="def"), metadata=metadata)
+    print(response.msg)
 if __name__ == '__main__':
   run()

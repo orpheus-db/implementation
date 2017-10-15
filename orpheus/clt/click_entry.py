@@ -42,8 +42,9 @@ def cli(ctx):
     try:
         ctx.obj = Context().config #Orpheus context obj
         user_obj = UserManager.get_current_state()
-        for key in user_obj:
-            ctx.obj[key] = user_obj[key]
+        if user_obj != None:
+            for key in user_obj:
+                ctx.obj[key] = user_obj[key]
     except Exception as e:
         click.secho(str(e), fg='red')
 
@@ -79,9 +80,11 @@ def config(ctx, user, password, database):
 @cli.command()
 @click.pass_context
 def create_user(ctx):
+    if ctx.obj == None:
+        return
     # check this user has permission to create new user or not
     # create user in UserManager
-    if not ctx.obj['user'] or not ctx.obj['database']:
+    if ((not 'user' in ctx.obj) or (not 'database' in ctx.obj)):
         click.secho("No session in use, please call config first", fg='red')
         return # stop the following commands
 
@@ -103,10 +106,9 @@ def create_user(ctx):
 def whoami(ctx):
     if ctx.obj == None:
         return
-    if not ctx.obj['user'] or not ctx.obj['database']:
+    if ((not 'user' in ctx.obj) or (not 'database' in ctx.obj)):
         click.secho("No session in use, please call config first", fg='red')
         return # stop the following commands
-
     click.echo('Logged to the database [%s] as [%s] ' % (ctx.obj['database'],ctx.obj['user']))
 
 

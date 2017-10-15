@@ -44,6 +44,11 @@ class OrpheusStub(object):
         request_serializer=msg__pb2.RunRequest.SerializeToString,
         response_deserializer=msg__pb2.RunReply.FromString,
         )
+    self.create_user = channel.unary_unary(
+        '/Orpheus/create_user',
+        request_serializer=msg__pb2.CreateUserRequest.SerializeToString,
+        response_deserializer=msg__pb2.BasicReply.FromString,
+        )
 
 
 class OrpheusServicer(object):
@@ -92,6 +97,13 @@ class OrpheusServicer(object):
     context.set_details('Method not implemented!')
     raise NotImplementedError('Method not implemented!')
 
+  def create_user(self, request, context):
+    # missing associated documentation comment in .proto file
+    pass
+    context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+    context.set_details('Method not implemented!')
+    raise NotImplementedError('Method not implemented!')
+
 
 def add_OrpheusServicer_to_server(servicer, server):
   rpc_method_handlers = {
@@ -124,6 +136,11 @@ def add_OrpheusServicer_to_server(servicer, server):
           servicer.run,
           request_deserializer=msg__pb2.RunRequest.FromString,
           response_serializer=msg__pb2.RunReply.SerializeToString,
+      ),
+      'create_user': grpc.unary_unary_rpc_method_handler(
+          servicer.create_user,
+          request_deserializer=msg__pb2.CreateUserRequest.FromString,
+          response_serializer=msg__pb2.BasicReply.SerializeToString,
       ),
   }
   generic_handler = grpc.method_handlers_generic_handler(

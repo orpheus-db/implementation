@@ -8,6 +8,7 @@ import yaml
 from db_manager import DatabaseManager
 from orpheus.core.orpheus_sqlparse import SQLParser
 from orpheus.core.executor import Executor
+from orpheus.core.user_control import UserManager
 from orpheus.core.orpheus_exceptions import BadStateError, NotImplementedError, BadParametersError
 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
@@ -71,7 +72,10 @@ class Orpheus(msg_pb2_grpc.OrpheusServicer):
     def list(self, request, context):
         conf = self.config(context)
         conn = self.connect_db(conf)
-        res = conn.list_dataset()
+        try:
+            res = conn.list_dataset()
+        except Exception as e:
+            res = "" # Just return empty string indicating no CVD under current user
         ret = msg_pb2.BasicReply(msg="%s" % (res))
         return ret
 
@@ -142,10 +146,22 @@ class Orpheus(msg_pb2_grpc.OrpheusServicer):
         delimiters = request.delimiters or ","
         header = request.header
 
-
         executor.exec_commit(msg, table_name, file_name, delimiters, header, conn)
 
         return msg_pb2.BasicReply(msg='%s is committed successfully.' % (table_name or file_name))
+
+    def create_user(self, request, context):
+        conf = self.config(context)
+        conn = self.connect_db(conf)
+        user = request.user
+        password = request.password
+        try:
+            conn.create_user(user, password, conf) #TODO: need revise
+        except Exception as e:
+            info = str(e)
+            return msg_pb2.BasicReply(msg=info)
+        UserManager.create_user(user, password)
+        return msg_pb2.BasicReply(msg='User [%s] created into database [%s] successfully.' % (user, conf['db']))      
 
 def serve():
     server_credentials = grpc.ssl_server_credentials(((private_key, certificate_chain,),))

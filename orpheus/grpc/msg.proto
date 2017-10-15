@@ -7,7 +7,7 @@ service Orpheus {
     rpc checkout(CheckoutRequest) returns (BasicReply) {}
     rpc commit(CommitRequest) returns (BasicReply) {}
     rpc run(RunRequest) returns (RunReply) {}
-    
+    rpc create_user(CreateUserRequest) returns (BasicReply) {}
 }
 
 message Empty {
@@ -64,4 +64,9 @@ message CommitRequest {
     string message = 3;
     string delimiters = 5;
     bool header = 6;
+}
+
+message CreateUserRequest {
+    string user = 1;
+    string password = 2;
 }
