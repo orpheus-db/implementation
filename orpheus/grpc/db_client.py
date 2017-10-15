@@ -20,6 +20,16 @@ def run():
     metadata = [(b'db', b'postgres'), (b'user', b'postgres'), (b'password', b'postgres')]
     
     print ("========")
+    print("Creating a user [tester] in OrpheusDB..")
+
+    response = stub.create_user(request=msg_pb2.CreateUserRequest(user="tester", password="tester"), metadata=metadata)
+    print(response.msg)
+
+    print ("========")
+    print("Connecting to the server via user [tester]")
+    metadata = [(b'db', b'postgres'), (b'user', b'tester'), (b'password', b'tester')]
+
+    print ("========")
     response = stub.list(request=msg_pb2.ListRequest(), metadata=metadata)
     print("List the CVDs in OrpheusDB: %s" % response.msg)
 
@@ -51,7 +61,6 @@ def run():
     response = stub.drop(request=msg_pb2.DropRequest(cvd="protein"), metadata=metadata)
     print("Dropping the protein.. \n%s" % response.msg)
 
-    response = stub.create_user(request=msg_pb2.CreateUserRequest(user="abc", password="def"), metadata=metadata)
-    print(response.msg)
+
 if __name__ == '__main__':
   run()
