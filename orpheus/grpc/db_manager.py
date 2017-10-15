@@ -168,14 +168,15 @@ class DatabaseManager():
         # Set one-time only connection to the database to create user
         try:
             server_config = conf
-            conn_string = "host=" + server_config['host'] + " port=" + str(server_config['port']) + " dbname=" + server_config['db']
-            connect = psycopg2.connect(conn_string)
-            cursor = connect.cursor()
+            #conn_string = "host=" + server_config['host'] + " port=" + str(server_config['port']) + " dbname=" + server_config['db']
+            #print "new", conn_string
+            #connect = psycopg2.connect(conn_string)
+            #cursor = connect.cursor()
             # passphrase = EncryptionTool.passphrase_hash(password)
-            cursor.execute("CREATE USER %s SUPERUSER;" % user) # TODO: add password detection later
-            connect.commit()
+            self.cursor.execute("CREATE ROLE %s SUPERUSER CREATEROLE PASSWORD \'%s\';" % (user, password)) # TODO: add password detection later
+            self.connect.commit()
         except psycopg2.OperationalError:
-            raise ConnectionError("Cannot connect to %s at %s:%s" % (db, server_config['host'], str(server_config['port'])))
+            raise ConnectionError("Cannot connect to %s at %s:%s" % (server_config['db'], server_config['host'], str(server_config['port'])))
         except Exception as e: # unknown error
             raise e
         return

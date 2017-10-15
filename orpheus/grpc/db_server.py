@@ -15,10 +15,6 @@ _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 hostname = "0.0.0.0"
 port = 8888
-with open('server.key') as f:
-    private_key = f.read()
-with open('server.crt') as f:
-    certificate_chain = f.read()
 
 class Orpheus(msg_pb2_grpc.OrpheusServicer):
     def config(self, context):
@@ -159,15 +155,14 @@ class Orpheus(msg_pb2_grpc.OrpheusServicer):
             conn.create_user(user, password, conf) #TODO: need revise
         except Exception as e:
             info = str(e)
+	    print info
             return msg_pb2.BasicReply(msg=info)
         UserManager.create_user(user, password)
         return msg_pb2.BasicReply(msg='User [%s] created into database [%s] successfully.' % (user, conf['db']))      
 
 def serve():
-    server_credentials = grpc.ssl_server_credentials(((private_key, certificate_chain,),))
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     msg_pb2_grpc.add_OrpheusServicer_to_server(Orpheus(), server)
-    #server.add_secure_port('%s:%d' % (hostname, port), server_credentials)
     server.add_insecure_port('%s:%d' % (hostname, port))
     server.start()
     try:

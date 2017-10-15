@@ -6,17 +6,13 @@ import msg_pb2
 import msg_pb2_grpc
 import random
 
-#hostname = "hilda.cs.illinois.edu"
-hostname = "localhost"
+hostname = "hilda.cs.illinois.edu"
+#hostname = "localhost"
 port = 8888
 
 # This method aims to test the gRPC server APIs
 def run():
 
-    with open('server.crt') as f:
-        trusted_certs = f.read()
-    creds = grpc.ssl_channel_credentials(root_certificates=trusted_certs)
-    #channel = grpc.secure_channel('%s:%d' % (hostname, port), creds)
     channel = grpc.insecure_channel('%s:%d' % (hostname, port))
     stub = msg_pb2_grpc.OrpheusStub(channel)
 
