@@ -21,7 +21,7 @@ class OrpheusStub(object):
         )
     self.list = channel.unary_unary(
         '/Orpheus/list',
-        request_serializer=msg__pb2.Empty.SerializeToString,
+        request_serializer=msg__pb2.ListRequest.SerializeToString,
         response_deserializer=msg__pb2.BasicReply.FromString,
         )
     self.drop = channel.unary_unary(
@@ -114,7 +114,7 @@ def add_OrpheusServicer_to_server(servicer, server):
       ),
       'list': grpc.unary_unary_rpc_method_handler(
           servicer.list,
-          request_deserializer=msg__pb2.Empty.FromString,
+          request_deserializer=msg__pb2.ListRequest.FromString,
           response_serializer=msg__pb2.BasicReply.SerializeToString,
       ),
       'drop': grpc.unary_unary_rpc_method_handler(

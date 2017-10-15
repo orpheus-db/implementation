@@ -19,34 +19,10 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='msg.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\tmsg.proto\"\x07\n\x05\x45mpty\"\x19\n\nBasicReply\x12\x0b\n\x03msg\x18\x01 \x01(\t\"\x19\n\x06Record\x12\x0f\n\x07\x63olumns\x18\x01 \x03(\t\" \n\x07Records\x12\x15\n\x04rows\x18\x01 \x03(\x0b\x32\x07.Record\"\x1b\n\nRunRequest\x12\r\n\x05query\x18\x01 \x01(\t\"/\n\x08RunReply\x12\x0b\n\x03msg\x18\x01 \x01(\t\x12\x16\n\x04\x64\x61ta\x18\x02 \x01(\x0b\x32\x08.Records\"<\n\x0bInitRequest\x12\x10\n\x08\x64\x61tafile\x18\x01 \x01(\t\x12\x0b\n\x03\x63vd\x18\x02 \x01(\t\x12\x0e\n\x06schema\x18\x03 \x01(\t\"\x1a\n\x0b\x44ropRequest\x12\x0b\n\x03\x63vd\x18\x01 \x01(\t\"\x18\n\x08Versions\x12\x0c\n\x04vals\x18\x01 \x03(\x05\"\x8b\x01\n\x0f\x43heckoutRequest\x12\x0b\n\x03\x63vd\x18\x01 \x01(\t\x12\x1a\n\x07version\x18\x02 \x01(\x0b\x32\t.Versions\x12\x0c\n\x04\x66ile\x18\x03 \x01(\t\x12\r\n\x05table\x18\x04 \x01(\t\x12\x12\n\ndelimiters\x18\x05 \x01(\t\x12\x0e\n\x06header\x18\x06 \x01(\x08\x12\x0e\n\x06ignore\x18\x07 \x01(\x08\"a\n\rCommitRequest\x12\x0c\n\x04\x66ile\x18\x01 \x01(\t\x12\r\n\x05table\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\x12\x12\n\ndelimiters\x18\x05 \x01(\t\x12\x0e\n\x06header\x18\x06 \x01(\x08\"3\n\x11\x43reateUserRequest\x12\x0c\n\x04user\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t2\x9b\x02\n\x07Orpheus\x12#\n\x04init\x12\x0c.InitRequest\x1a\x0b.BasicReply\"\x00\x12\x1d\n\x04list\x12\x06.Empty\x1a\x0b.BasicReply\"\x00\x12#\n\x04\x64rop\x12\x0c.DropRequest\x1a\x0b.BasicReply\"\x00\x12+\n\x08\x63heckout\x12\x10.CheckoutRequest\x1a\x0b.BasicReply\"\x00\x12\'\n\x06\x63ommit\x12\x0e.CommitRequest\x1a\x0b.BasicReply\"\x00\x12\x1f\n\x03run\x12\x0b.RunRequest\x1a\t.RunReply\"\x00\x12\x30\n\x0b\x63reate_user\x12\x12.CreateUserRequest\x1a\x0b.BasicReply\"\x00\x62\x06proto3')
+  serialized_pb=_b('\n\tmsg.proto\"\x19\n\nBasicReply\x12\x0b\n\x03msg\x18\x01 \x01(\t\"\x19\n\x06Record\x12\x0f\n\x07\x63olumns\x18\x01 \x03(\t\" \n\x07Records\x12\x15\n\x04rows\x18\x01 \x03(\x0b\x32\x07.Record\"\r\n\x0bListRequest\"\x1b\n\nRunRequest\x12\r\n\x05query\x18\x01 \x01(\t\"/\n\x08RunReply\x12\x0b\n\x03msg\x18\x01 \x01(\t\x12\x16\n\x04\x64\x61ta\x18\x02 \x01(\x0b\x32\x08.Records\"<\n\x0bInitRequest\x12\x10\n\x08\x64\x61tafile\x18\x01 \x01(\t\x12\x0b\n\x03\x63vd\x18\x02 \x01(\t\x12\x0e\n\x06schema\x18\x03 \x01(\t\"\x1a\n\x0b\x44ropRequest\x12\x0b\n\x03\x63vd\x18\x01 \x01(\t\"\x18\n\x08Versions\x12\x0c\n\x04vals\x18\x01 \x03(\x05\"\x8b\x01\n\x0f\x43heckoutRequest\x12\x0b\n\x03\x63vd\x18\x01 \x01(\t\x12\x1a\n\x07version\x18\x02 \x01(\x0b\x32\t.Versions\x12\x0c\n\x04\x66ile\x18\x03 \x01(\t\x12\r\n\x05table\x18\x04 \x01(\t\x12\x12\n\ndelimiters\x18\x05 \x01(\t\x12\x0e\n\x06header\x18\x06 \x01(\x08\x12\x0e\n\x06ignore\x18\x07 \x01(\x08\"a\n\rCommitRequest\x12\x0c\n\x04\x66ile\x18\x01 \x01(\t\x12\r\n\x05table\x18\x02 \x01(\t\x12\x0f\n\x07message\x18\x03 \x01(\t\x12\x12\n\ndelimiters\x18\x05 \x01(\t\x12\x0e\n\x06header\x18\x06 \x01(\x08\"3\n\x11\x43reateUserRequest\x12\x0c\n\x04user\x18\x01 \x01(\t\x12\x10\n\x08password\x18\x02 \x01(\t2\xa1\x02\n\x07Orpheus\x12#\n\x04init\x12\x0c.InitRequest\x1a\x0b.BasicReply\"\x00\x12#\n\x04list\x12\x0c.ListRequest\x1a\x0b.BasicReply\"\x00\x12#\n\x04\x64rop\x12\x0c.DropRequest\x1a\x0b.BasicReply\"\x00\x12+\n\x08\x63heckout\x12\x10.CheckoutRequest\x1a\x0b.BasicReply\"\x00\x12\'\n\x06\x63ommit\x12\x0e.CommitRequest\x1a\x0b.BasicReply\"\x00\x12\x1f\n\x03run\x12\x0b.RunRequest\x1a\t.RunReply\"\x00\x12\x30\n\x0b\x63reate_user\x12\x12.CreateUserRequest\x1a\x0b.BasicReply\"\x00\x62\x06proto3')
 )
 
 
-
-
-_EMPTY = _descriptor.Descriptor(
-  name='Empty',
-  full_name='Empty',
-  filename=None,
-  file=DESCRIPTOR,
-  containing_type=None,
-  fields=[
-  ],
-  extensions=[
-  ],
-  nested_types=[],
-  enum_types=[
-  ],
-  options=None,
-  is_extendable=False,
-  syntax='proto3',
-  extension_ranges=[],
-  oneofs=[
-  ],
-  serialized_start=13,
-  serialized_end=20,
-)
 
 
 _BASICREPLY = _descriptor.Descriptor(
@@ -75,8 +51,8 @@ _BASICREPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=22,
-  serialized_end=47,
+  serialized_start=13,
+  serialized_end=38,
 )
 
 
@@ -106,8 +82,8 @@ _RECORD = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=49,
-  serialized_end=74,
+  serialized_start=40,
+  serialized_end=65,
 )
 
 
@@ -137,8 +113,32 @@ _RECORDS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=76,
-  serialized_end=108,
+  serialized_start=67,
+  serialized_end=99,
+)
+
+
+_LISTREQUEST = _descriptor.Descriptor(
+  name='ListRequest',
+  full_name='ListRequest',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=101,
+  serialized_end=114,
 )
 
 
@@ -168,8 +168,8 @@ _RUNREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=110,
-  serialized_end=137,
+  serialized_start=116,
+  serialized_end=143,
 )
 
 
@@ -206,8 +206,8 @@ _RUNREPLY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=139,
-  serialized_end=186,
+  serialized_start=145,
+  serialized_end=192,
 )
 
 
@@ -251,8 +251,8 @@ _INITREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=188,
-  serialized_end=248,
+  serialized_start=194,
+  serialized_end=254,
 )
 
 
@@ -282,8 +282,8 @@ _DROPREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=250,
-  serialized_end=276,
+  serialized_start=256,
+  serialized_end=282,
 )
 
 
@@ -313,8 +313,8 @@ _VERSIONS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=278,
-  serialized_end=302,
+  serialized_start=284,
+  serialized_end=308,
 )
 
 
@@ -386,8 +386,8 @@ _CHECKOUTREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=305,
-  serialized_end=444,
+  serialized_start=311,
+  serialized_end=450,
 )
 
 
@@ -445,8 +445,8 @@ _COMMITREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=446,
-  serialized_end=543,
+  serialized_start=452,
+  serialized_end=549,
 )
 
 
@@ -483,17 +483,17 @@ _CREATEUSERREQUEST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=545,
-  serialized_end=596,
+  serialized_start=551,
+  serialized_end=602,
 )
 
 _RECORDS.fields_by_name['rows'].message_type = _RECORD
 _RUNREPLY.fields_by_name['data'].message_type = _RECORDS
 _CHECKOUTREQUEST.fields_by_name['version'].message_type = _VERSIONS
-DESCRIPTOR.message_types_by_name['Empty'] = _EMPTY
 DESCRIPTOR.message_types_by_name['BasicReply'] = _BASICREPLY
 DESCRIPTOR.message_types_by_name['Record'] = _RECORD
 DESCRIPTOR.message_types_by_name['Records'] = _RECORDS
+DESCRIPTOR.message_types_by_name['ListRequest'] = _LISTREQUEST
 DESCRIPTOR.message_types_by_name['RunRequest'] = _RUNREQUEST
 DESCRIPTOR.message_types_by_name['RunReply'] = _RUNREPLY
 DESCRIPTOR.message_types_by_name['InitRequest'] = _INITREQUEST
@@ -503,13 +503,6 @@ DESCRIPTOR.message_types_by_name['CheckoutRequest'] = _CHECKOUTREQUEST
 DESCRIPTOR.message_types_by_name['CommitRequest'] = _COMMITREQUEST
 DESCRIPTOR.message_types_by_name['CreateUserRequest'] = _CREATEUSERREQUEST
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
-
-Empty = _reflection.GeneratedProtocolMessageType('Empty', (_message.Message,), dict(
-  DESCRIPTOR = _EMPTY,
-  __module__ = 'msg_pb2'
-  # @@protoc_insertion_point(class_scope:Empty)
-  ))
-_sym_db.RegisterMessage(Empty)
 
 BasicReply = _reflection.GeneratedProtocolMessageType('BasicReply', (_message.Message,), dict(
   DESCRIPTOR = _BASICREPLY,
@@ -531,6 +524,13 @@ Records = _reflection.GeneratedProtocolMessageType('Records', (_message.Message,
   # @@protoc_insertion_point(class_scope:Records)
   ))
 _sym_db.RegisterMessage(Records)
+
+ListRequest = _reflection.GeneratedProtocolMessageType('ListRequest', (_message.Message,), dict(
+  DESCRIPTOR = _LISTREQUEST,
+  __module__ = 'msg_pb2'
+  # @@protoc_insertion_point(class_scope:ListRequest)
+  ))
+_sym_db.RegisterMessage(ListRequest)
 
 RunRequest = _reflection.GeneratedProtocolMessageType('RunRequest', (_message.Message,), dict(
   DESCRIPTOR = _RUNREQUEST,
@@ -596,8 +596,8 @@ _ORPHEUS = _descriptor.ServiceDescriptor(
   file=DESCRIPTOR,
   index=0,
   options=None,
-  serialized_start=599,
-  serialized_end=882,
+  serialized_start=605,
+  serialized_end=894,
   methods=[
   _descriptor.MethodDescriptor(
     name='init',
@@ -613,7 +613,7 @@ _ORPHEUS = _descriptor.ServiceDescriptor(
     full_name='Orpheus.list',
     index=1,
     containing_service=None,
-    input_type=_EMPTY,
+    input_type=_LISTREQUEST,
     output_type=_BASICREPLY,
     options=None,
   ),
@@ -694,7 +694,7 @@ try:
           )
       self.list = channel.unary_unary(
           '/Orpheus/list',
-          request_serializer=Empty.SerializeToString,
+          request_serializer=ListRequest.SerializeToString,
           response_deserializer=BasicReply.FromString,
           )
       self.drop = channel.unary_unary(
@@ -787,7 +787,7 @@ try:
         ),
         'list': grpc.unary_unary_rpc_method_handler(
             servicer.list,
-            request_deserializer=Empty.FromString,
+            request_deserializer=ListRequest.FromString,
             response_serializer=BasicReply.SerializeToString,
         ),
         'drop': grpc.unary_unary_rpc_method_handler(
@@ -916,7 +916,7 @@ try:
       ('Orpheus', 'create_user'): CreateUserRequest.FromString,
       ('Orpheus', 'drop'): DropRequest.FromString,
       ('Orpheus', 'init'): InitRequest.FromString,
-      ('Orpheus', 'list'): Empty.FromString,
+      ('Orpheus', 'list'): ListRequest.FromString,
       ('Orpheus', 'run'): RunRequest.FromString,
     }
     response_serializers = {
@@ -953,7 +953,7 @@ try:
       ('Orpheus', 'create_user'): CreateUserRequest.SerializeToString,
       ('Orpheus', 'drop'): DropRequest.SerializeToString,
       ('Orpheus', 'init'): InitRequest.SerializeToString,
-      ('Orpheus', 'list'): Empty.SerializeToString,
+      ('Orpheus', 'list'): ListRequest.SerializeToString,
       ('Orpheus', 'run'): RunRequest.SerializeToString,
     }
     response_deserializers = {

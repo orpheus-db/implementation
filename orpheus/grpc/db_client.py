@@ -20,7 +20,7 @@ def run():
     metadata = [(b'db', b'postgres'), (b'user', b'postgres'), (b'password', b'postgres')]
     
     print ("========")
-    response = stub.list(request=msg_pb2.Empty(), metadata=metadata)
+    response = stub.list(request=msg_pb2.ListRequest(), metadata=metadata)
     print("List the CVDs in OrpheusDB: %s" % response.msg)
 
     print ("========")

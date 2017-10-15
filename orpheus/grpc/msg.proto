@@ -2,15 +2,12 @@ syntax = "proto3";
 
 service Orpheus {
     rpc init(InitRequest) returns (BasicReply) {}
-    rpc list(Empty) returns (BasicReply) {}
+    rpc list(ListRequest) returns (BasicReply) {}
     rpc drop(DropRequest) returns (BasicReply) {}
     rpc checkout(CheckoutRequest) returns (BasicReply) {}
     rpc commit(CommitRequest) returns (BasicReply) {}
     rpc run(RunRequest) returns (RunReply) {}
     rpc create_user(CreateUserRequest) returns (BasicReply) {}
-}
-
-message Empty {
 }
 
 message BasicReply{
@@ -23,6 +20,9 @@ message Record {
 
 message Records {
     repeated Record rows = 1;
+}
+
+message ListRequest {
 }
 
 message RunRequest {
