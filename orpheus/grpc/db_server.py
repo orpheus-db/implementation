@@ -14,7 +14,7 @@ from orpheus.core.orpheus_exceptions import BadStateError, NotImplementedError, 
 _ONE_DAY_IN_SECONDS = 60 * 60 * 24
 
 hostname = "0.0.0.0"
-port = 8888
+port = 1503
 
 class Orpheus(msg_pb2_grpc.OrpheusServicer):
     def config(self, context):

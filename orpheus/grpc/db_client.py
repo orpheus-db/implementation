@@ -8,7 +8,7 @@ import random
 
 hostname = "hilda.cs.illinois.edu"
 #hostname = "localhost"
-port = 8888
+port = 1503
 
 # This method aims to test the gRPC server APIs
 def run():

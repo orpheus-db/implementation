@@ -173,7 +173,7 @@ class DatabaseManager():
             #connect = psycopg2.connect(conn_string)
             #cursor = connect.cursor()
             # passphrase = EncryptionTool.passphrase_hash(password)
-            self.cursor.execute("CREATE ROLE %s SUPERUSER CREATEROLE PASSWORD \'%s\';" % (user, password)) # TODO: add password detection later
+            self.cursor.execute("CREATE ROLE %s SUPERUSER CREATEROLE LOGIN PASSWORD \'%s\';" % (user, password)) # TODO: add password detection later
             self.connect.commit()
         except psycopg2.OperationalError:
             raise ConnectionError("Cannot connect to %s at %s:%s" % (server_config['db'], server_config['host'], str(server_config['port'])))
