@@ -20,7 +20,7 @@ setup(
 	 		# 	'click_entry'],
 	#py_modules=['click_entry'],
 	install_requires=[
-	    'Click', 'psycopg2', 'PyYAML', 'pandas', 'pyparsing', 'sqlparse', 'django'
+	    'Click', 'psycopg2-binary', 'PyYAML', 'pandas', 'pyparsing', 'sqlparse', 'django'
 		#'Click'
 	],
 	license='MIT',
