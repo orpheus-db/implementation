@@ -172,8 +172,10 @@ def execute_sql_file(ctx, param, value):
     click.echo("Executing SQL file at %s" % value)
     with open(abs_path, 'r') as f:
         for line in f:
+            if len(line.strip()) == 0: continue
             executable_sql = parser.parse(line)
             #print executable_sql
+            conn.execute_sql(executable_sql)
     ctx.exit()
 
 @cli.command()
